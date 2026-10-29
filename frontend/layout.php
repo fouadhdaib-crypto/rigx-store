@@ -8,7 +8,7 @@ function regix_brand(): void
     <a class="brand" href="index.php" aria-label="REGIX dashboard">
         <img
             class="brand-logo"
-            src="assets/regix-logo.svg"
+            src="../assets/regix-logo.svg"
             alt="REGIX — Next level shopping"
             width="220"
             height="53"
@@ -79,12 +79,12 @@ function page_start(string $title, string $active): void
         <link
             rel="icon"
             type="image/svg+xml"
-            href="assets/favicon.svg"
+            href="../assets/favicon.svg"
         >
 
-        <link rel="stylesheet" href="css/admin.css">
+        <link rel="stylesheet" href="../css/admin.css">
 
-        <script src="js/admin.js" defer></script>
+        <script src="../js/admin.js" defer></script>
     </head>
 
     <body>
@@ -110,7 +110,7 @@ function page_start(string $title, string $active): void
 
                         <span class="workspace-icon">
                             <img
-                                src="assets/regix-mark.svg"
+                                src="../assets/regix-mark.svg"
                                 alt=""
                                 width="27"
                                 height="27"
