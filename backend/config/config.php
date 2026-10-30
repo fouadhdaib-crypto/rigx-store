@@ -22,7 +22,7 @@ function initials(string $name): string {
     );
 }
 
-$dataBaseValues = [
+$DB_connValues = [
     'host'     => 'localhost',
     'dbname'   => 'regix_db',
     'username' => 'root',
