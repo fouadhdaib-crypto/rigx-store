@@ -2,13 +2,13 @@
 
 require_once __DIR__ . '/../backend/config/config.php';
 
-function regix_brand(): void
+function regix_brand(string $assetPrefix = ''): void
 {
     ?>
     <a class="brand" href="index.php" aria-label="REGIX dashboard">
         <img
             class="brand-logo"
-            src="assets/regix-logo.svg"
+            src="<?= e($assetPrefix) ?>assets/regix-logo.svg"
             alt="REGIX — Next level shopping"
             width="220"
             height="53"
@@ -19,6 +19,9 @@ function regix_brand(): void
 
 function page_start(string $title, string $active): void
 {
+    $inAdminDirectory = basename(dirname($_SERVER['SCRIPT_NAME'] ?? '')) === 'admin';
+    $assetPrefix = $inAdminDirectory ? '../' : '';
+
     $links = [
         ['index.php', 'Overview', 'overview'],
         ['categories.php', 'Categories', 'categories'],
@@ -79,12 +82,12 @@ function page_start(string $title, string $active): void
         <link
             rel="icon"
             type="image/svg+xml"
-            href="assets/favicon.svg"
+            href="<?= e($assetPrefix) ?>assets/favicon.svg"
         >
 
-        <link rel="stylesheet" href="css/admin.css">
+        <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/admin.css">
 
-        <script src="js/admin.js" defer></script>
+        <script src="<?= e($assetPrefix) ?>js/admin.js" defer></script>
     </head>
 
     <body>
@@ -103,14 +106,14 @@ function page_start(string $title, string $active): void
 
                 <div class="sidebar-top">
 
-                    <?php regix_brand(); ?>
+                    <?php regix_brand($assetPrefix); ?>
 
                     <!-- Workspace Switcher -->
                     <div class="workspace-switcher">
 
                         <span class="workspace-icon">
                             <img
-                                src="assets/regix-mark.svg"
+                                src="<?= e($assetPrefix) ?>assets/regix-mark.svg"
                                 alt=""
                                 width="27"
                                 height="27"
@@ -139,7 +142,7 @@ function page_start(string $title, string $active): void
 
                             <a
                                 class="nav-link <?= $active === $file ? 'active' : '' ?>"
-                                href="<?= e($file) ?>"
+                                href="<?= e($file === 'orders.php' && !$inAdminDirectory ? 'admin/orders.php' : $file) ?>"
                                 <?= $active === $file ? 'aria-current="page"' : '' ?>
                             >
 
@@ -179,7 +182,7 @@ function page_start(string $title, string $active): void
 
                     <nav class="main-nav" aria-label="Account">
 
-                        <a class="nav-link" href="login.php">
+                        <a class="nav-link" href="<?= e($assetPrefix) ?>login.php">
 
                             <span class="nav-icon" aria-hidden="true">
                                 ↪
@@ -189,7 +192,7 @@ function page_start(string $title, string $active): void
 
                         </a>
 
-                        <a class="nav-link" href="logout.php">
+                        <a class="nav-link" href="<?= e($assetPrefix) ?>logout.php">
 
                             <span class="nav-icon" aria-hidden="true">
                                 ⇥
