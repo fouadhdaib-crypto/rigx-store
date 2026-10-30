@@ -153,7 +153,6 @@ sort($pageNumbers);
 page_start('Categories', 'categories.php');
 ?>
 
-<!-- تم اضافة ملف الـ CSS هنا -->
 <link rel="stylesheet" href="../css/categories.css">
 
 <div class="categories-page">
@@ -165,7 +164,7 @@ page_start('Categories', 'categories.php');
             <p>Create and organize collections for your products.</p>
         </div>
 
-        <button type="button" class="add-category-btn" id="openCategoryModal">
+        <button type="button" class="add-category-btn primary-button" id="openCategoryModal">
             <span aria-hidden="true">＋</span>
             Add Category
         </button>
@@ -229,7 +228,7 @@ page_start('Categories', 'categories.php');
             </p>
 
             <?php if ($search === ''): ?>
-                <button type="button" class="add-category-btn" id="openCategoryModalEmpty">
+                <button type="button" class="add-category-btn primary-button" id="openCategoryModalEmpty">
                     ＋ Create your first category
                 </button>
             <?php endif; ?>
@@ -441,7 +440,7 @@ page_start('Categories', 'categories.php');
                     Cancel
                 </button>
 
-                <button type="submit" class="add-category-btn" id="submitCategory">
+                <button type="submit" class="add-category-btn primary-button" id="submitCategory">
                     Create Category <span aria-hidden="true">→</span>
                 </button>
             </div>
