@@ -1,10 +1,10 @@
-
 <?php
 session_start();
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../classes/UsersClass.php'; 
 $error = '';
 $name = '';
 $email = '';
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['subtn'])) {
     $name = trim($_POST['fname'] ?? '');
     $email = trim($_POST['email'] ?? '');
@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['subtn'])) {
         $error = 'Passwords do not match';
     } else {
         try {
-            $reg = new DB_con();
+            $reg = new UsersClass();
             $result = $reg->register($name, $email, $password, $role);
 
             if ($result) {
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['subtn'])) {
                     $_SESSION['user_name'] = $user['name'];
                     $_SESSION['email'] = $user['email'];
                     $_SESSION['user_role'] = $user['role'];
-                    header('Location: login.php');
+                    header('Location: ../../frontend/user/index.php');
                     exit();
                 }
             }
@@ -58,29 +58,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['subtn'])) {
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="icon" type="image/svg+xml" href="../../frontend/assets/favicon.svg">
 <link rel="stylesheet" href="../../frontend/css/auth.css">
 </head>
 <body>
 <div class="ring" aria-hidden="true"></div>
 <main class="wrap">
   <section class="card">
-    <a class="logo" href="#" aria-label="Rigx">
-      <svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true">
-        <path fill-rule="evenodd" fill="#a6e91c"
-          d="M4 36V6H24Q36 6 36 16Q36 24 28 25L37 36H27L19 26H12V36Z
-             M12 13V20H23Q27 20 27 16.5Q27 13 23 13Z"/>
-        <path fill="#6fa30c" d="M4 6H14L4 20Z"/>
-      </svg>
-      <span>Rigx</span>
-    </a>
+ 
 
+<a class="logo" href="login.php" aria-label="REGIX home">
+      <img src="../../frontend/assets/regix-logo.svg" alt="REGIX — Next level shopping" width="200" height="48">
+    </a>
     <nav class="tabs" aria-label="Account">
       <a href="login.php">Sign In</a>
       <a href="signup.php" class="active" aria-current="page">Register</a>
     </nav>
 
     <form id="signup" method="post" action="signup.php" novalidate>
-      <h1>Join <em>RIGX</em></h1>
+      <h1>Join <em>Regix</em></h1>
 
       <?php if (!empty($error)): ?>
         <div class="alert alert-error" role="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>

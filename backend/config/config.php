@@ -25,9 +25,9 @@ function initials(string $name): string
     );
 }
 
-$dataBaseValues = [
-    'host' => 'localhost',
-    'dbname' => 'regix_db',
+$DB_connValues = [
+    'host'     => 'localhost',
+    'dbname'   => 'regix_db',
     'username' => 'root',
     'password' => ''
 ];
