@@ -82,8 +82,8 @@ function page_start(string $title, string $active): void
             href="assets/favicon.svg"
         >
 
-        <link rel="stylesheet" href="css/admin.css">
-
+        <link rel="stylesheet" href="../css/admin.css">
+        <link rel="stylesheet" href="../css/product_admin_view.css">
         <script src="js/admin.js" defer></script>
     </head>
 
