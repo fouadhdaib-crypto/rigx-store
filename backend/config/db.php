@@ -1,7 +1,5 @@
 <?php
-
 require_once __DIR__ . '/config.php';
-
 class DB_conn
 {
     private static ?PDO $instance = null;
@@ -9,10 +7,8 @@ class DB_conn
     public static function getConnection(): PDO
     {
         global $dataBaseValues;
-
         if (self::$instance === null) {
             try {
-
                 $dsn = "mysql:host=" . $dataBaseValues['host'] .
                        ";dbname=" . $dataBaseValues['dbname'] .
                        ";charset=utf8mb4";
@@ -31,7 +27,6 @@ class DB_conn
                 );
 
             } catch (PDOException $e) {
-
                 throw new Exception(
                     "Database Connection Failed",
                     0,
