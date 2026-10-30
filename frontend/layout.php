@@ -5,17 +5,9 @@ require_once __DIR__ . '/../backend/config/config.php';
 function regix_brand(string $assetPrefix = ''): void
 {
     ?>
-    <a class="brand" href="index.php" aria-label="REGIX dashboard">
-        <img
-            class="brand-logo"
-
-            src="<?= e($assetPrefix) ?>assets/regix-logo.svg"
-=======
-            src="../assets/regix-logo.svg"
-            alt="REGIX — Next level shopping"
-            width="220"
-            height="53"
-        >
+    <a class="brand" href="dashboard.php" aria-label="REGIX dashboard">
+        <img class="brand-logo" src="<?= e($assetPrefix) ?>assets/regix-logo.svg"
+            alt="REGIX — Next level shopping" width="220" height="53">
     </a>
     <?php
 }
@@ -33,7 +25,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
         : '../backend/auth/logout.php';
 
     $links = [
-        ['index.php', 'Overview', 'overview'],
+        ['dashboard.php', 'Overview', 'overview'],
         ['categories.php', 'Categories', 'categories'],
         ['products.php', 'Products', 'products'],
         ['orders.php', 'Orders', 'orders'],
@@ -88,48 +80,35 @@ function page_start(string $title, string $active, string $extraHead = ''): void
     <head>
         <meta charset="utf-8">
 
-        <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1"
-        >
+        <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <meta name="theme-color" content="#090a0c">
         <meta name="color-scheme" content="dark">
 
         <title><?= e($title) ?> · REGIX Admin</title>
 
-        <link
-            rel="icon"
-            type="image/svg+xml"
+        <link rel="icon" type="image/svg+xml" href="<?= e($assetPrefix) ?>assets/favicon.svg">
 
-            href="<?= e($assetPrefix) ?>assets/favicon.svg"
-        >
-
-       <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/admin.css">
-<link rel="stylesheet" href="<?= e($assetPrefix) ?>css/product_admin_view.css">
+        <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/admin.css">
+        <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/product_admin_view.css">
 
 
         <script src="<?= e($assetPrefix) ?>js/admin.js" defer></script>
-            href="../assets/favicon.svg"
+        href="../assets/favicon.svg"
         >
 
         <link rel="stylesheet" href="../css/admin.css">
 
         <script src="../js/admin.js" defer></script>
-<script src="<?= e($assetPrefix) ?>js/admin.js" defer></script>
+        <script src="<?= e($assetPrefix) ?>js/admin.js" defer></script>
 
-<?= $extraHead ?>
+        <?= $extraHead ?>
 
     </head>
 
     <body>
 
-        <input
-            class="nav-toggle"
-            type="checkbox"
-            id="nav-toggle"
-            aria-label="Open navigation"
-        >
+        <input class="nav-toggle" type="checkbox" id="nav-toggle" aria-label="Open navigation">
 
         <div class="app-shell">
 
@@ -144,15 +123,8 @@ function page_start(string $title, string $active, string $extraHead = ''): void
                     <div class="workspace-switcher">
 
                         <span class="workspace-icon">
-                            <img
-
-                                src="<?= e($assetPrefix) ?>assets/regix-mark.svg"
-=======
-                                src="../assets/regix-mark.svg"
-                                alt=""
-                                width="27"
-                                height="27"
-                            >
+                            <img src="<?= e($assetPrefix) ?>assets/regix-mark.svg" src="../assets/regix-mark.svg" alt=""
+                                width="27" height="27">
                         </span>
 
                         <span class="workspace-copy">
@@ -175,22 +147,14 @@ function page_start(string $title, string $active, string $extraHead = ''): void
 
                         <?php foreach ($links as [$file, $label, $icon]): ?>
 
-                            <a
-                                class="nav-link <?= $active === $file ? 'active' : '' ?>"
+                            <a class="nav-link <?= $active === $file ? 'active' : '' ?>"
                                 href="<?= e($file === 'orders.php' && !$inAdminDirectory ? 'admin/orders.php' : $file) ?>"
-                                <?= $active === $file ? 'aria-current="page"' : '' ?>
-                            >
+                                <?= $active === $file ? 'aria-current="page"' : '' ?>>
 
                                 <span class="nav-icon" aria-hidden="true">
 
-                                    <svg
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="1.8"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    >
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                        stroke-linecap="round" stroke-linejoin="round">
                                         <?= $icons[$icon] ?>
                                     </svg>
 
@@ -263,7 +227,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
                             together in REGIX.
                         </p>
 
-                        <a href="index.php" class="text-button">
+                        <a href="dashboard.php" class="text-button">
                             Explore overview
                             <span aria-hidden="true">↗</span>
                         </a>
@@ -302,18 +266,14 @@ function page_start(string $title, string $active, string $extraHead = ''): void
             </aside>
 
             <!-- Mobile Backdrop -->
-            <label
-                for="nav-toggle"
-                class="mobile-backdrop"
-                aria-label="Close navigation"
-            ></label>
+            <label for="nav-toggle" class="mobile-backdrop" aria-label="Close navigation"></label>
 
             <!-- Main Content -->
             <div class="main-content">
 
                 <main class="page-wrap" id="main-content">
 
-    <?php
+                    <?php
 }
 
 function page_end(): void
@@ -344,6 +304,7 @@ function page_end(): void
         </div>
 
     </body>
+
     </html>
 
     <?php
@@ -359,20 +320,10 @@ function heading(
     <section class="page-heading">
 
         <!-- Mobile Menu -->
-        <label
-            for="nav-toggle"
-            class="mobile-menu"
-            aria-label="Open navigation"
-        >
+        <label for="nav-toggle" class="mobile-menu" aria-label="Open navigation">
 
-            <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-            >
-                <path d="M4 7h16M4 12h16M4 17h16"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M4 7h16M4 12h16M4 17h16" />
             </svg>
 
         </label>

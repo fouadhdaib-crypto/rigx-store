@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['login_btn'])) {
                 header("Location: ../../frontend/user/index.php");
                 exit();
             } else {
-                header("Location: ../../frontend/admin/index.php");
+                header("Location: ../../frontend/admin/dashboard.php");
                 exit();
             }
         } else {
