@@ -156,60 +156,6 @@
         background: var(--cat-panel);
     }
 
-    .category-pagination-bar,
-    .category-pagination {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .category-pagination-bar {
-        justify-content: space-between;
-        flex-wrap: wrap;
-        margin-top: 16px;
-        color: var(--cat-muted);
-        font-size: 12px;
-    }
-
-    .category-pagination-bar strong {
-        color: var(--color-text, #f3f5f7);
-    }
-
-    .category-page-link,
-    .category-page-gap {
-        display: inline-flex;
-        min-width: 34px;
-        height: 34px;
-        align-items: center;
-        justify-content: center;
-        padding: 0 9px;
-        border: 1px solid var(--cat-border);
-        border-radius: 7px;
-        color: var(--color-text, #f3f5f7);
-        font-size: 12px;
-    }
-
-    .category-page-link:hover,
-    .category-page-link.active {
-        border-color: var(--cat-accent);
-        background: var(--cat-accent);
-        color: #10140a;
-    }
-
-    .category-page-link.active {
-        font-weight: 800;
-    }
-
-    .category-page-link:focus-visible {
-        outline: 2px solid var(--cat-accent);
-        outline-offset: 2px;
-    }
-
-    .category-page-gap {
-        border-color: transparent;
-        color: var(--cat-muted);
-    }
-
     .category-table-scroll {
         width: 100%;
         overflow-x: auto;

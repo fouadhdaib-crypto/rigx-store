@@ -68,6 +68,7 @@ if (($_GET['action'] ?? '') === 'dashboard') {
     exit;
 }
 
+
 /*
 |--------------------------------------------------------------------------
 | DASHBOARD PAGE
@@ -89,6 +90,12 @@ page_start('Overview', 'index.php');
 
 $layoutOutput = ob_get_clean();
 
+/*
+|--------------------------------------------------------------------------
+| FIX SHARED ASSET PATHS
+|--------------------------------------------------------------------------
+*/
+
 $layoutOutput = str_replace(
     [
         'href="assets/favicon.svg"',
@@ -107,6 +114,21 @@ $layoutOutput = str_replace(
     $layoutOutput
 );
 
+/*
+|--------------------------------------------------------------------------
+| LOAD DASHBOARD STYLESHEET
+|--------------------------------------------------------------------------
+| Dashboard.css is loaded after admin.css so page-specific
+| styles can override shared styles when necessary.
+*/
+
+$layoutOutput = str_replace(
+    '<link rel="stylesheet" href="../css/admin.css">',
+    '<link rel="stylesheet" href="../css/admin.css">' . PHP_EOL .
+    '        <link rel="stylesheet" href="../css/Dashboard.css">',
+    $layoutOutput
+);
+
 echo $layoutOutput;
 
 /*
@@ -122,6 +144,7 @@ heading(
 );
 
 ?>
+
 
 <!-- ============================================================
      DASHBOARD SCRIPTS
