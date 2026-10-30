@@ -10,7 +10,9 @@ function e(string $value): string {
 }
 
 function admin_name(): string {
-    return (string)($_SESSION['admin_name'] ?? 'Store Administrator');
+    return isset($_SESSION['email'])
+        ? (string) ($_SESSION['user_name'] ?? $_SESSION['email'])
+        : 'Guest';
 }
 
 function initials(string $name): string {

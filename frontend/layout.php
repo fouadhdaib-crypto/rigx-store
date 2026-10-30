@@ -41,6 +41,15 @@ function page_start(string $title, string $active, string $extraHead = ''): void
     ];
 
     $name = admin_name();
+    $isLoggedIn = !empty($_SESSION['email']);
+    $roleLabels = [
+        'admin' => 'Administrator',
+        'customer' => 'Customer',
+        'seller' => 'Seller',
+    ];
+    $roleLabel = $isLoggedIn
+        ? ($roleLabels[$_SESSION['user_role'] ?? ''] ?? 'User')
+        : 'Not signed in';
 
     $icons = [
         'overview' =>
@@ -208,6 +217,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
 
                     <nav class="main-nav" aria-label="Account">
 
+                        <?php if (!$isLoggedIn): ?>
                         <a class="nav-link" href="<?= e($loginPath) ?>">
 
                             <span class="nav-icon" aria-hidden="true">
@@ -218,6 +228,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
 
                         </a>
 
+                        <?php else: ?>
                         <a class="nav-link" href="<?= e($logoutPath) ?>">
 
                             <span class="nav-icon" aria-hidden="true">
@@ -227,6 +238,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
                             <span>Sign out</span>
 
                         </a>
+                        <?php endif; ?>
 
                     </nav>
 
@@ -272,14 +284,15 @@ function page_start(string $title, string $active, string $extraHead = ''): void
                             </strong>
 
                             <small>
-                                Store Administrator
+                                <?= e($roleLabel) ?>
                             </small>
 
                         </span>
 
                         <span
                             class="profile-status"
-                            title="Workspace"
+                            title="<?= $isLoggedIn ? 'Signed in' : 'Not signed in' ?>"
+                            <?= !$isLoggedIn ? 'style="background: #64748b; box-shadow: none;"' : '' ?>
                         ></span>
 
                     </div>
