@@ -92,11 +92,12 @@ function page_start(string $title, string $active, string $extraHead = ''): void
             href="<?= e($assetPrefix) ?>assets/favicon.svg"
         >
 
-        <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/admin.css">
+       <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/admin.css">
+<link rel="stylesheet" href="<?= e($assetPrefix) ?>css/product_admin_view.css">
 
-        <script src="<?= e($assetPrefix) ?>js/admin.js" defer></script>
+<script src="<?= e($assetPrefix) ?>js/admin.js" defer></script>
 
-        <?= $extraHead /* CHANGED: page-specific <head> tags (trusted markup passed by the page itself) */ ?>
+<?= $extraHead ?>
     </head>
 
     <body>
