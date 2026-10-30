@@ -28,16 +28,15 @@ function store_page_start(
     bool $landing = false
 ): void {
     ?>
-<!doctype html>
-<html lang="en">
+    <!doctype html>
+    <html lang="en">
+
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#090a0c">
-        <meta
-            name="description"
-            content="Discover new and pre-loved products at REGIX. Browse categories and find your next everyday essential."
-        >
+        <meta name="description"
+            content="Discover new and pre-loved products at REGIX. Browse categories and find your next everyday essential.">
         <title>
             <?= e($title) ?>
             · REGIX
@@ -65,12 +64,7 @@ function store_page_start(
         <header class="store-header">
             <div class="header-main wrap">
                 <a class="store-brand" href="index.php" aria-label="REGIX home">
-                    <img
-                        src="../assets/regix-logo.svg"
-                        alt="REGIX — Next level shopping"
-                        width="180"
-                        height="44"
-                    >
+                    <img src="../assets/regix-logo.svg" alt="REGIX — Next level shopping" width="180" height="44">
                 </a>
                 <a class="button header-explore" href="index.php#rigs">
                     Explore builds <?= store_icon('arrow') ?>
@@ -81,13 +75,8 @@ function store_page_start(
                         <?= e((string) ($_SESSION['user_name'] ?? 'Sign in')) ?>
                     </span>
                 </a>
-                <button
-                    class="menu-button"
-                    type="button"
-                    aria-controls="store-nav"
-                    aria-expanded="false"
-                    aria-label="Toggle navigation"
-                >
+                <button class="menu-button" type="button" aria-controls="store-nav" aria-expanded="false"
+                    aria-label="Toggle navigation">
                     <?= store_icon('menu') ?>
                 </button>
             </div>
@@ -102,7 +91,7 @@ function store_page_start(
             </nav>
         </header>
         <main id="main-content" class="wrap store-main">
-<?php
+            <?php
 }
 
 function store_page_end(): void
@@ -138,7 +127,8 @@ function store_page_end(): void
                 </small>
             </div>
         </footer>
-    </body>
-</html>
-<?php
+        </body>
+
+    </html>
+    <?php
 }
