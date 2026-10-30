@@ -84,6 +84,9 @@ function page_start(string $title, string $active, string $extraHead = ''): void
 
         <meta name="theme-color" content="#090a0c">
         <meta name="color-scheme" content="dark">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oxanium:wght@500;600;700;800&display=swap" rel="stylesheet">
 
         <title><?= e($title) ?> · REGIX Admin</title>
 
@@ -94,6 +97,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
 
         <?= $extraHead ?>
         <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/admin-unified.css?v=<?= filemtime(__DIR__ . '/css/admin-unified.css') ?>">
+        <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/typography.css?v=<?= filemtime(__DIR__ . '/css/typography.css') ?>">
 
     </head>
 
@@ -130,6 +134,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
                     </div>
 
                     <!-- Workspace Navigation -->
+                    <div class="sidebar-nav-scroll" tabindex="0" role="region" aria-label="Sidebar navigation">
                     <div class="nav-label">
                         WORKSPACE
                     </div>
@@ -197,6 +202,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
 
                     </nav>
 
+                    </div>
                 </div>
 
                 <!-- Sidebar Bottom -->
@@ -339,15 +345,6 @@ function heading(
             </p>
 
         </div>
-
-        <!-- Heading Badge -->
-        <span class="heading-chip">
-
-            <span class="heading-chip-dot"></span>
-
-            REGIX / ADMIN
-
-        </span>
 
     </section>
 

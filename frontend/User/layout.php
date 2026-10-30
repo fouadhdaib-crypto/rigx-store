@@ -84,6 +84,9 @@ function store_page_start(
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#090a0c">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oxanium:wght@500;600;700;800&display=swap" rel="stylesheet">
         <meta name="description"
             content="Discover new and pre-loved products at REGIX. Browse categories and find your next everyday essential.">
         <title>
@@ -97,6 +100,7 @@ function store_page_start(
             <script src="../js/landing.js" defer></script>
         <?php endif; ?>
         <link rel="stylesheet" href="../css/storefront.css?v=<?= filemtime(__DIR__ . '/../css/storefront.css') ?>">
+        <link rel="stylesheet" href="../css/typography.css?v=<?= filemtime(__DIR__ . '/../css/typography.css') ?>">
         <script src="../js/store.js?v=<?= filemtime(__DIR__ . '/../js/store.js') ?>" defer></script>
     </head>
     <body<?= $landing ? ' class="gaming-page"' : '' ?>>

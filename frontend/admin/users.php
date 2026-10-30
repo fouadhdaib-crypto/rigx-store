@@ -99,9 +99,6 @@ $growth = $stats['revenue_growth'];
 require_once __DIR__ . '/../layout.php';   
 
 $extraHead = '
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="../css/admin-users.css">
 ';
@@ -159,43 +156,47 @@ heading('STORE MANAGEMENT', 'Customers & users', 'Manage customers and admins, t
 
       <div class="table-header-actions">
         <div class="management-panel-title"><h2>All users</h2><p>Review accounts, permissions, and customer activity.</p></div>
-        <!-- Top Row: Search & Add User Button -->
+        <!-- Search, centered filters, and create action. -->
         <div class="top-controls-row">
           <div class="search-box">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" id="searchInput" class="search-input" placeholder="Search by name, email..." onkeyup="filterAndSortUsers()">
           </div>
 
-          <button class="btn-primary" onclick="openAddUserModal()">
-            <i class="fa-solid fa-plus"></i> Add New User
-          </button>
+
         </div>
 
       
         <div class="filters-row">
-          <select id="filterRole" class="select-filter" onchange="filterAndSortUsers()">
+          <select id="filterRole" class="select-filter" aria-label="Filter by role" onchange="filterAndSortUsers()">
             <option value="">All Roles</option>
             <option value="Admin">Admin</option>
             <option value="Customer">Customer</option>
           </select>
 
-          <select id="filterStatus" class="select-filter" onchange="filterAndSortUsers()">
+          <select id="filterStatus" class="select-filter" aria-label="Filter by status" onchange="filterAndSortUsers()">
             <option value="">All Status</option>
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>
           </select>
 
-          <select id="sortSpent" class="select-filter" onchange="filterAndSortUsers()">
+          <select id="sortSpent" class="select-filter" aria-label="Sort by spending" onchange="filterAndSortUsers()">
             <option value="">Sort by Spent</option>
             <option value="spent-desc">Spent: High to Low</option>
             <option value="spent-asc">Spent: Low to High</option>
           </select>
 
-          <select id="sortOrders" class="select-filter" onchange="filterAndSortUsers()">
+          <select id="sortOrders" class="select-filter" aria-label="Sort by order count" onchange="filterAndSortUsers()">
             <option value="">Sort by Orders</option>
             <option value="orders-desc">Orders: High to Low</option>
             <option value="orders-asc">Orders: Low to High</option>
           </select>
+        </div>
+        <div class="users-create-row">
+          <button type="button" class="btn-primary users-add-button" onclick="openAddUserModal()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            <span>Add user</span>
+          </button>
         </div>
       </div>
 
