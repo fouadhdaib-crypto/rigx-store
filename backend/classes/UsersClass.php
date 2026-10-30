@@ -172,4 +172,88 @@ class UsersClass
         $stmt = $dbh->prepare("UPDATE users SET deleted_at = NOW() WHERE id = ? AND deleted_at IS NULL");
         return $stmt->execute([$id]) && $stmt->rowCount() > 0;
     }
+    
+   
+    public function getProfile(int $id)
+    {
+        $dbh  = DB_conn::getConnection();
+        $stmt = $dbh->prepare(
+            "SELECT u.id, u.name, u.email, u.role, u.status, u.address_line1, u.created_at,
+                    (SELECT COUNT(*) FROM orders o
+                      WHERE o.user_id = u.id
+                        AND o.deleted_at IS NULL
+                        AND o.status <> 'cancelled')                       AS orders_count,
+                    (SELECT COALESCE(SUM(o.total_jod), 0) FROM orders o
+                      WHERE o.user_id = u.id
+                        AND o.deleted_at IS NULL
+                        AND o.status <> 'cancelled')                       AS total_spent
+             FROM users u
+             WHERE u.id = ? AND u.deleted_at IS NULL"
+        );
+        $stmt->execute([$id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$row) {
+            return false;
+        }
+
+        $row['orders_count'] = (int)$row['orders_count'];
+        $row['total_spent']  = (float)$row['total_spent'];
+        return $row;
+    }
+
+    
+    public function updateProfile(int $id, string $name, string $email, string $address): bool
+    {
+        $dbh  = DB_conn::getConnection();
+        $stmt = $dbh->prepare(
+            "UPDATE users
+             SET name = ?, email = ?, address_line1 = ?
+             WHERE id = ? AND deleted_at IS NULL"
+        );
+        return $stmt->execute([$name, $email, $address, $id]);
+    }
+
+    public function changePassword(int $id, string $currentPassword, string $newPassword): bool
+    {
+        $dbh  = DB_conn::getConnection();
+
+        $stmt = $dbh->prepare("SELECT password_hash FROM users WHERE id = ? AND deleted_at IS NULL");
+        $stmt->execute([$id]);
+        $hash = $stmt->fetchColumn();
+
+        if (!$hash || !password_verify($currentPassword, $hash)) {
+            return false;
+        }
+
+        $upd = $dbh->prepare("UPDATE users SET password_hash = ? WHERE id = ? AND deleted_at IS NULL");
+        return $upd->execute([password_hash($newPassword, PASSWORD_DEFAULT), $id]);
+    }
+
+    
+    public function getUserOrders(int $userId, int $limit = 10): array
+    {
+        $dbh  = DB_conn::getConnection();
+        $stmt = $dbh->prepare(
+            "SELECT id, status, total_jod, created_at
+             FROM orders
+             WHERE user_id = :uid AND deleted_at IS NULL
+             ORDER BY created_at DESC, id DESC
+             LIMIT :lim"
+        );
+        $stmt->bindValue(':uid', $userId, PDO::PARAM_INT);
+        $stmt->bindValue(':lim', max(1, $limit), PDO::PARAM_INT);
+        $stmt->execute();
+
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($rows as &$r) {
+            $r['id']         = (int)$r['id'];
+            $r['total_jod']  = (float)$r['total_jod'];
+            $r['status']     = ucfirst((string)$r['status']);
+            $r['created_at'] = substr((string)$r['created_at'], 0, 10);
+        }
+        unset($r);
+
+        return $rows;
+    }
 }
