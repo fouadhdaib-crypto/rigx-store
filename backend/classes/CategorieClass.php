@@ -34,6 +34,51 @@ class Categorie
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function countCategories(string $search = ''): int
+    {
+        $stmt = $this->db->prepare(
+            "SELECT COUNT(*)
+             FROM categories
+             WHERE deleted_at IS NULL
+               AND name LIKE ?"
+        );
+
+        $stmt->execute(['%' . $search . '%']);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function getCategoriesPage(
+        string $search,
+        int $limit,
+        int $offset
+    ): array {
+        if ($limit < 1 || $offset < 0) {
+            throw new InvalidArgumentException('Invalid category pagination values.');
+        }
+
+        $stmt = $this->db->prepare(
+            "SELECT c.*,
+                    (
+                        SELECT COUNT(*)
+                        FROM products p
+                        WHERE p.category_id = c.id
+                          AND p.deleted_at IS NULL
+                    ) AS products_count
+             FROM categories c
+             WHERE c.deleted_at IS NULL
+               AND c.name LIKE ?
+             ORDER BY c.id DESC
+             LIMIT ? OFFSET ?"
+        );
+        $stmt->bindValue(1, '%' . $search . '%', PDO::PARAM_STR);
+        $stmt->bindValue(2, $limit, PDO::PARAM_INT);
+        $stmt->bindValue(3, $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function getById(int $id): ?array
     {
         $stmt = $this->db->prepare(

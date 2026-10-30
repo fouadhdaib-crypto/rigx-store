@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
     <link rel="stylesheet" href="../css/admin.css">
     <link rel="stylesheet" href="../css/checkout.css">
-   
+
 </head>
 
 <body class="checkout-page">
@@ -147,15 +147,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <h3 id="checkoutPoliciesTitle">Store policies</h3>
                     <details class="checkout-policy">
                         <summary>Purchase policy</summary>
-                        <p>Review the items, quantities, and total before placing your order. Cash on delivery is paid when the order arrives; Stripe payments are completed online.</p>
+                        <p>Review the items, quantities, and total before placing your order. Cash on delivery is paid
+                            when the order arrives; Stripe payments are completed online.</p>
                     </details>
                     <details class="checkout-policy">
                         <summary>Returns and exchanges</summary>
-                        <p>Keep items unused and in their original packaging. Contact the store with your order number to request a return or exchange; each request is reviewed according to the item and its condition.</p>
+                        <p>Keep items unused and in their original packaging. Contact the store with your order number
+                            to request a return or exchange; each request is reviewed according to the item and its
+                            condition.</p>
                     </details>
                     <details class="checkout-policy">
                         <summary>Delivery policy</summary>
-                        <p>Enter an accurate phone number and delivery address. Delivery timing and any applicable charges depend on the delivery area and will be confirmed by the store.</p>
+                        <p>Enter an accurate phone number and delivery address. Delivery timing and any applicable
+                            charges depend on the delivery area and will be confirmed by the store.</p>
                     </details>
                 </section>
             </section>
@@ -173,13 +177,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <?php if ($cashOnDeliveryConfirmation): ?>
                         <div class="checkout-confirmation" role="status">
                             <strong>Cash on delivery order placed</strong>
-                            <span>Order <?= htmlspecialchars($cashOnDeliveryConfirmation['order_number'], ENT_QUOTES, 'UTF-8') ?></span>
+                            <span>Order
+                                <?= htmlspecialchars($cashOnDeliveryConfirmation['order_number'], ENT_QUOTES, 'UTF-8') ?></span>
                             Total due on delivery: $<?= number_format((float) $cashOnDeliveryConfirmation['subtotal'], 2) ?>
                             <a href="user_categories.php">Continue shopping</a>
                         </div>
                     <?php else: ?>
                         <form method="post" action="checkout.php" id="paymentForm">
-                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['checkout_csrf'], ENT_QUOTES, 'UTF-8') ?>">
+                            <input type="hidden" name="csrf_token"
+                                value="<?= htmlspecialchars($_SESSION['checkout_csrf'], ENT_QUOTES, 'UTF-8') ?>">
                             <fieldset class="payment-choices">
                                 <legend>Payment method</legend>
                                 <label class="payment-option">
@@ -204,15 +210,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="delivery-fields" id="deliveryFields" <?= $selectedPaymentMethod === 'cash_on_delivery' ? '' : 'hidden' ?>>
                                 <label for="customerName">
                                     Full name
-                                    <input id="customerName" name="customer_name" type="text" maxlength="100" value="<?= htmlspecialchars($customerName, ENT_QUOTES, 'UTF-8') ?>" autocomplete="name" <?= $selectedPaymentMethod === 'cash_on_delivery' ? 'required' : '' ?>>
+                                    <input id="customerName" name="customer_name" type="text" maxlength="100"
+                                        value="<?= htmlspecialchars($customerName, ENT_QUOTES, 'UTF-8') ?>"
+                                        autocomplete="name" <?= $selectedPaymentMethod === 'cash_on_delivery' ? 'required' : '' ?>>
                                 </label>
                                 <label for="customerPhone">
                                     Phone number
-                                    <input id="customerPhone" name="customer_phone" type="tel" maxlength="30" value="<?= htmlspecialchars($customerPhone, ENT_QUOTES, 'UTF-8') ?>" autocomplete="tel" <?= $selectedPaymentMethod === 'cash_on_delivery' ? 'required' : '' ?>>
+                                    <input id="customerPhone" name="customer_phone" type="tel" maxlength="30"
+                                        value="<?= htmlspecialchars($customerPhone, ENT_QUOTES, 'UTF-8') ?>"
+                                        autocomplete="tel" <?= $selectedPaymentMethod === 'cash_on_delivery' ? 'required' : '' ?>>
                                 </label>
                                 <label for="deliveryAddress">
                                     Delivery address
-                                    <textarea id="deliveryAddress" name="delivery_address" maxlength="2000" autocomplete="street-address" <?= $selectedPaymentMethod === 'cash_on_delivery' ? 'required' : '' ?>><?= htmlspecialchars($deliveryAddress, ENT_QUOTES, 'UTF-8') ?></textarea>
+                                    <textarea id="deliveryAddress" name="delivery_address" maxlength="2000"
+                                        autocomplete="street-address" <?= $selectedPaymentMethod === 'cash_on_delivery' ? 'required' : '' ?>><?= htmlspecialchars($deliveryAddress, ENT_QUOTES, 'UTF-8') ?></textarea>
                                 </label>
                             </div>
                             <p class="secure-note" id="paymentHelp"><span class="secure-mark"

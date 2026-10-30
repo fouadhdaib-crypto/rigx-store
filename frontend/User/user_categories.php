@@ -2,12 +2,23 @@
 require_once __DIR__ . '/../../backend/classes/CategorieClass.php';
 
 $search = trim($_GET['q'] ?? '');
+$page = max(1, (int) ($_GET['page'] ?? 1));
+$perPage = 9;
+$totalCategories = 0;
+$totalPages = 1;
 $categories = [];
 $error_msg = '';
 
 try {
     $categoryManager = new Categorie();
-    $categories = $categoryManager->getAll($search);
+    $totalCategories = $categoryManager->countCategories($search);
+    $totalPages = max(1, (int) ceil($totalCategories / $perPage));
+    $page = min($page, $totalPages);
+    $categories = $categoryManager->getCategoriesPage(
+        $search,
+        $perPage,
+        ($page - 1) * $perPage
+    );
 } catch (\Throwable $e) {
     $error_msg = $e->getMessage();
 }
@@ -57,8 +68,8 @@ try {
 
         <section class="category-tools" aria-label="Category search and count">
             <span class="category-count">
-                <?= count($categories) ?>
-                <?= count($categories) === 1 ? 'category' : 'categories' ?><?= $search !== '' ? ' found' : '' ?>
+                <?= $totalCategories ?>
+                <?= $totalCategories === 1 ? 'category' : 'categories' ?><?= $search !== '' ? ' found' : '' ?>
             </span>
             <form class="category-search" method="get" action="user_categories.php" role="search">
                 <label class="visually-hidden" for="categorySearch">Search categories by name</label>
@@ -71,6 +82,42 @@ try {
                 <button type="submit">Search</button>
             </form>
         </section>
+
+        <?php if ($totalCategories > 0): ?>
+            <div class="category-pagination-bar">
+                <span>
+                    Showing <?= (($page - 1) * $perPage) + 1 ?>–<?= min($page * $perPage, $totalCategories) ?>
+                    of <?= $totalCategories ?> categories
+                </span>
+                <?php if ($totalPages > 1): ?>
+                    <nav class="category-pagination" aria-label="Categories pagination">
+                        <?php
+                        $pageNumbers = array_unique(array_merge(
+                            [1, $totalPages],
+                            range(max(1, $page - 2), min($totalPages, $page + 2))
+                        ));
+                        sort($pageNumbers);
+                        $previousNumber = 0;
+                        foreach ($pageNumbers as $number):
+                            if ($number - $previousNumber > 1):
+                                ?>
+                                <span class="category-page-gap" aria-hidden="true">…</span>
+                            <?php endif; ?>
+                            <?php
+                            $query = ['page' => $number];
+                            if ($search !== '') {
+                                $query['q'] = $search;
+                            }
+                            ?>
+                            <a class="category-page-link <?= $number === $page ? 'active' : '' ?>"
+                                href="user_categories.php?<?= htmlspecialchars(http_build_query($query), ENT_QUOTES, 'UTF-8') ?>"
+                                <?= $number === $page ? 'aria-current="page"' : '' ?>><?= $number ?></a>
+                            <?php $previousNumber = $number; ?>
+                        <?php endforeach; ?>
+                    </nav>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
 
         <section class="category-grid" aria-label="Product categories">
             <?php if (!empty($categories)): ?>
