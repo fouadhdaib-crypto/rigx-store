@@ -8,7 +8,10 @@ function regix_brand(string $assetPrefix = ''): void
     <a class="brand" href="index.php" aria-label="REGIX dashboard">
         <img
             class="brand-logo"
+
             src="<?= e($assetPrefix) ?>assets/regix-logo.svg"
+=======
+            src="../assets/regix-logo.svg"
             alt="REGIX — Next level shopping"
             width="220"
             height="53"
@@ -22,6 +25,12 @@ function page_start(string $title, string $active, string $extraHead = ''): void
 {
     $inAdminDirectory = basename(dirname($_SERVER['SCRIPT_NAME'] ?? '')) === 'admin';
     $assetPrefix = $inAdminDirectory ? '../' : '';
+    $loginPath = $inAdminDirectory
+        ? '../../backend/auth/login.php'
+        : '../backend/auth/login.php';
+    $logoutPath = $inAdminDirectory
+        ? '../../backend/auth/logout.php'
+        : '../backend/auth/logout.php';
 
     $links = [
         ['index.php', 'Overview', 'overview'],
@@ -83,14 +92,25 @@ function page_start(string $title, string $active, string $extraHead = ''): void
         <link
             rel="icon"
             type="image/svg+xml"
+
             href="<?= e($assetPrefix) ?>assets/favicon.svg"
         >
 
-        <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/admin.css">
+       <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/admin.css">
+<link rel="stylesheet" href="<?= e($assetPrefix) ?>css/product_admin_view.css">
+
 
         <script src="<?= e($assetPrefix) ?>js/admin.js" defer></script>
+            href="../assets/favicon.svg"
+        >
 
-        <?= $extraHead /* CHANGED: page-specific <head> tags (trusted markup passed by the page itself) */ ?>
+        <link rel="stylesheet" href="../css/admin.css">
+
+        <script src="../js/admin.js" defer></script>
+<script src="<?= e($assetPrefix) ?>js/admin.js" defer></script>
+
+<?= $extraHead ?>
+
     </head>
 
     <body>
@@ -116,7 +136,10 @@ function page_start(string $title, string $active, string $extraHead = ''): void
 
                         <span class="workspace-icon">
                             <img
+
                                 src="<?= e($assetPrefix) ?>assets/regix-mark.svg"
+=======
+                                src="../assets/regix-mark.svg"
                                 alt=""
                                 width="27"
                                 height="27"
@@ -185,7 +208,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
 
                     <nav class="main-nav" aria-label="Account">
 
-                        <a class="nav-link" href="<?= e($assetPrefix) ?>login.php">
+                        <a class="nav-link" href="<?= e($loginPath) ?>">
 
                             <span class="nav-icon" aria-hidden="true">
                                 ↪
@@ -195,7 +218,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
 
                         </a>
 
-                        <a class="nav-link" href="<?= e($assetPrefix) ?>logout.php">
+                        <a class="nav-link" href="<?= e($logoutPath) ?>">
 
                             <span class="nav-icon" aria-hidden="true">
                                 ⇥

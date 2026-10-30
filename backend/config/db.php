@@ -6,11 +6,11 @@ class DB_conn
 
     public static function getConnection(): PDO
     {
-        global $dataBaseValues;
+        global $DB_connValues;
         if (self::$instance === null) {
             try {
-                $dsn = "mysql:host=" . $dataBaseValues['host'] .
-                       ";dbname=" . $dataBaseValues['dbname'] .
+                $dsn = "mysql:host=" . $DB_connValues['host'] .
+                       ";dbname=" . $DB_connValues['dbname'] .
                        ";charset=utf8mb4";
 
                 $options = [
@@ -21,14 +21,14 @@ class DB_conn
 
                 self::$instance = new PDO(
                     $dsn,
-                    $dataBaseValues['username'],
-                    $dataBaseValues['password'],
+                    $DB_connValues['username'],
+                    $DB_connValues['password'],
                     $options
                 );
 
             } catch (PDOException $e) {
                 throw new Exception(
-                    "Database Connection Failed",
+                    "DB_conn Connection Failed",
                     0,
                     $e
                 );
