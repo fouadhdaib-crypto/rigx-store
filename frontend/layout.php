@@ -1,134 +1,400 @@
 <?php
 
-declare(strict_types=1);
+require_once __DIR__ . '/../backend/config/config.php';
 
-require_once __DIR__ . '/../../backend/config/config.php';
-
-function store_icon(string $name): string
+function regix_brand(string $assetPrefix = ''): void
 {
-    $paths = [
-        'search' => '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/>',
-        'arrow' => '<path d="M4 12h16m-6-6 6 6-6 6"/>',
-        'box' => '<path d="m3 7 9-4 9 4v10l-9 4-9-4ZM3 7l9 4 9-4M12 11v10M7 5l10 4"/>',
-        'user' => '<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>',
-        'menu' => '<path d="M4 6h16M4 12h16M4 18h16"/>',
-        'check' => '<path d="m5 12 4 4L19 6"/>',
-    ];
+    ?>
+    <a class="brand" href="index.php" aria-label="REGIX dashboard">
+        <img
+            class="brand-logo"
 
-    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"'
-        . ' stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"'
-        . ' aria-hidden="true">'
-        . ($paths[$name] ?? $paths['box'])
-        . '</svg>';
+            src="<?= e($assetPrefix) ?>assets/regix-logo.svg"
+=======
+            src="../assets/regix-logo.svg"
+            alt="REGIX — Next level shopping"
+            width="220"
+            height="53"
+        >
+    </a>
+    <?php
 }
 
-function store_page_start(
-    string $title = 'Discover your next find',
-    string $search = '',
-    bool $landing = false
-): void {
+// CHANGED: added optional 3rd parameter $extraHead so a page can load its own CSS/fonts/icons inside <head>
+function page_start(string $title, string $active, string $extraHead = ''): void
+{
+    $inAdminDirectory = basename(dirname($_SERVER['SCRIPT_NAME'] ?? '')) === 'admin';
+    $assetPrefix = $inAdminDirectory ? '../' : '';
+    $loginPath = $inAdminDirectory
+        ? '../../backend/auth/login.php'
+        : '../backend/auth/login.php';
+    $logoutPath = $inAdminDirectory
+        ? '../../backend/auth/logout.php'
+        : '../backend/auth/logout.php';
+
+    $links = [
+        ['index.php', 'Overview', 'overview'],
+        ['categories.php', 'Categories', 'categories'],
+        ['products.php', 'Products', 'products'],
+        ['orders.php', 'Orders', 'orders'],
+        ['users.php', 'Customers / Users', 'users'],
+    ];
+
+    $name = admin_name();
+
+    $icons = [
+        'overview' =>
+            '<rect x="3" y="3" width="7" height="7" rx="1"/>
+             <rect x="14" y="3" width="7" height="7" rx="1"/>
+             <rect x="3" y="14" width="7" height="7" rx="1"/>
+             <rect x="14" y="14" width="7" height="7" rx="1"/>',
+
+        'categories' =>
+            '<rect x="3" y="3" width="7" height="7" rx="1"/>
+             <rect x="14" y="3" width="7" height="7" rx="1"/>
+             <rect x="3" y="14" width="7" height="7" rx="1"/>
+             <rect x="14" y="14" width="7" height="7" rx="1"/>',
+
+        'products' =>
+            '<path d="m3 7 9-4 9 4v10l-9 4-9-4Z"/>
+             <path d="m3 7 9 4 9-4M12 11v10"/>',
+
+        'orders' =>
+            '<rect x="5" y="3" width="14" height="18" rx="2"/>
+             <path d="M9 3.5h6"/>
+             <path d="M9 9h6"/>
+             <path d="M9 13h6"/>
+             <path d="M9 17h4"/>',
+
+        'users' =>
+            '<circle cx="9" cy="8" r="3"/>
+             <path d="M3 20v-2a6 6 0 0 1 12 0v2"/>
+             <path d="M16 5a3 3 0 0 1 0 6M18 14a5 5 0 0 1 3 5v1"/>',
+    ];
     ?>
+
     <!doctype html>
     <html lang="en">
 
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1"
+        >
+
         <meta name="theme-color" content="#090a0c">
-        <meta name="description"
-            content="Discover new and pre-loved products at REGIX. Browse categories and find your next everyday essential.">
-        <title>
-            <?= e($title) ?>
-            · REGIX
-        </title>
-        <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-        <link rel="stylesheet" href="../css/store.css">
-        <?php if ($landing): ?>
-            <link rel="stylesheet" href="../css/landing.css">
-            <script src="../js/landing.js" defer></script>
-        <?php endif; ?>
-        <script src="../js/store.js" defer></script>
+        <meta name="color-scheme" content="dark">
+
+        <title><?= e($title) ?> · REGIX Admin</title>
+
+        <link
+            rel="icon"
+            type="image/svg+xml"
+
+            href="<?= e($assetPrefix) ?>assets/favicon.svg"
+        >
+
+       <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/admin.css">
+<link rel="stylesheet" href="<?= e($assetPrefix) ?>css/product_admin_view.css">
+
+
+        <script src="<?= e($assetPrefix) ?>js/admin.js" defer></script>
+            href="../assets/favicon.svg"
+        >
+
+        <link rel="stylesheet" href="../css/admin.css">
+
+        <script src="../js/admin.js" defer></script>
+<script src="<?= e($assetPrefix) ?>js/admin.js" defer></script>
+
+<?= $extraHead ?>
+
     </head>
-    <body<?= $landing ? ' class="gaming-page"' : '' ?>>
-        <a class="skip-link" href="#main-content">
-            Skip to content
-        </a>
-        <div class="announcement">
-            <span>
-                NEW FINDS. MORE POSSIBILITIES.
-            </span>
-            <span>
-                New & pre-loved, all in one place <?= store_icon('arrow') ?>
-            </span>
-        </div>
-        <header class="store-header">
-            <div class="header-main wrap">
-                <a class="store-brand" href="index.php" aria-label="REGIX home">
-                    <img src="../assets/regix-logo.svg" alt="REGIX — Next level shopping" width="180" height="44">
-                </a>
-                <a class="button header-explore" href="index.php#rigs">
-                    Explore builds <?= store_icon('arrow') ?>
-                </a>
-                <a class="account-link" href="../../backend/auth/login.php">
-                    <?= store_icon('user') ?>
-                    <span>
-                        <?= e((string) ($_SESSION['user_name'] ?? 'Sign in')) ?>
-                    </span>
-                </a>
-                <button class="menu-button" type="button" aria-controls="store-nav" aria-expanded="false"
-                    aria-label="Toggle navigation">
-                    <?= store_icon('menu') ?>
-                </button>
-            </div>
-            <nav class="store-nav wrap" id="store-nav" aria-label="Store navigation">
-                <a href="index.php#categories">Categories</a>
-                <a href="index.php#rigs">Featured rigs</a>
-                <a href="index.php#builder">Build planner</a>
-                <span class="nav-note">
-                    <span class="status-dot"></span>
-                    A little discovery goes a long way
-                </span>
-            </nav>
-        </header>
-        <main id="main-content" class="wrap store-main">
-            <?php
+
+    <body>
+
+        <input
+            class="nav-toggle"
+            type="checkbox"
+            id="nav-toggle"
+            aria-label="Open navigation"
+        >
+
+        <div class="app-shell">
+
+            <!-- Sidebar -->
+            <aside class="sidebar" id="sidebar">
+
+                <div class="sidebar-top">
+
+                    <?php regix_brand($assetPrefix); ?>
+
+                    <!-- Workspace Switcher -->
+                    <div class="workspace-switcher">
+
+                        <span class="workspace-icon">
+                            <img
+
+                                src="<?= e($assetPrefix) ?>assets/regix-mark.svg"
+=======
+                                src="../assets/regix-mark.svg"
+                                alt=""
+                                width="27"
+                                height="27"
+                            >
+                        </span>
+
+                        <span class="workspace-copy">
+                            <strong>Regix Store</strong>
+                            <small>Admin workspace</small>
+                        </span>
+
+                        <span class="chevron" aria-hidden="true">
+                            ⌄
+                        </span>
+
+                    </div>
+
+                    <!-- Workspace Navigation -->
+                    <div class="nav-label">
+                        WORKSPACE
+                    </div>
+
+                    <nav class="main-nav" aria-label="Main navigation">
+
+                        <?php foreach ($links as [$file, $label, $icon]): ?>
+
+                            <a
+                                class="nav-link <?= $active === $file ? 'active' : '' ?>"
+                                href="<?= e($file === 'orders.php' && !$inAdminDirectory ? 'admin/orders.php' : $file) ?>"
+                                <?= $active === $file ? 'aria-current="page"' : '' ?>
+                            >
+
+                                <span class="nav-icon" aria-hidden="true">
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <?= $icons[$icon] ?>
+                                    </svg>
+
+                                </span>
+
+                                <span>
+                                    <?= e($label) ?>
+                                </span>
+
+                                <?php if ($active === $file): ?>
+                                    <span class="nav-pip"></span>
+                                <?php endif; ?>
+
+                            </a>
+
+                        <?php endforeach; ?>
+
+                    </nav>
+
+                    <!-- Account Navigation -->
+                    <div class="nav-label tools-label">
+                        ACCOUNT
+                    </div>
+
+                    <nav class="main-nav" aria-label="Account">
+
+                        <a class="nav-link" href="<?= e($loginPath) ?>">
+
+                            <span class="nav-icon" aria-hidden="true">
+                                ↪
+                            </span>
+
+                            <span>Login</span>
+
+                        </a>
+
+                        <a class="nav-link" href="<?= e($logoutPath) ?>">
+
+                            <span class="nav-icon" aria-hidden="true">
+                                ⇥
+                            </span>
+
+                            <span>Sign out</span>
+
+                        </a>
+
+                    </nav>
+
+                </div>
+
+                <!-- Sidebar Bottom -->
+                <div class="sidebar-bottom">
+
+                    <!-- Help Card -->
+                    <div class="help-card">
+
+                        <span class="help-orbit">
+                            ✦
+                        </span>
+
+                        <strong>
+                            Everything in one place
+                        </strong>
+
+                        <p>
+                            Your products, customers and store insights,
+                            together in REGIX.
+                        </p>
+
+                        <a href="index.php" class="text-button">
+                            Explore overview
+                            <span aria-hidden="true">↗</span>
+                        </a>
+
+                    </div>
+
+                    <!-- Admin Profile -->
+                    <div class="profile-mini">
+
+                        <span class="avatar">
+                            <?= e(initials($name)) ?>
+                        </span>
+
+                        <span class="profile-copy">
+
+                            <strong>
+                                <?= e($name) ?>
+                            </strong>
+
+                            <small>
+                                Store Administrator
+                            </small>
+
+                        </span>
+
+                        <span
+                            class="profile-status"
+                            title="Workspace"
+                        ></span>
+
+                    </div>
+
+                </div>
+
+            </aside>
+
+            <!-- Mobile Backdrop -->
+            <label
+                for="nav-toggle"
+                class="mobile-backdrop"
+                aria-label="Close navigation"
+            ></label>
+
+            <!-- Main Content -->
+            <div class="main-content">
+
+                <main class="page-wrap" id="main-content">
+
+    <?php
 }
 
-function store_page_end(): void
+function page_end(): void
 {
     ?>
-        </main>
-        <footer class="store-footer">
-            <div class="wrap footer-inner">
-                <div>
-                    <a class="footer-logo" href="index.php">
-                        REGIX
-                        <span>
-                            .
-                        </span>
-                    </a>
-                    <p>
-                        Next level shopping. Everyday discoveries.
-                    </p>
-                </div>
-                <nav aria-label="Footer navigation">
-                    <a href="index.php#rigs">
-                        Featured builds
-                    </a>
-                    <a href="index.php#categories">
-                        Categories
-                    </a>
-                    <a href="../../backend/auth/login.php">
-                        Your account
-                    </a>
-                </nav>
-                <small>
-                    &copy; <?= date('Y') ?> REGIX
-                </small>
-            </div>
-        </footer>
-        </body>
 
+                </main>
+
+                <!-- Footer -->
+                <footer class="footer">
+
+                    <span class="footer-brand">
+                        REGIX<span class="accent">.</span>
+                    </span>
+
+                    <span>
+                        Next level shopping · Admin dashboard
+                    </span>
+
+                    <span class="footer-right">
+                        Built for better commerce
+                    </span>
+
+                </footer>
+
+            </div>
+
+        </div>
+
+    </body>
     </html>
+
+    <?php
+}
+
+function heading(
+    string $eyebrow,
+    string $title,
+    string $description
+): void {
+    ?>
+
+    <section class="page-heading">
+
+        <!-- Mobile Menu -->
+        <label
+            for="nav-toggle"
+            class="mobile-menu"
+            aria-label="Open navigation"
+        >
+
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+            >
+                <path d="M4 7h16M4 12h16M4 17h16"/>
+            </svg>
+
+        </label>
+
+        <!-- Heading Content -->
+        <div class="heading-copy">
+
+            <div class="eyebrow">
+
+                <span class="eyebrow-line"></span>
+
+                <?= e($eyebrow) ?>
+
+            </div>
+
+            <h1>
+                <?= e($title) ?>
+            </h1>
+
+            <p>
+                <?= e($description) ?>
+            </p>
+
+        </div>
+
+        <!-- Heading Badge -->
+        <span class="heading-chip">
+
+            <span class="heading-chip-dot"></span>
+
+            REGIX / ADMIN
+
+        </span>
+
+    </section>
+
     <?php
 }

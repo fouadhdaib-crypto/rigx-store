@@ -6,7 +6,6 @@ $category = new Categorie();
 
 $imagePath = '../assets/category/';
 $search = trim($_GET['q'] ?? '');
-$page = max(1, (int) ($_GET['page'] ?? 1));
 $error = '';
 $openModalOnLoad = false;
 
@@ -15,6 +14,7 @@ function redirectCategories(string $status): void
     header('Location: categories.php?status=' . urlencode($status));
     exit;
 }
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
@@ -135,24 +135,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$perPage = 10;
-$totalCategories = $category->countCategories($search);
-$totalPages = max(1, (int) ceil($totalCategories / $perPage));
-$page = min($page, $totalPages);
-$categories = $category->getCategoriesPage(
-    $search,
-    $perPage,
-    ($page - 1) * $perPage
-);
-$pageNumbers = array_unique(array_merge(
-    [1, $totalPages],
-    range(max(1, $page - 2), min($totalPages, $page + 2))
-));
-sort($pageNumbers);
+$categories = $category->getAll($search);
 
 page_start('Categories', 'categories.php');
 ?>
 
+<!-- تم اضافة ملف الـ CSS هنا -->
 <link rel="stylesheet" href="../css/categories.css">
 
 <div class="categories-page">
@@ -164,7 +152,7 @@ page_start('Categories', 'categories.php');
             <p>Create and organize collections for your products.</p>
         </div>
 
-        <button type="button" class="add-category-btn primary-button" id="openCategoryModal">
+        <button type="button" class="add-category-btn" id="openCategoryModal">
             <span aria-hidden="true">＋</span>
             Add Category
         </button>
@@ -195,7 +183,7 @@ page_start('Categories', 'categories.php');
     <section class="category-controls">
         <div>
             <h3>All categories</h3>
-            <p><?= $totalCategories ?> categories found</p>
+            <p><?= count($categories) ?> categories found</p>
         </div>
 
         <form method="get" class="category-search">
@@ -228,7 +216,7 @@ page_start('Categories', 'categories.php');
             </p>
 
             <?php if ($search === ''): ?>
-                <button type="button" class="add-category-btn primary-button" id="openCategoryModalEmpty">
+                <button type="button" class="add-category-btn" id="openCategoryModalEmpty">
                     ＋ Create your first category
                 </button>
             <?php endif; ?>
@@ -324,38 +312,6 @@ page_start('Categories', 'categories.php');
             </div>
         </section>
 
-        <?php if ($totalCategories > 0): ?>
-            <div class="category-pagination-bar">
-                <span>
-                    Showing <strong><?= (($page - 1) * $perPage) + 1 ?>–<?= min($page * $perPage, $totalCategories) ?></strong>
-                    of <strong><?= $totalCategories ?></strong> categories
-                </span>
-
-                <?php if ($totalPages > 1): ?>
-                    <nav class="category-pagination" aria-label="Categories pagination">
-                        <?php
-                        $previousNumber = 0;
-                        foreach ($pageNumbers as $number):
-                            if ($number - $previousNumber > 1):
-                                ?>
-                                <span class="category-page-gap" aria-hidden="true">…</span>
-                            <?php endif; ?>
-                            <?php
-                            $query = ['page' => $number];
-                            if ($search !== '') {
-                                $query['q'] = $search;
-                            }
-                            ?>
-                            <a class="category-page-link <?= $number === $page ? 'active' : '' ?>"
-                                href="categories.php?<?= e(http_build_query($query)) ?>"
-                                <?= $number === $page ? 'aria-current="page"' : '' ?>><?= $number ?></a>
-                            <?php $previousNumber = $number; ?>
-                        <?php endforeach; ?>
-                    </nav>
-                <?php endif; ?>
-            </div>
-        <?php endif; ?>
-
     <?php endif; ?>
 </div>
 
@@ -440,7 +396,7 @@ page_start('Categories', 'categories.php');
                     Cancel
                 </button>
 
-                <button type="submit" class="add-category-btn primary-button" id="submitCategory">
+                <button type="submit" class="add-category-btn" id="submitCategory">
                     Create Category <span aria-hidden="true">→</span>
                 </button>
             </div>
