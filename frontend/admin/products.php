@@ -3,14 +3,25 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../backend/config/db.php';
 require_once __DIR__ . '/../../backend/classes/ProductsClass.php';
+require_once __DIR__ . '/../../backend/classes/CategorieClass.php';
 require_once __DIR__ . '/../layout.php';
 
 $productModel = new Product();
+$categoryModel = new Categorie();
 
 $errorMessages = [];
 $successMessage = "";
 $data = [];
 $page = max(1, (int) ($_GET['page'] ?? 1));
+$search = is_string($_GET['search'] ?? null)
+    ? trim($_GET['search'])
+    : '';
+$categoryIdInput = is_string($_GET['category_id'] ?? null)
+    ? $_GET['category_id']
+    : '';
+$categoryId = ctype_digit($categoryIdInput) && (int) $categoryIdInput > 0
+    ? (int) $categoryIdInput
+    : null;
 
 function getFormData () : array {
     $currentImage = trim($_POST['product_img'] ?? '');
@@ -207,11 +218,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+$categories = $categoryModel->getAll();
+$filterParameters = [];
+
+if ($search !== '') {
+    $filterParameters['search'] = $search;
+}
+
+if ($categoryId !== null) {
+    $filterParameters['category_id'] = $categoryId;
+}
+
+$pageUrl = static function (int $targetPage) use ($filterParameters): string {
+    return 'products.php?' . http_build_query(
+        $filterParameters + ['page' => $targetPage]
+    );
+};
+
 $perPage = 10;
-$totalProducts = $productModel->countProducts(false);
+$totalProducts = $productModel->countProducts(
+    false,
+    $search,
+    $categoryId
+);
 $totalPages = max(1, (int) ceil($totalProducts / $perPage));
 $page = min($page, $totalPages);
-$products = $productModel->getProductsPage($perPage, ($page - 1) * $perPage, false);
+$products = $productModel->getProductsPage(
+    $perPage,
+    ($page - 1) * $perPage,
+    false,
+    $search,
+    $categoryId
+);
 
 $pageNumbers = array_unique(array_merge([1, $totalPages], range(max(1, $page - 2), min($totalPages, $page + 2))));
 sort($pageNumbers);
@@ -224,6 +262,30 @@ heading('Catalog', 'Products', 'Create, update and manage every product listed i
 
 <div class="toolbar">
     <span class="demo-label"><?= $totalProducts ?> products in total</span>
+    <form class="product-filters" action="products.php" method="get">
+        <label class="visually-hidden" for="product-search">Search products</label>
+        <input
+            type="search"
+            id="product-search"
+            name="search"
+            value="<?= htmlspecialchars($search, ENT_QUOTES, 'UTF-8') ?>"
+            placeholder="Search products..."
+        >
+        <label class="visually-hidden" for="product-category-filter">Filter by category</label>
+        <select id="product-category-filter" name="category_id">
+            <option value="">All categories</option>
+            <?php foreach ($categories as $category): ?>
+                <option
+                    value="<?= (int) $category['id'] ?>"
+                    <?= $categoryId === (int) $category['id'] ? 'selected' : '' ?>
+                ><?= htmlspecialchars((string) $category['name'], ENT_QUOTES, 'UTF-8') ?></option>
+            <?php endforeach; ?>
+        </select>
+        <button type="submit" class="primary-button">Search</button>
+        <?php if ($search !== '' || $categoryId !== null): ?>
+            <a class="product-filter-reset" href="products.php">Clear</a>
+        <?php endif; ?>
+    </form>
     <button type="button" id="add-product-btn" class="primary-button">
         <span aria-hidden="true">+</span> Add product
     </button>
@@ -241,7 +303,7 @@ heading('Catalog', 'Products', 'Create, update and manage every product listed i
 
 <div class="modal-overlay<?= !empty($data) ? ' open' : '' ?>" id="product-modal">
 
-<form action="products.php?page=<?= $page ?>" method="POST" enctype="multipart/form-data" class="add-product-form">
+<form action="<?= htmlspecialchars($pageUrl($page), ENT_QUOTES, 'UTF-8') ?>" method="POST" enctype="multipart/form-data" class="add-product-form">
 
     <div class="form-header">
         <h2><?= isset($data['id']) ? 'Update product' : 'Add product'; ?></h2>
@@ -408,7 +470,7 @@ heading('Catalog', 'Products', 'Create, update and manage every product listed i
                             <td><?= htmlspecialchars((string)($product['deleted_at'] ?? 'Active')) ?></td>
                             <td>
                                 <div class="row-actions">
-                                    <form action="products.php?page=<?= $page ?>" method="POST">
+                                    <form action="<?= htmlspecialchars($pageUrl($page), ENT_QUOTES, 'UTF-8') ?>" method="POST">
                                         <input type="hidden" name="productId" value="<?= (int) $product['id']; ?>">
                                         <button type="submit" name="updateAction" class="btn-small">
                                             Update
@@ -416,14 +478,14 @@ heading('Catalog', 'Products', 'Create, update and manage every product listed i
                                     </form>
 
                                     <?php if ($product['deleted_at'] === null): ?>
-                                        <form action="products.php?page=<?= $page ?>" method="POST">
+                                        <form action="<?= htmlspecialchars($pageUrl($page), ENT_QUOTES, 'UTF-8') ?>" method="POST">
                                             <input type="hidden" name="productId" value="<?= (int) $product['id']; ?>">
                                             <button type="submit" name="action" value="delete" class="btn-small btn-danger">
                                                 Delete
                                             </button>
                                         </form>
                                     <?php else : ?>
-                                        <form action="products.php?page=<?= $page ?>" method="POST">
+                                        <form action="<?= htmlspecialchars($pageUrl($page), ENT_QUOTES, 'UTF-8') ?>" method="POST">
                                             <input type="hidden" name="productId" value="<?= (int) $product['id']; ?>">
                                             <button type="submit" name="action" value="reactivate" class="btn-small btn-success">
                                                 Reactivate
@@ -452,7 +514,7 @@ heading('Catalog', 'Products', 'Create, update and manage every product listed i
                 <nav class="pagination" aria-label="Products pagination">
 
                     <?php if ($page > 1): ?>
-                        <a class="page-link page-arrow" href="products.php?page=<?= $page - 1 ?>"><span aria-hidden="true">‹</span> Previous</a>
+                        <a class="page-link page-arrow" href="<?= htmlspecialchars($pageUrl($page - 1), ENT_QUOTES, 'UTF-8') ?>"><span aria-hidden="true">‹</span> Previous</a>
                     <?php else : ?>
                         <span class="page-link page-arrow disabled"><span aria-hidden="true">‹</span> Previous</span>
                     <?php endif; ?>
@@ -463,13 +525,13 @@ heading('Catalog', 'Products', 'Create, update and manage every product listed i
                             <span class="page-gap">…</span>
                         <?php endif; ?>
                         <a class="page-link <?= $number === $page ? 'active' : '' ?>"
-                        href="products.php?page=<?= $number ?>"
+                        href="<?= htmlspecialchars($pageUrl($number), ENT_QUOTES, 'UTF-8') ?>"
                         <?= $number === $page ? 'aria-current="page"' : '' ?>><?= $number ?></a>
                         <?php $previousNumber = $number; ?>
                     <?php endforeach; ?>
 
                     <?php if ($page < $totalPages): ?>
-                        <a class="page-link page-arrow" href="products.php?page=<?= $page + 1 ?>">Next <span aria-hidden="true">›</span></a>
+                        <a class="page-link page-arrow" href="<?= htmlspecialchars($pageUrl($page + 1), ENT_QUOTES, 'UTF-8') ?>">Next <span aria-hidden="true">›</span></a>
                     <?php else : ?>
                         <span class="page-link page-arrow disabled">Next <span aria-hidden="true">›</span></span>
                     <?php endif; ?>
