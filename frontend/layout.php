@@ -90,23 +90,14 @@ function page_start(string $title, string $active, string $extraHead = ''): void
         <link rel="icon" type="image/svg+xml" href="<?= e($assetPrefix) ?>assets/favicon.svg">
 
         <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/admin.css">
-        <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/product_admin_view.css">
-
-
-        <script src="<?= e($assetPrefix) ?>js/admin.js" defer></script>
-        href="../assets/favicon.svg"
-        >
-
-        <link rel="stylesheet" href="../css/admin.css">
-
-        <script src="../js/admin.js" defer></script>
         <script src="<?= e($assetPrefix) ?>js/admin.js" defer></script>
 
         <?= $extraHead ?>
+        <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/admin-unified.css?v=<?= filemtime(__DIR__ . '/css/admin-unified.css') ?>">
 
     </head>
 
-    <body>
+    <body data-admin-page="<?= e(pathinfo($active, PATHINFO_FILENAME)) ?>" class="<?= in_array($active, ['products.php', 'categories.php', 'users.php'], true) ? 'admin-management' : 'admin-dashboard' ?>">
 
         <input class="nav-toggle" type="checkbox" id="nav-toggle" aria-label="Open navigation">
 
@@ -123,7 +114,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
                     <div class="workspace-switcher">
 
                         <span class="workspace-icon">
-                            <img src="<?= e($assetPrefix) ?>assets/regix-mark.svg" src="../assets/regix-mark.svg" alt=""
+                            <img src="<?= e($assetPrefix) ?>assets/regix-mark.svg" alt=""
                                 width="27" height="27">
                         </span>
 

@@ -109,7 +109,7 @@ $extraHead = '
 
 page_start('Users', 'users.php', $extraHead);
 
-heading('Customers / Users', 'User Management', 'Manage customers and admins, their status and spending.');
+heading('STORE MANAGEMENT', 'Customers & users', 'Manage customers and admins, their status and spending.');
 ?>
 
     <section class="metrics-grid">
@@ -158,6 +158,7 @@ heading('Customers / Users', 'User Management', 'Manage customers and admins, th
       <div id="pageMessage" class="form-message"></div>
 
       <div class="table-header-actions">
+        <div class="management-panel-title"><h2>All users</h2><p>Review accounts, permissions, and customer activity.</p></div>
         <!-- Top Row: Search & Add User Button -->
         <div class="top-controls-row">
           <div class="search-box">
@@ -199,6 +200,7 @@ heading('Customers / Users', 'User Management', 'Manage customers and admins, th
       </div>
 
 
+      <div class="users-table-scroll">
       <table class="data-table" id="usersTable">
         <thead>
           <tr>
@@ -255,6 +257,7 @@ heading('Customers / Users', 'User Management', 'Manage customers and admins, th
           <?php endforeach; ?>
         </tbody>
       </table>
+      </div>
 
     </section>
 

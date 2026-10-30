@@ -111,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <a class="checkout-brand" href="index.php" aria-label="REGIX Store home">
                 <img src="../assets/regix-logo.svg" alt="REGIX Store" width="220" height="53">
             </a>
-            <a class="back-link" href="user_categories.php"><span aria-hidden="true">←</span> Continue shopping</a>
+            <a class="back-link" href="index.php#categories"><span aria-hidden="true">←</span> Continue shopping</a>
         </div>
     </header>
 
@@ -175,7 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <strong>Cash on delivery order placed</strong>
                             <span>Order <?= htmlspecialchars($cashOnDeliveryConfirmation['order_number'], ENT_QUOTES, 'UTF-8') ?></span>
                             Total due on delivery: $<?= number_format((float) $cashOnDeliveryConfirmation['subtotal'], 2) ?>
-                            <a href="user_categories.php">Continue shopping</a>
+                            <a href="index.php#categories">Continue shopping</a>
                         </div>
                     <?php else: ?>
                         <form method="post" action="checkout.php" id="paymentForm">

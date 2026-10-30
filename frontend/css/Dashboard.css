@@ -100,6 +100,43 @@
   padding: 8px 13px;
 }
 
+.period-form #refreshButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 100px;
+  min-height: 39px;
+  padding: 8px 15px;
+  border: 1px solid #333c4d;
+  border-radius: 10px;
+  background: #1a1d24;
+  color: #cbd5e1;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+
+.period-form #refreshButton:hover:not(:disabled) {
+  border-color: #526a35;
+  background: #1e251b;
+  color: #a3e635;
+}
+
+.period-form #refreshButton:focus-visible {
+  outline: 2px solid #a3e635;
+  outline-offset: 3px;
+}
+
+.period-form #refreshButton:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
 /* ========================================================================== 
    10. DASHBOARD ERROR & LOADING STATES
    ========================================================================== */

@@ -18,7 +18,7 @@
             <a class="payment-brand" href="index.php" aria-label="REGIX Store home">
                 <img src="../assets/regix-logo.svg" alt="REGIX Store" width="220" height="53">
             </a>
-            <a class="payment-brand-link" href="user_categories.php">Continue shopping</a>
+            <a class="payment-brand-link" href="index.php#categories">Continue shopping</a>
         </div>
     </header>
 
@@ -30,7 +30,7 @@
             <p>No payment was completed. You can return to checkout to try again, or continue browsing the store.</p>
             <div class="payment-actions">
                 <a class="payment-link primary" href="checkout.php">Return to checkout</a>
-                <a class="payment-link" href="user_categories.php">Continue shopping</a>
+                <a class="payment-link" href="index.php#categories">Continue shopping</a>
             </div>
         </section>
     </main>

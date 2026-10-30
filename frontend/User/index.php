@@ -184,10 +184,11 @@ store_page_start('Level up your setup', '', true);
                 </span>
             </h2>
         </div>
-        <a class="gaming-text-link" href="#categories">
+        <a class="gaming-text-link" href="#categories" data-clear-category-search>
             All categories <?= store_icon('arrow') ?>
         </a>
     </div>
+    <p class="landing-category-feedback" id="landing-category-feedback" role="status" hidden></p>
     <div class="hardware-categories">
         <?php foreach ($categories as [$name, $description, $symbol, $query]): ?>
             <a class="hardware-category" href="#builder">
