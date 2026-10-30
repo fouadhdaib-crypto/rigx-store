@@ -17,7 +17,8 @@ function regix_brand(string $assetPrefix = ''): void
     <?php
 }
 
-function page_start(string $title, string $active): void
+// CHANGED: added optional 3rd parameter $extraHead so a page can load its own CSS/fonts/icons inside <head>
+function page_start(string $title, string $active, string $extraHead = ''): void
 {
     $inAdminDirectory = basename(dirname($_SERVER['SCRIPT_NAME'] ?? '')) === 'admin';
     $assetPrefix = $inAdminDirectory ? '../' : '';
@@ -88,6 +89,8 @@ function page_start(string $title, string $active): void
         <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/admin.css">
 
         <script src="<?= e($assetPrefix) ?>js/admin.js" defer></script>
+
+        <?= $extraHead /* CHANGED: page-specific <head> tags (trusted markup passed by the page itself) */ ?>
     </head>
 
     <body>
