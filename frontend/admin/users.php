@@ -1,6 +1,6 @@
 <?php
+require_once __DIR__ . '/../../backend/classes/UsersClass.php';   
 
-require_once __DIR__ . '/../../backend/classes/UsersClass.php';
 $usersObj = new UsersClass();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success' => $ok, 'message' => $msg]);
         exit;
     };
-    
+
     try {
         switch ($action) {
             case 'add':
@@ -32,8 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!in_array($role, $allowedRoles, true) || !in_array($status, $allowedStatuses, true)) {
                     $respond(false, 'Invalid role or status.');
                 }
-                if (strlen($password) < 6) {
-                    $respond(false, 'Password must be at least 6 characters.');
+                if (strlen($password) < 8) {
+                    $respond(false, 'Password must be at least 8 characters.');
                 }
                 if ($password !== $confirm) {
                     $respond(false, 'Passwords do not match!');
@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $respond($ok, $ok ? 'User added.' : 'Could not add user.');
                 break;
 
-                 case 'update':
+            case 'update':
                 if ($id <= 0 || $name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     $respond(false, 'Please enter a valid name and email.');
                 }
@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $respond($ok, $ok ? 'User updated.' : 'Could not update user.');
                 break;
 
-                case 'status':
+            case 'status':
                 if ($id <= 0 || !in_array($status, $allowedStatuses, true)) {
                     $respond(false, 'Invalid request.');
                 }
@@ -82,18 +82,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ok = $usersObj->deleteUser($id);
                 $respond($ok, $ok ? 'User deleted.' : 'User not found.');
                 break;
-                
+
             default:
                 $respond(false, 'Unknown action.');
-                }
-    }
-    catch (Throwable $e) {
+        }
+    } catch (Throwable $e) {
         $respond(false, 'Server error, please try again.');
     }
 }
+
+
+$users = $usersObj->getAllUsers();
+$stats = $usersObj->getStats();
+$growth = $stats['revenue_growth'];
 ?>
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
