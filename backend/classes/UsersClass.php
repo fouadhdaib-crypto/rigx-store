@@ -34,5 +34,46 @@ public function register($name, $email, $password, $role) {
         );
         return $stmt->execute([$name, $email, $hash, strtolower($role), strtolower($status)]);
     }
+ public function emailExists(string $email, int $excludeId = 0): bool
+    {
+        $dbh  = DB_conn::getConnection();
+        $stmt = $dbh->prepare("SELECT COUNT(*) FROM users WHERE email = ? AND id <> ?");
+        $stmt->execute([$email, $excludeId]);
+        return (int)$stmt->fetchColumn() > 0;
+    }
+
+     public function updateUser(int $id, string $name, string $email, string $role, string $status, string $password = ''): bool
+    {
+        $dbh = DB_conn::getConnection();
+        if ($password !== '') {
+            $stmt = $dbh->prepare(
+                "UPDATE users
+                 SET name = ?, email = ?, role = ?, status = ?, password_hash = ?
+                 WHERE id = ? AND deleted_at IS NULL"
+            );
+            return $stmt->execute([
+                $name, $email, strtolower($role), strtolower($status),
+                password_hash($password, PASSWORD_DEFAULT), $id
+            ]);
+        }
+        $stmt = $dbh->prepare(
+            "UPDATE users
+             SET name = ?, email = ?, role = ?, status = ?
+             WHERE id = ? AND deleted_at IS NULL"
+        );
+        return $stmt->execute([$name, $email, strtolower($role), strtolower($status), $id]);
+    }
+      public function updateStatus(int $id, string $status): bool
+    {
+        $dbh  = DB_conn::getConnection();
+        $stmt = $dbh->prepare("UPDATE users SET status = ? WHERE id = ? AND deleted_at IS NULL");
+        return $stmt->execute([strtolower($status), $id]);
+    }
+     public function deleteUser(int $id): bool
+    {
+        $dbh  = DB_conn::getConnection();
+        $stmt = $dbh->prepare("UPDATE users SET deleted_at = NOW() WHERE id = ? AND deleted_at IS NULL");
+        return $stmt->execute([$id]) && $stmt->rowCount() > 0;
+    }
 
 }
