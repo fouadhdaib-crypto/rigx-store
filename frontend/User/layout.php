@@ -119,6 +119,7 @@ function store_page_start(
                 </a>
                 <nav class="store-nav" id="store-nav" aria-label="Store navigation">
                 <a class="store-home-link" href="index.php" <?= basename($_SERVER['SCRIPT_NAME'] ?? '') === 'index.php' ? 'aria-current="page"' : '' ?>>Home</a>
+                <a href="store.php" <?= basename($_SERVER['SCRIPT_NAME'] ?? '') === 'store.php' ? 'aria-current="page"' : '' ?>>Store</a>
                 <a href="index.php#categories">Categories</a>
                 <a href="index.php#rigs">Featured rigs</a>
                 <a href="index.php#builder">Build planner</a>
