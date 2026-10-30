@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['login_btn'])) {
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Invalid email address';
     } else {
-        $db = new DB_con();
+        $db = new DB_conn();
         $user = $db->login($email, $password);
         if ($user) {
                 session_start();
