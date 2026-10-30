@@ -101,6 +101,11 @@ function store_page_start(
         <?php endif; ?>
         <link rel="stylesheet" href="../css/storefront.css?v=<?= filemtime(__DIR__ . '/../css/storefront.css') ?>">
         <link rel="stylesheet" href="../css/typography.css?v=<?= filemtime(__DIR__ . '/../css/typography.css') ?>">
+        <?php if ($landing): ?>
+            <link href="https://fonts.googleapis.com/css2?family=Anton&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+            <link rel="stylesheet" href="../css/cinematic.css?v=<?= filemtime(__DIR__ . '/../css/cinematic.css') ?>">
+            <script src="../js/cinematic.js?v=<?= filemtime(__DIR__ . '/../js/cinematic.js') ?>" defer></script>
+        <?php endif; ?>
         <script src="../js/store.js?v=<?= filemtime(__DIR__ . '/../js/store.js') ?>" defer></script>
     </head>
     <body<?= $landing ? ' class="gaming-page"' : '' ?>>
