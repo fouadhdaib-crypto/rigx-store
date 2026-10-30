@@ -95,49 +95,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $users = $usersObj->getAllUsers();
 $stats = $usersObj->getStats();
 $growth = $stats['revenue_growth'];
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>User Management - Admin Dashboard</title>
-  
+
+require_once __DIR__ . '/../layout.php';   
+
+$extraHead = '
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link  rel="stylesheet" href="../css/admin-users.css">
-  <style>
-    .form-message {
-      display: none;
-      background-color: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      color: var(--color-error);
-      padding: 0.65rem 1rem;
-      border-radius: var(--radius-md);
-      font-size: 0.85rem;
-      font-weight: 600;
-      margin-top: 1rem;
-    }
-    .form-message.show { display: block; }
-    #pageMessage { margin: 0 0 1rem 0; }
-  </style>
-</head>
-<body>
+  <link rel="stylesheet" href="../css/admin-users.css">
+';
 
-  <aside class="admin-sidebar">
-   
 
-  </aside>
+page_start('Users', 'users.php', $extraHead);
 
-  
-  <main class="admin-main">
-    
-    <header class="top-bar">
-      
-    </header>
-
+heading('Customers / Users', 'User Management', 'Manage customers and admins, their status and spending.');
+?>
 
     <section class="metrics-grid">
       <div class="metric-card">
@@ -285,7 +258,7 @@ $growth = $stats['revenue_growth'];
 
     </section>
 
-  </main>
+
 
 
   <div id="addUserModal" class="modal-overlay">
@@ -591,5 +564,4 @@ $growth = $stats['revenue_growth'];
     }
   </script>
 
-</body>
-</html>
+<?php page_end();  ?>
