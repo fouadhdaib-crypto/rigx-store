@@ -9,9 +9,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (periodPicker?.open) { periodPicker.open = false; periodPicker.querySelector('summary')?.focus(); }
     }
   });
+
+
+
+
+
   document.addEventListener('click', (event) => {
     if (periodPicker?.open && !periodPicker.contains(event.target)) periodPicker.open = false;
   });
+
+
+  
   document.querySelectorAll('.sidebar a').forEach(link => {
     link.addEventListener('click', () => { toggle.checked = false; });
   });
