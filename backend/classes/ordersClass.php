@@ -122,21 +122,63 @@ class Order
         return $summary;
     }
 
+
     public function findAllForAdmin(): array
     {
-        return $this->db->query(
-            "SELECT o.*, u.name AS customer_name, u.email,
-                    COALESCE(i.item_count, 0) AS item_count,
-                    COALESCE(p.payment_status, 'pending') AS payment_status,
-                    COALESCE(p.payment_method, 'not_recorded') AS payment_method
-             FROM orders o
-             LEFT JOIN users u ON u.id = o.user_id
-             LEFT JOIN (SELECT order_id, SUM(quantity) AS item_count
-                        FROM order_items GROUP BY order_id) i ON i.order_id = o.id
-             LEFT JOIN payments p ON p.order_id = o.id AND p.deleted_at IS NULL
-             WHERE o.deleted_at IS NULL ORDER BY o.id DESC"
-        )->fetchAll(PDO::FETCH_ASSOC);
+        $sql = "
+        SELECT
+            o.*,
+            u.name AS customer_name,
+            u.email,
+
+            COALESCE(i.item_count, 0) AS item_count,
+
+            COALESCE(
+                (
+                    SELECT pay.payment_status
+                    FROM payments pay
+                    WHERE pay.cart_id = o.cart_id
+                      AND pay.deleted_at IS NULL
+                    ORDER BY pay.created_at DESC, pay.id DESC
+                    LIMIT 1
+                ),
+                'pending'
+            ) AS payment_status,
+
+            COALESCE(
+                (
+                    SELECT pay.payment_method
+                    FROM payments pay
+                    WHERE pay.cart_id = o.cart_id
+                      AND pay.deleted_at IS NULL
+                    ORDER BY pay.created_at DESC, pay.id DESC
+                    LIMIT 1
+                ),
+                'not_recorded'
+            ) AS payment_method
+
+        FROM orders o
+
+        LEFT JOIN users u
+            ON u.id = o.user_id
+
+        LEFT JOIN (
+            SELECT
+                order_id,
+                SUM(quantity) AS item_count
+            FROM order_items
+            GROUP BY order_id
+        ) i
+            ON i.order_id = o.id
+
+        WHERE o.deleted_at IS NULL
+
+        ORDER BY o.id DESC
+    ";
+
+        return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
+
 
     public function findByUserId(int $userId): array
     {
@@ -179,8 +221,10 @@ class Order
 
     public function updateStatuses(int $id, string $status, string $paymentStatus): bool
     {
-        if (!in_array($status, ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'], true)
-            || !in_array($paymentStatus, ['pending', 'authorized', 'paid', 'failed', 'refunded'], true)) {
+        if (
+            !in_array($status, ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'], true)
+            || !in_array($paymentStatus, ['pending', 'authorized', 'paid', 'failed', 'refunded'], true)
+        ) {
             throw new InvalidArgumentException('Invalid order or payment status.');
         }
 
