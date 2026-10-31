@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 require_once __DIR__ . '/layout.php';
+require_once __DIR__ . '/product_images.php';
 require_once __DIR__ . '/../../backend/config/db.php';
 
 $db = DB_conn::getConnection();
@@ -112,15 +113,16 @@ store_page_start('Next level. No limits.', '', true);
             <?php foreach ($products as $product): ?>
                             <?php
                             $image = (string) ($product['product_img'] ?? '');
-                            $imageIsValid = preg_match('#\Aassets/products/[A-Za-z0-9._-]+\z#', $image) === 1;
+                            $imageIsValid = preg_match('#\Aassets/products/[A-Za-z0-9._-]+\z#', $image) === 1
+                                && is_file(__DIR__ . '/../' . $image);
+                            $fallbackImage = store_category_default_image((string) $product['category_name']);
                             ?>
                             <article class="landing-product-card">
                                 <div class="landing-product-image">
-                                    <?php if ($imageIsValid): ?>
-                                        <img src="../<?= e($image) ?>" alt="<?= e($product['name']) ?>" loading="lazy" width="480" height="320">
-                                    <?php else: ?>
-                                        <div class="featured-image-placeholder"><?= store_icon('box') ?><small><?= e($product['category_name']) ?></small></div>
-                                    <?php endif; ?>
+                                    <img src="../<?= e($imageIsValid ? $image : $fallbackImage) ?>"
+                                        data-category-fallback="../<?= e($fallbackImage) ?>"
+                                        alt="<?= e($imageIsValid ? (string) $product['name'] : (string) $product['category_name'] . ' — category illustration') ?>"
+                                        loading="lazy" width="480" height="320">
                                     <span><?= e(strtoupper((string) $product['condition_type'])) ?></span>
                                 </div>
                                 <div class="landing-product-copy">

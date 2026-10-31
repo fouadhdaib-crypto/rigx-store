@@ -120,13 +120,11 @@ function store_page_start(
         <?php if ($landing): ?>
             <script src="../js/cinematic.js?v=<?= filemtime(__DIR__ . '/../js/cinematic.js') ?>" defer></script>
         <?php endif; ?>
+        <link rel="stylesheet" href="../css/store-cart.css?v=<?= filemtime(__DIR__ . '/../css/store-cart.css') ?>">
         <script src="../js/store.js?v=<?= filemtime(__DIR__ . '/../js/store.js') ?>" defer></script>
     </head>
     <body<?= $landing ? ' class="gaming-page"' : ($isStorePage ? ' class="gaming-page store-page"' : ($isProfilePage ? ' class="gaming-page profile-page"' : ($isBuilderPage ? ' class="gaming-page builder-page"' : ''))) ?>>
         <div class="store-ambient" aria-hidden="true"><span class="ambient-glow ambient-glow-one"></span><span class="ambient-glow ambient-glow-two"></span><span class="ambient-grid"></span><span class="ambient-stars"></span></div>
-        <a class="skip-link" href="#main-content">
-            Skip to content
-        </a>
         <div class="announcement">
             <span>
                 NEXT LEVEL HARDWARE. EVERYDAY POSSIBILITIES.

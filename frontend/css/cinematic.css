@@ -334,3 +334,35 @@ body.gaming-page { margin: 0; }
 .landing-category-browser .landing-product-heading { padding-bottom: 12px; }
 .landing-category-browser .landing-product-heading h3 { margin: 8px 0 0; }
 .landing-category-browser .landing-product-category[hidden] { display: none; }
+
+/* A more visible REGIX brand across the public header. */
+body .store-header .store-brand { flex-shrink: 0; }
+body .store-header .store-brand img { display: block; width: 180px; height: auto; }
+@media (min-width: 901px) and (max-width: 1100px) {
+ body .store-header .store-brand img { width: 155px; }
+ body .store-header .header-main { gap: 14px; }
+ body .store-header .store-nav { gap: 13px; }
+}
+@media (max-width: 700px) { body .store-header .store-brand img { width: 145px; } }
+@media (max-width: 380px) { body .store-header .store-brand img { width: 128px; } }
+
+/* Explicit link colors prevent browser visited-link purple in the campaign footer. */
+.gaming-page .campaign-contact-link:link,
+.gaming-page .campaign-contact-link:visited { color: #f3f1ea; }
+.gaming-page .campaign-contact-link:hover,
+.gaming-page .campaign-contact-link:focus-visible { color: #a3e635; }
+.gaming-page .store-footer { border-top: 1px solid #ffffff18; }
+.gaming-page .store-footer .footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 28px; margin-inline: auto; padding-block: 28px; }
+.gaming-page .store-footer .footer-logo { display: inline-flex; align-items: baseline; gap: 2px; color: #f3f1ea; font-size: 32px; }
+.gaming-page .store-footer .footer-logo span { color: #a3e635; }
+.gaming-page .store-footer p { margin: 10px 0 0; color: #929d8e; font-size: 11px; line-height: 1.7; }
+.gaming-page .store-footer nav { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 24px; }
+.gaming-page .store-footer nav a { color: #a6b29f; font-size: 12px; transition: color .18s; }
+.gaming-page .store-footer nav a:hover,
+.gaming-page .store-footer nav a:focus-visible { color: #a3e635; }
+.gaming-page .store-footer small { color: #7d8b77; font-size: 10px; white-space: nowrap; }
+@media (max-width: 650px) {
+ .gaming-page .store-footer .footer-inner { align-items: flex-start; flex-direction: column; gap: 20px; padding-block: 25px; }
+ .gaming-page .store-footer nav { gap: 12px 20px; }
+}
+@media (prefers-reduced-motion: reduce) { .gaming-page .store-footer nav a { transition: none; } }

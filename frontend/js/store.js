@@ -106,6 +106,19 @@ if (initialCategoryQuery) filterLandingCategories(initialCategoryQuery);
 
 const storeFilterForm = document.querySelector('.store-catalog-filters');
 
+// Replace an unreadable product photo once, without retrying a failed fallback.
+document.querySelectorAll('img[data-category-fallback]').forEach((image) => {
+    const useCategoryImage = () => {
+        if (!image.dataset.categoryFallback) return;
+        const fallback = image.dataset.categoryFallback;
+        delete image.dataset.categoryFallback;
+        image.src = fallback;
+        image.alt = 'Category illustration';
+    };
+    image.addEventListener('error', useCategoryImage, { once: true });
+    if (image.complete && image.naturalWidth === 0) useCategoryImage();
+});
+
 if (storeFilterForm) {
     const storeSearch = document.getElementById('store-search');
     const storeCategory = document.getElementById('store-category');
