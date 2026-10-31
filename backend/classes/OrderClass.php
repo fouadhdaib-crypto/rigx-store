@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/PaymentCurrency.php';
 
 class OrderClass
 {
@@ -109,10 +110,11 @@ class OrderClass
             }
 
             $paymentStatement = $this->db->prepare(
-                'INSERT INTO payments (cart_id, payment_method, amount_jod, payment_status)
-                 VALUES (?, ?, ?, ?)'
+                'INSERT INTO payments (order_id, cart_id, payment_method, amount_jod, payment_status)
+                 VALUES (?, ?, ?, ?, ?)'
             );
             $paymentStatement->execute([
+                $orderId,
                 $cartId,
                 $paymentMethod,
                 $total,
@@ -238,26 +240,29 @@ class OrderClass
             $cartId = (int) $order['cart_id'];
 
             $statement = $this->db->prepare(
-                "SELECT payment_status FROM payments
-                 WHERE cart_id = ? AND payment_method = 'card' AND deleted_at IS NULL
-                 ORDER BY id DESC LIMIT 1 FOR UPDATE"
+                "SELECT id, payment_status FROM payments
+                 WHERE order_id = ? AND payment_method = 'card' AND deleted_at IS NULL
+                 LIMIT 1 FOR UPDATE"
             );
-            $statement->execute([$cartId]);
-            $paymentStatus = $statement->fetchColumn();
-            if ($paymentStatus === 'paid') {
+            $statement->execute([$orderId]);
+            $payment = $statement->fetch(PDO::FETCH_ASSOC);
+            if (!$payment) {
+                throw new RuntimeException('The payment record could not be found.');
+            }
+            if ($payment['payment_status'] === 'paid') {
                 $this->db->commit();
                 return;
             }
-            if ($paymentStatus === false) {
-                throw new RuntimeException('The payment record could not be found.');
+            if ($order['status'] === 'cancelled') {
+                $this->db->commit();
+                return;
             }
 
             $statement = $this->db->prepare(
                 "UPDATE payments SET payment_status = 'failed'
-                 WHERE cart_id = ? AND payment_method = 'card'
-                   AND payment_status = 'pending' AND deleted_at IS NULL"
+                 WHERE id = ? AND payment_status = 'pending' AND deleted_at IS NULL"
             );
-            $statement->execute([$cartId]);
+            $statement->execute([(int) $payment['id']]);
             $statement = $this->db->prepare(
                 "UPDATE orders SET status = 'cancelled'
                  WHERE id = ? AND status = 'pending' AND deleted_at IS NULL"
@@ -282,17 +287,22 @@ class OrderClass
 
     public function confirmStripePayment(int $orderId, int $amountMinor, string $currency): bool
     {
-        if ($orderId < 1 || strtolower($currency) !== 'jod') {
+        if ($orderId < 1 || strtolower($currency) !== PaymentCurrency::STRIPE_CURRENCY) {
             return false;
         }
 
         $this->db->beginTransaction();
         try {
             $statement = $this->db->prepare(
-                "SELECT o.cart_id, o.total_jod, o.status AS order_status,
+                "SELECT o.id, o.cart_id, o.status AS order_status,
+                        (
+                            SELECT COALESCE(SUM(ROUND(oi.unit_price_jod * " . PaymentCurrency::USD_CENTS_PER_JOD . ") * oi.quantity), 0)
+                            FROM order_items oi
+                            WHERE oi.order_id = o.id
+                        ) AS expected_amount_minor,
                         p.id AS payment_id, p.payment_status
                  FROM orders o
-                 JOIN payments p ON p.cart_id = o.cart_id
+                 JOIN payments p ON p.order_id = o.id
                  WHERE o.id = ? AND o.deleted_at IS NULL
                    AND p.payment_method = 'card' AND p.deleted_at IS NULL
                  ORDER BY p.id DESC LIMIT 1
@@ -303,7 +313,7 @@ class OrderClass
             if (
                 !$order ||
                 $order['order_status'] === 'cancelled' ||
-                (int) round((float) $order['total_jod'] * 1000) !== $amountMinor
+                (int) $order['expected_amount_minor'] !== $amountMinor
             ) {
                 $this->db->rollBack();
                 return false;

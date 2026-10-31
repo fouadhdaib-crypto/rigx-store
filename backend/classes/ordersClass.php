@@ -133,11 +133,7 @@ class Order
              LEFT JOIN users u ON u.id = o.user_id
              LEFT JOIN (SELECT order_id, SUM(quantity) AS item_count
                         FROM order_items GROUP BY order_id) i ON i.order_id = o.id
-             LEFT JOIN payments p ON p.id = (
-                 SELECT latest.id FROM payments latest
-                 WHERE latest.cart_id = o.cart_id AND latest.deleted_at IS NULL
-                 ORDER BY latest.created_at DESC, latest.id DESC LIMIT 1
-             )
+             LEFT JOIN payments p ON p.order_id = o.id AND p.deleted_at IS NULL
              WHERE o.deleted_at IS NULL ORDER BY o.id DESC"
         )->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -205,10 +201,10 @@ class Order
             }
 
             $payment = $this->db->prepare(
-                'SELECT id FROM payments WHERE cart_id = ? AND deleted_at IS NULL
-                 ORDER BY created_at DESC, id DESC LIMIT 1 FOR UPDATE'
+                'SELECT id FROM payments WHERE order_id = ? AND deleted_at IS NULL
+                 LIMIT 1 FOR UPDATE'
             );
-            $payment->execute([$order['cart_id']]);
+            $payment->execute([$id]);
             $paymentId = $payment->fetchColumn();
             if (!$paymentId && $paymentStatus !== 'pending') {
                 throw new InvalidArgumentException('This order has no payment record. Keep payment status Pending.');
@@ -264,7 +260,7 @@ class Order
 
         try {
             $statement = $this->db->prepare(
-                'SELECT status, cart_id FROM orders
+                'SELECT id, status, cart_id FROM orders
                  WHERE id = ? AND deleted_at IS NULL FOR UPDATE'
             );
             $statement->execute([$id]);
@@ -277,10 +273,10 @@ class Order
             if (in_array($order['status'], ['pending', 'confirmed'], true) && $order['cart_id'] !== null) {
                 $statement = $this->db->prepare(
                     'SELECT id, payment_method, payment_status FROM payments
-                     WHERE cart_id = ? AND deleted_at IS NULL
-                     ORDER BY id DESC LIMIT 1 FOR UPDATE'
+                     WHERE order_id = ? AND deleted_at IS NULL
+                     LIMIT 1 FOR UPDATE'
                 );
-                $statement->execute([$order['cart_id']]);
+                $statement->execute([(int) $order['id']]);
                 $payment = $statement->fetch(PDO::FETCH_ASSOC);
                 if ($payment && $payment['payment_status'] !== 'paid') {
                     (new OrderClass())->restoreInventoryForOrder($id);

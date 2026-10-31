@@ -79,6 +79,9 @@ function store_page_start(
 ): void {
     $cart = store_cart();
     $signedIn = !empty($_SESSION['email']);
+    $currentPage = basename((string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+    $isStorePage = $currentPage === 'store.php';
+    $pageSearch = is_string($_GET['q'] ?? null) ? trim($_GET['q']) : '';
     if (empty($_SESSION['cart_csrf'])) {
         $_SESSION['cart_csrf'] = bin2hex(random_bytes(32));
     }
@@ -134,8 +137,8 @@ function store_page_start(
                 </a>
                 <nav class="store-nav" id="store-nav" aria-label="Store navigation">
                 <a href="index.php"<?= $landing ? ' aria-current="page"' : '' ?>>Home</a>
-                <a href="store.php">Store</a>
-                <a href="index.php#categories">Featured products</a>
+                <a href="store.php"<?= $isStorePage ? ' aria-current="page"' : '' ?>>Store</a>
+               <a href="index.php#categories">Featured products</a>
                 <a href="index.php#rigs">Featured rigs</a>
                 <a href="index.php#builder">Build planner</a>
                 </nav>
@@ -168,14 +171,14 @@ function store_page_end(): void
         </main>
         <dialog class="store-search-dialog" id="store-search-dialog" aria-labelledby="store-search-title">
             <div class="store-dialog-heading">
-                <div><span class="gaming-kicker">FIND YOUR NEXT UPGRADE</span><h2 id="store-search-title">Search featured products</h2></div>
+                <div><span class="gaming-kicker">FIND YOUR NEXT UPGRADE</span><h2 id="store-search-title"><?= $isStorePage ? 'Search products' : 'Search categories' ?></h2></div>
                 <button class="store-icon-button" type="button" data-close-store-dialog aria-label="Close search"><?= store_icon('close') ?></button>
             </div>
-            <p>Search the products featured on this page.</p>
-            <form class="store-search-form" id="landing-category-search" action="index.php#categories" method="get">
+            <p><?= $isStorePage ? 'Find a product by name, brand, or description.' : 'Search the categories currently available in the store.' ?></p>
+            <form class="store-search-form" id="landing-category-search" action="<?= $isStorePage ? 'store.php' : 'index.php#categories' ?>" method="get">
                 <?= store_icon('search') ?>
-                <label class="sr-only" for="header-search">Search featured products</label>
-                <input id="header-search" name="q" type="search" placeholder="Search featured products" autocomplete="off">
+                <label class="sr-only" for="header-search"><?= $isStorePage ? 'Search products' : 'Search categories' ?></label>
+                <input id="header-search" name="q" type="search" value="<?= $isStorePage ? e($pageSearch) : '' ?>" placeholder="<?= $isStorePage ? 'Search products' : 'Search categories' ?>" autocomplete="off">
                 <button type="submit" aria-label="Search"><?= store_icon('arrow') ?></button>
             </form>
         </dialog>
