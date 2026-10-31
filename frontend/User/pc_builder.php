@@ -68,6 +68,88 @@ function pc_builder_status_label(string $status): string
     return $labels[$status] ?? ucwords(str_replace('_', ' ', $status));
 }
 
+
+function pc_builder_build_story(array $build, string $purpose): array
+{
+    $components = is_array($build['components'] ?? null)
+        ? $build['components']
+        : [];
+
+    $requirements = is_array($build['purpose_requirements'] ?? null)
+        ? $build['purpose_requirements']
+        : [];
+
+    $getComponentName = static function (string $type, string $fallback) use ($components): string {
+        $component = $components[$type] ?? [];
+
+        return is_array($component)
+            ? (string) ($component['name'] ?? $fallback)
+            : $fallback;
+    };
+
+    $cpu = $getComponentName('cpu', 'Selected processor');
+    $motherboard = $getComponentName('motherboard', 'Selected motherboard');
+    $gpu = $getComponentName('gpu', 'Selected graphics card');
+    $storage = $getComponentName('storage', 'Selected SSD');
+    $ram = $getComponentName('ram', 'Selected memory');
+
+    $ramCapacity = $requirements['actual_ram_gb']
+        ?? ($components['ram']['specifications']['capacity_gb'] ?? null);
+
+    $memoryDescription = is_numeric($ramCapacity)
+        ? number_format((float) $ramCapacity, 0) . ' GB of memory'
+        : $ram;
+
+    $purposeStories = [
+        'gaming' => [
+            'eyebrow' => 'GAMING-FOCUSED BUILD',
+            'headline' => 'Built around the experience you want.',
+            'description' => 'Gaming performance is the primary ranking focus for this configuration. The selected combination is evaluated using available benchmark data, memory requirements and your budget.',
+            'focus' => 'Graphics and gaming performance'
+        ],
+        'workstation' => [
+            'eyebrow' => 'WORKSTATION BUILD',
+            'headline' => 'Ready for demanding work.',
+            'description' => 'This configuration gives additional importance to processing performance and memory capacity, while keeping the overall build within your budget.',
+            'focus' => 'Processing and memory capacity'
+        ],
+        'general_use' => [
+            'eyebrow' => 'EVERYDAY BUILD',
+            'headline' => 'A balanced setup for daily life.',
+            'description' => 'This configuration aims for a practical balance of performance, memory capacity and budget fit for everyday tasks.',
+            'focus' => 'Balanced everyday performance'
+        ]
+    ];
+
+    $story = $purposeStories[$purpose] ?? $purposeStories['general_use'];
+
+    return [
+        'eyebrow' => $story['eyebrow'],
+        'headline' => $story['headline'],
+        'description' => $story['description'],
+        'focus' => $story['focus'],
+
+        'chapters' => [
+            [
+                'number' => '01',
+                'title' => 'The foundation',
+                'description' => $cpu . ' works alongside ' . $motherboard . '.'
+            ],
+            [
+                'number' => '02',
+                'title' => 'The performance',
+                'description' => $gpu . ' is paired with ' . $memoryDescription . '.'
+            ],
+            [
+                'number' => '03',
+                'title' => 'The everyday experience',
+                'description' => $storage . ' is selected as the primary storage for this build.'
+            ]
+        ]
+    ];
+}
+
+
 /*
 |--------------------------------------------------------------------------
 | Form Configuration
@@ -304,1135 +386,1049 @@ echo $storePageStart;
 
 <div class="pc-builder-page">
 
-    <div class="pb-main">
 
-        <!-- =====================================================
-             HERO SECTION
-        ====================================================== -->
+    <div class="pbx-page">
 
-        <section class="pb-hero">
+        <!-- HERO -->
+        <section class="pbx-hero">
 
-            <div class="pb-hero-copy">
-
-                <div class="pb-eyebrow">
-                    <span class="pb-eyebrow-dot"></span>
-                    REGIX CUSTOM BUILDER
-                </div>
+            <div class="pbx-hero-copy">
+                <span class="pbx-eyebrow">
+                    <span class="pbx-live-dot"></span>
+                    REGIX BUILD EXPERIENCE
+                </span>
 
                 <h1>
-                    Build a PC that<br>
-                    <span>fits your purpose.</span>
+                    Your next PC starts
+                    <span>with your purpose.</span>
                 </h1>
 
                 <p>
-                    Set your budget, choose what you use your PC for,
-                    and get a build assembled from available REGIX components.
+                    Tell us what you want to achieve. We’ll turn your budget
+                    and priorities into a PC configuration selected from
+                    available REGIX components.
                 </p>
 
-                <div class="pb-hero-points">
+                <a href="#pbx-builder" class="pbx-hero-cta">
+                    Start your build
+                    <span aria-hidden="true">↓</span>
+                </a>
 
-                    <span>
-                        <i>✓</i>
-                        Live store availability
-                    </span>
-
-                    <span>
-                        <i>✓</i>
-                        Compatibility checks
-                    </span>
-
-                    <span>
-                        <i>✓</i>
-                        Performance-based ranking
-                    </span>
-
+                <div class="pbx-trust-points">
+                    <span>Inventory-aware</span>
+                    <span>Compatibility checks</span>
+                    <span>Purpose-based ranking</span>
                 </div>
-
             </div>
 
-            <div class="pb-hero-visual" aria-hidden="true">
+            <div class="pbx-hero-visual" aria-hidden="true">
+                <div class="pbx-visual-orbit pbx-orbit-a"></div>
+                <div class="pbx-visual-orbit pbx-orbit-b"></div>
 
-                <div class="pb-visual-glow"></div>
+                <div class="pbx-visual-core">
+                    <span class="pbx-core-light"></span>
+                    <span class="pbx-core-brand">R</span>
+                    <strong>REGIX</strong>
+                    <small>BUILD YOUR RIG</small>
+                </div>
 
-                <div class="pb-visual-orbit pb-orbit-one"></div>
+                <div class="pbx-float-card pbx-float-top">
+                    <span class="pbx-float-icon">01</span>
+                    <div>
+                        <strong>Your purpose</strong>
+                        <small>Define your goal</small>
+                    </div>
+                </div>
 
-                <div class="pb-visual-orbit pb-orbit-two"></div>
+                <div class="pbx-float-card pbx-float-bottom">
+                    <span class="pbx-float-icon">02</span>
+                    <div>
+                        <strong>Your components</strong>
+                        <small>Matched to your needs</small>
+                    </div>
+                </div>
+            </div>
 
-                <div class="pb-visual-chip">
+        </section>
 
-                    <span class="pb-chip-corner top-left"></span>
-                    <span class="pb-chip-corner top-right"></span>
-                    <span class="pb-chip-corner bottom-left"></span>
-                    <span class="pb-chip-corner bottom-right"></span>
 
-                    <div class="pb-chip-inner">
+        <!-- BUILDER JOURNEY -->
+        <section class="pbx-workspace" id="pbx-builder">
 
-                        <span class="pb-chip-mark">R</span>
+            <div class="pbx-workspace-heading">
+                <div>
+                    <span class="pbx-section-kicker">THE BUILD JOURNEY</span>
+                    <h2>Let’s define your next rig.</h2>
+                    <p>Two simple steps. A configuration built around you.</p>
+                </div>
 
-                        <strong>REGIX</strong>
+                <span class="pbx-private-note">
+                    <span>✦</span>
+                    No technical knowledge required
+                </span>
+            </div>
 
-                        <small>PC BUILDER</small>
+
+            <div class="pbx-workspace-grid">
+
+                <!-- WIZARD -->
+                <div class="pbx-wizard-card">
+
+                    <div class="pbx-stepper">
+
+                        <div class="pbx-step-indicator is-active" data-step-indicator="1" aria-current="step">
+
+                            <span class="pbx-step-number">01</span>
+
+                            <div>
+                                <strong>Your purpose</strong>
+                                <small>What are you building for?</small>
+                            </div>
+
+                        </div>
+
+                        <span class="pbx-step-line"></span>
+
+                        <div class="pbx-step-indicator" data-step-indicator="2">
+
+                            <span class="pbx-step-number">02</span>
+
+                            <div>
+                                <strong>Your budget</strong>
+                                <small>Set your spending limit</small>
+                            </div>
+
+                        </div>
 
                     </div>
 
+
+                    <?php if (!empty($formErrors)): ?>
+                    <div class="pbx-form-errors" role="alert">
+                        <strong>Let’s check a few details.</strong>
+
+                        <?php foreach ($formErrors as $error): ?>
+                        <p><?= pc_builder_e($error) ?></p>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php endif; ?>
+
+
+                    <form method="POST" action="pc_builder.php#build-results" id="pcBuilderForm" class="pbx-form">
+
+                        <!-- STEP 1: PURPOSE -->
+                        <section class="pbx-step-panel" data-step-panel="1">
+
+                            <div class="pbx-panel-heading">
+                                <span class="pbx-panel-index">STEP 01 / 02</span>
+                                <h3>What matters most to you?</h3>
+                                <p>
+                                    Choose the main way you plan to use your PC.
+                                    We’ll use this to guide the recommendation.
+                                </p>
+                            </div>
+
+
+                            <div class="pbx-purpose-list">
+
+                                <label
+                                    class="pbx-purpose-card <?= $formValues['purpose'] === 'gaming' ? 'is-selected' : '' ?>">
+
+                                    <input type="radio" name="purpose" value="gaming"
+                                        <?= $formValues['purpose'] === 'gaming' ? 'checked' : '' ?> required>
+
+                                    <span class="pbx-purpose-symbol">G</span>
+
+                                    <span class="pbx-purpose-content">
+                                        <strong>Gaming</strong>
+                                        <small>
+                                            For immersive games, higher frame rates
+                                            and graphics-focused performance.
+                                        </small>
+                                        <span class="pbx-purpose-tags">
+                                            <i>Gaming performance</i>
+                                            <i>GPU priority</i>
+                                        </span>
+                                    </span>
+
+                                    <span class="pbx-choice-indicator"></span>
+
+                                </label>
+
+
+                                <label
+                                    class="pbx-purpose-card <?= $formValues['purpose'] === 'workstation' ? 'is-selected' : '' ?>">
+
+                                    <input type="radio" name="purpose" value="workstation"
+                                        <?= $formValues['purpose'] === 'workstation' ? 'checked' : '' ?>>
+
+                                    <span class="pbx-purpose-symbol">W</span>
+
+                                    <span class="pbx-purpose-content">
+                                        <strong>Workstation</strong>
+                                        <small>
+                                            For development, creative applications,
+                                            demanding workloads and multitasking.
+                                        </small>
+                                        <span class="pbx-purpose-tags">
+                                            <i>Processing</i>
+                                            <i>Memory capacity</i>
+                                        </span>
+                                    </span>
+
+                                    <span class="pbx-choice-indicator"></span>
+
+                                </label>
+
+
+                                <label
+                                    class="pbx-purpose-card <?= $formValues['purpose'] === 'general_use' ? 'is-selected' : '' ?>">
+
+                                    <input type="radio" name="purpose" value="general_use"
+                                        <?= $formValues['purpose'] === 'general_use' ? 'checked' : '' ?>>
+
+                                    <span class="pbx-purpose-symbol">D</span>
+
+                                    <span class="pbx-purpose-content">
+                                        <strong>Everyday use</strong>
+                                        <small>
+                                            For studying, browsing, office work
+                                            and everyday applications.
+                                        </small>
+                                        <span class="pbx-purpose-tags">
+                                            <i>Balanced setup</i>
+                                            <i>Budget fit</i>
+                                        </span>
+                                    </span>
+
+                                    <span class="pbx-choice-indicator"></span>
+
+                                </label>
+
+                            </div>
+
+
+                            <div class="pbx-step-actions pbx-actions-end">
+
+                                <span class="pbx-step-hint">
+                                    You can change this later.
+                                </span>
+
+                                <button type="button" class="pbx-button pbx-button-primary" id="pbxNextStep">
+                                    Continue
+                                    <span aria-hidden="true">→</span>
+                                </button>
+
+                            </div>
+
+                        </section>
+
+
+                        <!-- STEP 2: BUDGET -->
+                        <section class="pbx-step-panel" data-step-panel="2" hidden>
+
+                            <div class="pbx-panel-heading">
+                                <span class="pbx-panel-index">STEP 02 / 02</span>
+                                <h3>Let’s set your budget.</h3>
+                                <p>
+                                    Your budget is the maximum amount the
+                                    recommended component combination should cost.
+                                </p>
+                            </div>
+
+
+                            <div class="pbx-budget-field">
+
+                                <label for="pbBudget">
+                                    What is your maximum budget?
+                                </label>
+
+                                <div class="pbx-budget-input">
+
+                                    <span>JOD</span>
+
+                                    <input type="number" id="pbBudget" name="budget" min="1" max="1000000" step="0.01"
+                                        value="<?= pc_builder_e($formValues['budget']) ?>" placeholder="1200" required>
+
+                                </div>
+
+                                <small>
+                                    We’ll search for suitable combinations within this limit.
+                                </small>
+
+                            </div>
+
+
+                            <!-- GAMING RESOLUTION -->
+                            <div class="pbx-resolution-field" id="pbResolutionGroup"
+                                <?= $formValues['purpose'] !== 'gaming' ? 'hidden' : '' ?>>
+
+                                <label>What resolution do you want to play at?</label>
+
+                                <p>
+                                    This helps us use the appropriate gaming benchmark
+                                    when ranking available graphics cards.
+                                </p>
+
+                                <div class="pbx-resolution-options">
+
+                                    <label class="<?= $formValues['resolution'] === '1080p' ? 'is-selected' : '' ?>">
+                                        <input type="radio" name="resolution" value="1080p"
+                                            <?= $formValues['resolution'] === '1080p' ? 'checked' : '' ?>>
+                                        <strong>1080p</strong>
+                                        <small>Full HD</small>
+                                    </label>
+
+                                    <label class="<?= $formValues['resolution'] === '1440p' ? 'is-selected' : '' ?>">
+                                        <input type="radio" name="resolution" value="1440p"
+                                            <?= $formValues['resolution'] === '1440p' ? 'checked' : '' ?>>
+                                        <strong>1440p</strong>
+                                        <small>Quad HD</small>
+                                    </label>
+
+                                    <label class="<?= $formValues['resolution'] === '4k' ? 'is-selected' : '' ?>">
+                                        <input type="radio" name="resolution" value="4k"
+                                            <?= $formValues['resolution'] === '4k' ? 'checked' : '' ?>>
+                                        <strong>4K</strong>
+                                        <small>Ultra HD</small>
+                                    </label>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="pbx-step-actions">
+
+                                <button type="button" class="pbx-button pbx-button-ghost" id="pbxBackStep">
+                                    <span aria-hidden="true">←</span>
+                                    Back
+                                </button>
+
+                                <button type="submit" class="pbx-button pbx-button-primary" id="pbGenerateButton">
+                                    Build my PC
+                                    <span aria-hidden="true">↗</span>
+                                </button>
+
+                            </div>
+
+                        </section>
+
+                    </form>
+
                 </div>
 
-                <span class="pb-floating-tag tag-performance">
-                    <span></span>
-                    PERFORMANCE FIRST
-                </span>
 
-                <span class="pb-floating-tag tag-compatible">
-                    ✓ COMPATIBILITY CHECKS
-                </span>
+                <!-- LIVE BUILD SUMMARY -->
+                <aside class="pbx-summary-card">
+
+                    <div class="pbx-summary-top">
+                        <span class="pbx-summary-label">YOUR BUILD BRIEF</span>
+                        <span class="pbx-summary-status">
+                            <span></span>
+                            In progress
+                        </span>
+                    </div>
+
+                    <div class="pbx-summary-title">
+                        <h3>A PC that fits your world.</h3>
+                        <p>
+                            Here’s what we know about your build so far.
+                        </p>
+                    </div>
+
+
+                    <div class="pbx-summary-values">
+
+                        <div class="pbx-summary-row">
+                            <span>Primary purpose</span>
+                            <strong id="pbxSummaryPurpose">
+                                <?= pc_builder_e(
+                                pc_builder_purpose_label($formValues['purpose'])
+                            ) ?>
+                            </strong>
+                        </div>
+
+                        <div class="pbx-summary-row">
+                            <span>Maximum budget</span>
+                            <strong id="pbxSummaryBudget">
+                                <?= pc_builder_e($formValues['budget']) ?> JOD
+                            </strong>
+                        </div>
+
+                        <div class="pbx-summary-row" id="pbxSummaryResolutionRow"
+                            <?= $formValues['purpose'] !== 'gaming' ? 'hidden' : '' ?>>
+                            <span>Gaming resolution</span>
+                            <strong id="pbxSummaryResolution">
+                                <?= pc_builder_e(strtoupper($formValues['resolution'])) ?>
+                            </strong>
+                        </div>
+
+                    </div>
+
+
+                    <div class="pbx-summary-divider"></div>
+
+
+                    <div class="pbx-summary-process">
+
+                        <span class="pbx-summary-label">
+                            WHAT HAPPENS NEXT
+                        </span>
+
+                        <div class="pbx-mini-process">
+
+                            <span class="pbx-mini-number">01</span>
+                            <div>
+                                <strong>Inventory matching</strong>
+                                <small>Find available components</small>
+                            </div>
+
+                        </div>
+
+                        <div class="pbx-mini-process">
+
+                            <span class="pbx-mini-number">02</span>
+                            <div>
+                                <strong>Compatibility review</strong>
+                                <small>Evaluate known component conflicts</small>
+                            </div>
+
+                        </div>
+
+                        <div class="pbx-mini-process">
+
+                            <span class="pbx-mini-number">03</span>
+                            <div>
+                                <strong>Build ranking</strong>
+                                <small>Compare performance and budget fit</small>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="pbx-summary-footer">
+                        <span>✦</span>
+                        Your build is based on current REGIX catalog data.
+                    </div>
+
+                </aside>
 
             </div>
 
         </section>
 
 
-        <!-- =====================================================
-             BUILDER FORM SECTION
-        ====================================================== -->
+        <!-- BUILDING EXPERIENCE OVERLAY -->
+        <div class="pbx-loading" id="pbxLoading" hidden role="status" aria-live="polite">
 
-        <section class="pb-builder-layout" id="builder-form">
+            <div class="pbx-loading-card">
 
-            <!-- Form Column -->
+                <div class="pbx-loader-visual">
+                    <span class="pbx-loader-ring"></span>
+                    <span class="pbx-loader-ring pbx-loader-ring-two"></span>
+                    <strong>R</strong>
+                </div>
 
-            <div class="pb-form-column">
+                <span class="pbx-section-kicker">REGIX BUILD ENGINE</span>
 
-                <div class="pb-section-heading">
+                <h2 id="pbxLoadingTitle">
+                    Your build is taking shape.
+                </h2>
 
-                    <div>
+                <p id="pbxLoadingMessage">
+                    We’re matching your preferences with available components.
+                </p>
 
-                        <span class="pb-section-kicker">
-                            START YOUR BUILD
+                <div class="pbx-loading-steps">
+
+                    <span class="is-current" data-loading-step="0">
+                        <i></i> Inventory
+                    </span>
+
+                    <span data-loading-step="1">
+                        <i></i> Compatibility
+                    </span>
+
+                    <span data-loading-step="2">
+                        <i></i> Performance ranking
+                    </span>
+
+                    <span data-loading-step="3">
+                        <i></i> Budget fit
+                    </span>
+
+                </div>
+
+                <small>
+                    This may take a moment. Please keep this page open.
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <!-- RESULTS -->
+        <?php if ($hasSubmitted && $result !== null): ?>
+
+        <section class="pbx-results" id="build-results">
+
+            <?php if (($result['success'] ?? false) !== true): ?>
+
+            <div class="pbx-result-error">
+
+                <span class="pbx-result-error-icon">!</span>
+
+                <div>
+                    <span class="pbx-section-kicker">BUILD RESULT</span>
+
+                    <h2>We couldn’t complete this build.</h2>
+
+                    <p>
+                        <?= pc_builder_e(
+                                $result['message'] ?? 'No build could be generated.'
+                            ) ?>
+                    </p>
+
+                    <?php if (isset($result['minimum_listed_budget'])): ?>
+                    <p>
+                        Minimum listed budget:
+                        <strong>
+                            <?= pc_builder_e(
+                                        pc_builder_money($result['minimum_listed_budget'])
+                                    ) ?>
+                        </strong>
+                    </p>
+                    <?php endif; ?>
+
+                    <?php if (!empty($result['missing_component_types'])): ?>
+                    <p>
+                        Unavailable categories:
+                        <?= pc_builder_e(
+                                    implode(', ', $result['missing_component_types'])
+                                ) ?>
+                    </p>
+                    <?php endif; ?>
+
+                    <a href="pc_builder.php#pbx-builder" class="pbx-button pbx-button-primary">
+                        Adjust my requirements
+                        <span>↗</span>
+                    </a>
+                </div>
+
+            </div>
+
+            <?php elseif ($recommendedBuild !== null): ?>
+
+            <?php
+                $recommendedComponents = $recommendedBuild['components'] ?? [];
+
+                $performanceScore = $recommendedBuild['performance_score'] ?? null;
+
+                $recommendationScore = $recommendedBuild['recommendation_score'] ?? null;
+
+                $compatibilityStatus = (string) (
+                    $recommendedBuild['compatibility_status'] ?? 'needs_verification'
+                );
+
+                $ramRequirements = $recommendedBuild['purpose_requirements'] ?? [];
+
+                $compatibilityChecks = $recommendedBuild['compatibility_checks'] ?? [];
+
+                $componentsNeedingVerification =
+                    $recommendedBuild['components_needing_verification'] ?? [];
+
+                $storagePolicy = $result['storage_policy'] ?? null;
+
+                $buildStory = pc_builder_build_story(
+                    $recommendedBuild,
+                    $formValues['purpose']
+                );
+                ?>
+
+
+            <!-- RESULT INTRO -->
+            <div class="pbx-results-intro">
+
+                <div>
+                    <span class="pbx-section-kicker">
+                        YOUR BUILD IS READY
+                    </span>
+
+                    <h2>
+                        Here’s what we built
+                        <span>for you.</span>
+                    </h2>
+
+                    <p>
+                        Based on your <?= pc_builder_e(
+                                strtolower(pc_builder_purpose_label($formValues['purpose']))
+                            ) ?>
+                        requirements and a maximum budget of
+                        <?= pc_builder_e(pc_builder_money($formValues['budget'])) ?>.
+                    </p>
+                </div>
+
+                <a href="pc_builder.php#pbx-builder" class="pbx-button pbx-button-ghost">
+                    Change my brief
+                    <span>↗</span>
+                </a>
+
+            </div>
+
+
+            <!-- RECOMMENDED BUILD STORY -->
+            <article class="pbx-story-card">
+
+                <div class="pbx-story-intro">
+
+                    <span class="pbx-story-eyebrow">
+                        <?= pc_builder_e($buildStory['eyebrow']) ?>
+                    </span>
+
+                    <h3>
+                        <?= pc_builder_e($buildStory['headline']) ?>
+                    </h3>
+
+                    <p>
+                        <?= pc_builder_e($buildStory['description']) ?>
+                    </p>
+
+                    <div class="pbx-story-focus">
+                        <span>PRIMARY FOCUS</span>
+                        <strong><?= pc_builder_e($buildStory['focus']) ?></strong>
+                    </div>
+
+                </div>
+
+
+                <div class="pbx-story-chapters">
+
+                    <?php foreach ($buildStory['chapters'] as $chapter): ?>
+
+                    <div class="pbx-story-chapter">
+
+                        <span class="pbx-chapter-number">
+                            <?= pc_builder_e($chapter['number']) ?>
                         </span>
 
-                        <h2>Tell us what you need.</h2>
+                        <div>
+                            <strong>
+                                <?= pc_builder_e($chapter['title']) ?>
+                            </strong>
 
-                        <p>
-                            We’ll match your requirements with products currently in stock.
-                        </p>
+                            <p>
+                                <?= pc_builder_e($chapter['description']) ?>
+                            </p>
+                        </div>
 
                     </div>
 
-                    <span class="pb-step-indicator">
-                        <b>01</b> / 02
+                    <?php endforeach; ?>
+
+                </div>
+
+            </article>
+
+
+            <!-- BUILD OVERVIEW -->
+            <article class="pbx-build-card">
+
+                <div class="pbx-build-top">
+
+                    <div>
+                        <span class="pbx-build-label">
+                            RECOMMENDED CONFIGURATION
+                        </span>
+
+                        <h3>
+                            <?= pc_builder_e(
+                                    pc_builder_purpose_label($formValues['purpose'])
+                                ) ?> PC
+                        </h3>
+
+                        <small>
+                            Build #<?= pc_builder_e(
+                                    $recommendedBuild['build_id'] ?? '—'
+                                ) ?>
+                        </small>
+                    </div>
+
+                    <div class="pbx-build-total">
+                        <span>BUILD TOTAL</span>
+
+                        <strong>
+                            <?= pc_builder_e(
+                                    pc_builder_money($recommendedBuild['total_price'] ?? 0)
+                                ) ?>
+                        </strong>
+
+                        <small>
+                            <?= pc_builder_e(
+                                    pc_builder_money($recommendedBuild['remaining_budget'] ?? 0)
+                                ) ?>
+                            remaining
+                        </small>
+                    </div>
+
+                </div>
+
+
+                <!-- METRICS -->
+                <div class="pbx-metrics">
+
+                    <div class="pbx-metric">
+                        <span>Performance score</span>
+
+                        <strong>
+                            <?= is_numeric($performanceScore)
+                                    ? pc_builder_e(
+                                        number_format((float) $performanceScore, 2)
+                                    )
+                                    : '—' ?>
+                            <small>/100</small>
+                        </strong>
+
+                        <p>
+                            Relative benchmark ranking
+                        </p>
+                    </div>
+
+
+                    <div class="pbx-metric">
+                        <span>Recommendation score</span>
+
+                        <strong>
+                            <?= is_numeric($recommendationScore)
+                                    ? pc_builder_e(
+                                        number_format((float) $recommendationScore, 2)
+                                    )
+                                    : '—' ?>
+                            <small>/100</small>
+                        </strong>
+
+                        <p>
+                            Overall recommendation fit
+                        </p>
+                    </div>
+
+
+                    <div class="pbx-metric">
+                        <span>Compatibility</span>
+
+                        <strong class="<?= $compatibilityStatus === 'compatible' ? 'is-good' : 'is-warning' ?>">
+                            <?= pc_builder_e(
+                                    pc_builder_status_label($compatibilityStatus)
+                                ) ?>
+                        </strong>
+
+                        <p>
+                            <?= pc_builder_e(
+                                    pc_builder_compatibility_label($compatibilityStatus)
+                                ) ?>
+                        </p>
+                    </div>
+
+
+                    <div class="pbx-metric">
+                        <span>Memory capacity</span>
+
+                        <strong>
+                            <?= pc_builder_e(
+                                    $ramRequirements['actual_ram_gb']
+                                    ?? ($recommendedComponents['ram']['specifications']['capacity_gb'] ?? '—')
+                                ) ?>
+                            <small>GB</small>
+                        </strong>
+
+                        <p>
+                            <?= pc_builder_e(
+                                    pc_builder_status_label(
+                                        (string) ($ramRequirements['ram_status'] ?? 'unknown')
+                                    )
+                                ) ?>
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <!-- COMPONENTS -->
+                <div class="pbx-parts-heading">
+
+                    <div>
+                        <span class="pbx-section-kicker">THE HARDWARE</span>
+                        <h3>Meet your components.</h3>
+                        <p>
+                            Every part in your recommended configuration.
+                        </p>
+                    </div>
+
+                    <span class="pbx-parts-count">
+                        <?= count($recommendedComponents) ?> / 8 parts
                     </span>
 
                 </div>
 
 
-                <!-- Form Validation Errors -->
+                <div class="pbx-parts-grid">
 
-                <?php if (!empty($formErrors)): ?>
+                    <?php foreach ($componentLabels as $type => $label): ?>
 
-                    <div class="pb-alert pb-alert-error" role="alert">
+                    <?php if (!isset($recommendedComponents[$type])) {
+                                continue;
+                            } ?>
 
-                        <strong>Please check your choices.</strong>
+                    <?php $component = $recommendedComponents[$type]; ?>
 
-                        <?php foreach ($formErrors as $error): ?>
+                    <article class="pbx-part-card">
+
+                        <div class="pbx-part-top">
+
+                            <span class="pbx-part-type">
+                                <?= pc_builder_e($componentIcons[$type]) ?>
+                            </span>
+
+                            <span class="pbx-part-category">
+                                <?= pc_builder_e($label) ?>
+                            </span>
+
+                            <?php if (($component['spec_status'] ?? '') === 'verified'): ?>
+
+                            <span class="pbx-part-status is-good" title="Specifications verified">
+                                ✓
+                            </span>
+
+                            <?php else: ?>
+
+                            <span class="pbx-part-status is-warning" title="Specifications need verification">
+                                !
+                            </span>
+
+                            <?php endif; ?>
+
+                        </div>
+
+
+                        <h4>
+                            <?= pc_builder_e(
+                                        $component['name'] ?? 'Unknown component'
+                                    ) ?>
+                        </h4>
+
+
+                        <div class="pbx-part-meta">
 
                             <span>
-                                <?= pc_builder_e($error) ?>
+                                <?= pc_builder_e($component['brand'] ?? '') ?>
                             </span>
+
+                            <span>
+                                <?= pc_builder_e(
+                                            ucfirst((string) ($component['condition_type'] ?? ''))
+                                        ) ?>
+                            </span>
+
+                        </div>
+
+
+                        <div class="pbx-part-price">
+                            <?= pc_builder_e(
+                                        pc_builder_money($component['price'] ?? 0)
+                                    ) ?>
+                        </div>
+
+                    </article>
+
+                    <?php endforeach; ?>
+
+                </div>
+
+
+                <!-- VERIFICATION NOTICE -->
+                <?php if (!empty($componentsNeedingVerification)): ?>
+
+                <div class="pbx-verification">
+
+                    <span class="pbx-verification-icon">!</span>
+
+                    <div>
+
+                        <strong>
+                            A few specifications need your attention.
+                        </strong>
+
+                        <p>
+                            Some selected products have incomplete specification
+                            records. Please review these details before purchasing.
+                        </p>
+
+                        <ul>
+
+                            <?php foreach ($componentsNeedingVerification as $item): ?>
+
+                            <li>
+                                <?= pc_builder_e($item['name'] ?? 'Component') ?>
+
+                                —
+
+                                <?= pc_builder_e(
+                                                ucwords(
+                                                    str_replace(
+                                                        '_',
+                                                        ' ',
+                                                        (string) ($item['component_type'] ?? '')
+                                                    )
+                                                )
+                                            ) ?>
+                            </li>
+
+                            <?php endforeach; ?>
+
+                        </ul>
+
+                    </div>
+
+                </div>
+
+                <?php endif; ?>
+
+
+                <!-- COMPATIBILITY DETAILS -->
+                <?php if (!empty($compatibilityChecks)): ?>
+
+                <details class="pbx-compatibility">
+
+                    <summary>
+                        <span>
+                            Review compatibility details
+                        </span>
+
+                        <span>
+                            <?= count($compatibilityChecks) ?> checks
+                        </span>
+                    </summary>
+
+
+                    <div class="pbx-compatibility-list">
+
+                        <?php foreach ($compatibilityChecks as $check): ?>
+
+                        <?php
+                                    $checkStatus = (string) (
+                                        $check['status'] ?? 'needs_verification'
+                                    );
+                                    ?>
+
+                        <div class="pbx-check-row">
+
+                            <span class="pbx-check-dot <?= pc_builder_e($checkStatus) ?>"></span>
+
+                            <strong>
+                                <?= pc_builder_e(
+                                                ucwords(
+                                                    str_replace(
+                                                        '_',
+                                                        ' ',
+                                                        (string) ($check['code'] ?? 'Compatibility check')
+                                                    )
+                                                )
+                                            ) ?>
+                            </strong>
+
+                            <p>
+                                <?= pc_builder_e($check['message'] ?? '') ?>
+                            </p>
+
+                            <span class="pbx-check-result">
+                                <?= pc_builder_e(
+                                                pc_builder_status_label($checkStatus)
+                                            ) ?>
+                            </span>
+
+                        </div>
 
                         <?php endforeach; ?>
 
                     </div>
 
+                </details>
+
                 <?php endif; ?>
 
 
-                <!-- PC Builder Form -->
+                <?php if (is_array($storagePolicy)): ?>
 
-                <form method="POST" action="pc_builder.php#build-results" class="pb-form" id="pcBuilderForm">
+                <p class="pbx-policy-note">
+                    Primary storage is selected as an SSD.
+                    Secondary HDD selection is not included in this build step yet.
+                </p>
 
-                    <!-- Budget -->
+                <?php endif; ?>
 
-                    <div class="pb-form-block">
 
-                        <div class="pb-field-heading">
+                <div class="pbx-build-disclaimer">
+                    Performance scores are relative rankings based on available
+                    benchmark data, not predicted FPS for the complete PC.
+                    A build marked “Needs verification” should be reviewed
+                    before purchase.
+                </div>
 
-                            <span class="pb-field-number">01</span>
+            </article>
 
-                            <div>
 
-                                <label for="pbBudget">
-                                    What’s your budget?
-                                </label>
+            <!-- ALTERNATIVES -->
+            <?php if (!empty($alternatives)): ?>
 
-                                <small>
-                                    Enter the maximum amount you want to spend.
-                                </small>
+            <section class="pbx-alternatives">
 
-                            </div>
+                <div class="pbx-alternatives-heading">
 
-                        </div>
-
-                        <div class="pb-budget-input-wrap">
-
-                            <span class="pb-currency">
-                                JOD
-                            </span>
-
-                            <input type="number" id="pbBudget" name="budget" min="1" step="0.01" max="1000000"
-                                value="<?= pc_builder_e($formValues['budget']) ?>" placeholder="e.g. 1200" required>
-
-                        </div>
-
-                        <p class="pb-field-hint">
-                            The recommended build and alternatives will stay within this budget.
-                        </p>
-
-                    </div>
-
-
-                    <div class="pb-form-divider"></div>
-
-
-                    <!-- PC Purpose -->
-
-                    <fieldset class="pb-form-block pb-purpose-fieldset">
-
-                        <legend class="pb-field-heading">
-
-                            <span class="pb-field-number">02</span>
-
-                            <span>
-
-                                <strong>
-                                    What will you use it for?
-                                </strong>
-
-                                <small>
-                                    Choose the primary purpose of your PC.
-                                </small>
-
-                            </span>
-
-                        </legend>
-
-
-                        <div class="pb-purpose-options">
-
-                            <!-- Gaming -->
-
-                            <label
-                                class="pb-purpose-option <?= $formValues['purpose'] === 'gaming' ? 'selected' : '' ?>">
-
-                                <input type="radio" name="purpose" value="gaming" <?= $formValues['purpose'] === 'gaming' ? 'checked' : '' ?> required>
-
-                                <span class="pb-purpose-icon" aria-hidden="true">
-                                    Ｇ
-                                </span>
-
-                                <span class="pb-purpose-copy">
-
-                                    <strong>Gaming</strong>
-
-                                    <small>
-                                        Games and high frame rates
-                                    </small>
-
-                                </span>
-
-                                <span class="pb-radio-mark"></span>
-
-                            </label>
-
-
-                            <!-- Workstation -->
-
-                            <label
-                                class="pb-purpose-option <?= $formValues['purpose'] === 'workstation' ? 'selected' : '' ?>">
-
-                                <input type="radio" name="purpose" value="workstation"
-                                    <?= $formValues['purpose'] === 'workstation' ? 'checked' : '' ?>>
-
-                                <span class="pb-purpose-icon" aria-hidden="true">
-                                    ⌘
-                                </span>
-
-                                <span class="pb-purpose-copy">
-
-                                    <strong>Workstation</strong>
-
-                                    <small>
-                                        Heavy workloads and multitasking
-                                    </small>
-
-                                </span>
-
-                                <span class="pb-radio-mark"></span>
-
-                            </label>
-
-
-                            <!-- Everyday Use -->
-
-                            <label
-                                class="pb-purpose-option <?= $formValues['purpose'] === 'general_use' ? 'selected' : '' ?>">
-
-                                <input type="radio" name="purpose" value="general_use"
-                                    <?= $formValues['purpose'] === 'general_use' ? 'checked' : '' ?>>
-
-                                <span class="pb-purpose-icon" aria-hidden="true">
-                                    ▦
-                                </span>
-
-                                <span class="pb-purpose-copy">
-
-                                    <strong>Everyday use</strong>
-
-                                    <small>
-                                        Study, browsing and daily tasks
-                                    </small>
-
-                                </span>
-
-                                <span class="pb-radio-mark"></span>
-
-                            </label>
-
-                        </div>
-
-                    </fieldset>
-
-
-                    <!-- Gaming Resolution -->
-
-                    <div class="pb-resolution-group" id="pbResolutionGroup" <?= $formValues['purpose'] !== 'gaming' ? 'hidden' : '' ?>>
-
-                        <label for="pbResolution">
-                            Preferred gaming resolution
-                        </label>
-
-                        <div class="pb-resolution-options">
-
-                            <label>
-
-                                <input type="radio" name="resolution" value="1080p"
-                                    <?= $formValues['resolution'] === '1080p' ? 'checked' : '' ?>>
-
-                                <span>1080p</span>
-
-                            </label>
-
-
-                            <label>
-
-                                <input type="radio" name="resolution" value="1440p"
-                                    <?= $formValues['resolution'] === '1440p' ? 'checked' : '' ?>>
-
-                                <span>1440p</span>
-
-                            </label>
-
-
-                            <label>
-
-                                <input type="radio" name="resolution" value="4k" <?= $formValues['resolution'] === '4k' ? 'checked' : '' ?>>
-
-                                <span>4K</span>
-
-                            </label>
-
-                        </div>
-
-                        <p class="pb-field-hint">
-                            Resolution changes which GPU gaming benchmark is used for ranking.
-                        </p>
-
-                    </div>
-
-
-                    <!-- Submit -->
-
-                    <button type="submit" class="pb-submit-button" id="pbGenerateButton">
-
-                        <span>
-                            Generate my PC build
+                    <div>
+                        <span class="pbx-section-kicker">
+                            EXPLORE OTHER DIRECTIONS
                         </span>
 
-                        <span class="pb-submit-arrow" aria-hidden="true">
-                            →
-                        </span>
+                        <h3>There’s more than one way to build.</h3>
 
-                    </button>
+                        <p>
+                            Compare other component combinations that
+                            also fit your requirements.
+                        </p>
+                    </div>
 
-                    <p class="pb-submit-note">
-
-                        <span>✦</span>
-
-                        Builds are generated from available store inventory
-                        and checked for known compatibility conflicts.
-
-                    </p>
-
-                </form>
-
-            </div>
-
-
-            <!-- =================================================
-                 INFORMATION COLUMN
-            ================================================== -->
-
-            <aside class="pb-info-column">
-
-                <!-- How it works -->
-
-                <div class="pb-info-card pb-process-card">
-
-                    <span class="pb-info-label">
-                        HOW IT WORKS
+                    <span>
+                        <?= count($alternatives) ?> alternatives
                     </span>
 
-                    <h3>
-                        More than a parts list.
-                    </h3>
-
-                    <p>
-                        Your build is assembled through a set of checks and ranking steps.
-                    </p>
-
-
-                    <div class="pb-process-list">
-
-                        <div class="pb-process-item">
-
-                            <span class="pb-process-icon">
-                                01
-                            </span>
-
-                            <div>
-
-                                <strong>
-                                    Find available parts
-                                </strong>
-
-                                <small>
-                                    Only products currently in stock.
-                                </small>
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="pb-process-item">
-
-                            <span class="pb-process-icon">
-                                02
-                            </span>
-
-                            <div>
-
-                                <strong>
-                                    Check compatibility
-                                </strong>
-
-                                <small>
-                                    Known conflicts are excluded.
-                                </small>
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="pb-process-item">
-
-                            <span class="pb-process-icon">
-                                03
-                            </span>
-
-                            <div>
-
-                                <strong>
-                                    Rank performance
-                                </strong>
-
-                                <small>
-                                    Using available benchmark data.
-                                </small>
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="pb-process-item">
-
-                            <span class="pb-process-icon">
-                                04
-                            </span>
-
-                            <div>
-
-                                <strong>
-                                    Respect your budget
-                                </strong>
-
-                                <small>
-                                    Compare suitable build alternatives.
-                                </small>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
                 </div>
 
 
-                <!-- Inventory Information -->
+                <div class="pbx-alternatives-grid">
 
-                <div class="pb-info-card pb-inventory-card">
-
-                    <div class="pb-inventory-icon">
-                        ✳
-                    </div>
-
-                    <div>
-
-                        <strong>
-                            Built from REGIX inventory
-                        </strong>
-
-                        <p>
-                            Component availability and pricing are read from
-                            the live store catalog when you generate a build.
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <!-- Disclaimer -->
-
-                <div class="pb-disclaimer">
-
-                    <span>ⓘ</span>
-
-                    <p>
-                        Some products may need specification verification.
-                        Always review compatibility notes before purchasing.
-                    </p>
-
-                </div>
-
-            </aside>
-
-        </section>
-
-
-        <!-- =====================================================
-             BUILD RESULTS
-        ====================================================== -->
-
-        <?php if ($hasSubmitted && $result !== null): ?>
-
-            <section class="pb-results-section" id="build-results" aria-live="polite">
-
-                <!-- Results Heading -->
-
-                <div class="pb-results-heading">
-
-                    <div>
-
-                        <span class="pb-section-kicker">
-                            YOUR PC BUILD RESULTS
-                        </span>
-
-                        <h2>
-                            <?= ($result['success'] ?? false) === true
-                                ? 'Your recommended build.'
-                                : 'We couldn’t complete this build.' ?>
-                        </h2>
-
-                        <p>
-
-                            <?= pc_builder_e(
-                                pc_builder_purpose_label($formValues['purpose'])
-                            ) ?>
-
-                            <?php if ($formValues['purpose'] === 'gaming'): ?>
-
-                                · <?= pc_builder_e(
-                                    strtoupper($formValues['resolution'])
-                                ) ?>
-
-                            <?php endif; ?>
-
-                            · Budget
-                            <?= pc_builder_e(
-                                pc_builder_money($formValues['budget'])
-                            ) ?>
-
-                        </p>
-
-                    </div>
-
-                    <a href="pc_builder.php#builder-form" class="pb-edit-link">
-                        Edit requirements <span>↗</span>
-                    </a>
-
-                </div>
-
-
-                <!-- Error Result -->
-
-                <?php if (!empty($formErrors)): ?>
-
-                    <div class="pb-alert pb-alert-error" role="alert">
-                        Please correct the form values above.
-                    </div>
-
-
-                <?php elseif (($result['success'] ?? false) !== true): ?>
-
-                    <div class="pb-result-error" role="status">
-
-                        <div class="pb-result-error-icon">
-                            !
-                        </div>
-
-                        <div>
-
-                            <strong>
-                                <?= pc_builder_e(
-                                    $result['message'] ?? 'No build could be generated.'
-                                ) ?>
-                            </strong>
-
-
-                            <?php if (isset($result['minimum_listed_budget'])): ?>
-
-                                <p>
-                                    Minimum listed budget for the current requirements:
-
-                                    <b>
-                                        <?= pc_builder_e(
-                                            pc_builder_money($result['minimum_listed_budget'])
-                                        ) ?>
-                                    </b>
-                                </p>
-
-                            <?php endif; ?>
-
-
-                            <?php if (!empty($result['missing_component_types'])): ?>
-
-                                <p>
-                                    Unavailable or missing categories:
-
-                                    <?= pc_builder_e(
-                                        implode(', ', $result['missing_component_types'])
-                                    ) ?>
-                                </p>
-
-                            <?php endif; ?>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- Successful Result -->
-
-                <?php elseif ($recommendedBuild !== null): ?>
+                    <?php foreach ($alternatives as $index => $alternative): ?>
 
                     <?php
-
-                    $recommendedComponents = $recommendedBuild['components'] ?? [];
-
-                    $performanceScore = $recommendedBuild['performance_score'] ?? null;
-
-                    $recommendationScore = $recommendedBuild['recommendation_score'] ?? null;
-
-                    $compatibilityStatus = (string) (
-                        $recommendedBuild['compatibility_status'] ?? 'needs_verification'
-                    );
-
-                    $ramRequirements = $recommendedBuild['purpose_requirements'] ?? [];
-
-                    $compatibilityChecks = $recommendedBuild['compatibility_checks'] ?? [];
-
-                    $componentsNeedingVerification =
-                        $recommendedBuild['components_needing_verification'] ?? [];
-
-                    $performanceMetrics = $recommendedBuild['performance_metrics'] ?? [];
-
-                    $storagePolicy = $result['storage_policy'] ?? null;
-
-                    ?>
-
-
-                    <!-- Recommended Build Card -->
-
-                    <article class="pb-recommended-card">
-
-                        <div class="pb-recommended-topline">
-
-                            <span class="pb-recommended-badge">
-                                <i></i>
-                                RECOMMENDED BUILD
-                            </span>
-
-                            <span class="pb-build-id">
-                                BUILD #
-                                <?= pc_builder_e($recommendedBuild['build_id'] ?? '—') ?>
-                            </span>
-
-                        </div>
-
-
-                        <!-- Build Overview -->
-
-                        <div class="pb-build-overview">
-
-                            <div class="pb-build-overview-copy">
-
-                                <h3>
-                                    <?= pc_builder_e(
-                                        pc_builder_purpose_label($formValues['purpose'])
-                                    ) ?>
-                                    PC
-                                </h3>
-
-                                <p>
-                                    Selected from available products based on your
-                                    budget, requirements and benchmark data.
-                                </p>
-
-                            </div>
-
-
-                            <div class="pb-build-price">
-
-                                <span>
-                                    BUILD TOTAL
-                                </span>
-
-                                <strong>
-                                    <?= pc_builder_e(
-                                        pc_builder_money($recommendedBuild['total_price'] ?? 0)
-                                    ) ?>
-                                </strong>
-
-                                <small>
-                                    <?= pc_builder_e(
-                                        pc_builder_money($recommendedBuild['remaining_budget'] ?? 0)
-                                    ) ?>
-                                    remaining
-                                </small>
-
-                            </div>
-
-                        </div>
-
-
-                        <!-- Build Metrics -->
-
-                        <div class="pb-build-metrics">
-
-                            <div class="pb-metric-card">
-
-                                <span>
-                                    Performance score
-                                </span>
-
-                                <strong>
-                                    <?= is_numeric($performanceScore)
-                                        ? pc_builder_e(
-                                            number_format((float) $performanceScore, 2)
-                                        ) . '<small>/100</small>'
-                                        : 'Not available' ?>
-                                </strong>
-
-                                <small>
-                                    <?= pc_builder_e(
-                                        $recommendedBuild['performance_scope']
-                                        ?? 'Relative benchmark ranking'
-                                    ) ?>
-                                </small>
-
-                            </div>
-
-
-                            <div class="pb-metric-card">
-
-                                <span>
-                                    Recommendation score
-                                </span>
-
-                                <strong>
-                                    <?= is_numeric($recommendationScore)
-                                        ? pc_builder_e(
-                                            number_format((float) $recommendationScore, 2)
-                                        ) . '<small>/100</small>'
-                                        : 'Not available' ?>
-                                </strong>
-
-                                <small>
-                                    Performance, memory and budget fit
-                                </small>
-
-                            </div>
-
-
-                            <div class="pb-metric-card">
-
-                                <span>
-                                    Compatibility
-                                </span>
-
-                                <strong
-                                    class="pb-status-text <?= $compatibilityStatus === 'compatible' ? 'is-good' : 'is-warning' ?>">
-
-                                    <?= pc_builder_e(
-                                        pc_builder_status_label($compatibilityStatus)
-                                    ) ?>
-
-                                </strong>
-
-                                <small>
-                                    <?= pc_builder_e(
-                                        pc_builder_compatibility_label($compatibilityStatus)
-                                    ) ?>
-                                </small>
-
-                            </div>
-
-
-                            <div class="pb-metric-card">
-
-                                <span>
-                                    RAM capacity
-                                </span>
-
-                                <strong>
-
-                                    <?= pc_builder_e(
-                                        $ramRequirements['actual_ram_gb']
-                                        ?? (
-                                            $recommendedComponents['ram']['specifications']['capacity_gb']
-                                            ?? '—'
-                                        )
-                                    ) ?>
-
-                                    <small>GB</small>
-
-                                </strong>
-
-                                <small>
-                                    <?= pc_builder_e(
-                                        pc_builder_status_label(
-                                            (string) ($ramRequirements['ram_status'] ?? 'unknown')
-                                        )
-                                    ) ?>
-                                </small>
-
-                            </div>
-
-                        </div>
-
-
-                        <!-- Selected Components -->
-
-                        <div class="pb-components-heading">
-
-                            <div>
-
-                                <span class="pb-section-kicker">
-                                    THE COMPONENTS
-                                </span>
-
-                                <h4>
-                                    Your selected parts
-                                </h4>
-
-                            </div>
-
-                            <span>
-                                <?= count($recommendedComponents) ?> components
-                            </span>
-
-                        </div>
-
-
-                        <div class="pb-components-grid">
-
-                            <?php foreach ($componentLabels as $type => $label): ?>
-
-                                <?php if (!isset($recommendedComponents[$type])) {
-                                    continue;
-                                } ?>
-
-                                <?php $component = $recommendedComponents[$type]; ?>
-
-
-                                <article class="pb-component-card">
-
-                                    <div class="pb-component-card-top">
-
-                                        <span class="pb-component-icon">
-                                            <?= pc_builder_e($componentIcons[$type]) ?>
-                                        </span>
-
-                                        <span class="pb-component-type">
-                                            <?= pc_builder_e($label) ?>
-                                        </span>
-
-
-                                        <?php if (($component['spec_status'] ?? '') === 'verified'): ?>
-
-                                            <span class="pb-mini-check" title="Specifications verified">
-                                                ✓
-                                            </span>
-
-                                        <?php else: ?>
-
-                                            <span class="pb-mini-warning" title="Specifications need verification">
-                                                !
-                                            </span>
-
-                                        <?php endif; ?>
-
-                                    </div>
-
-
-                                    <h5>
-                                        <?= pc_builder_e(
-                                            $component['name'] ?? 'Unknown component'
-                                        ) ?>
-                                    </h5>
-
-
-                                    <div class="pb-component-meta">
-
-                                        <span>
-                                            <?= pc_builder_e($component['brand'] ?? '') ?>
-                                        </span>
-
-                                        <span>
-                                            <?= pc_builder_e(
-                                                ucfirst((string) ($component['condition_type'] ?? ''))
-                                            ) ?>
-                                        </span>
-
-                                    </div>
-
-
-                                    <div class="pb-component-price">
-                                        <?= pc_builder_e(
-                                            pc_builder_money($component['price'] ?? 0)
-                                        ) ?>
-                                    </div>
-
-                                </article>
-
-                            <?php endforeach; ?>
-
-                        </div>
-
-
-                        <!-- Components Needing Verification -->
-
-                        <?php if (!empty($componentsNeedingVerification)): ?>
-
-                            <div class="pb-verification-notice">
-
-                                <div class="pb-notice-symbol">
-                                    !
-                                </div>
-
-                                <div>
-
-                                    <strong>
-                                        Some specifications need verification
-                                    </strong>
-
-                                    <p>
-                                        These products have incomplete specification
-                                        records. Review them before purchasing.
-                                    </p>
-
-                                    <ul>
-
-                                        <?php foreach ($componentsNeedingVerification as $item): ?>
-
-                                            <li>
-
-                                                <?= pc_builder_e($item['name'] ?? 'Component') ?>
-
-                                                —
-
-                                                <?= pc_builder_e(
-                                                    ucwords(
-                                                        str_replace(
-                                                            '_',
-                                                            ' ',
-                                                            (string) ($item['component_type'] ?? '')
-                                                        )
-                                                    )
-                                                ) ?>
-
-                                            </li>
-
-                                        <?php endforeach; ?>
-
-                                    </ul>
-
-                                </div>
-
-                            </div>
-
-                        <?php endif; ?>
-
-
-                        <!-- Compatibility Checks -->
-
-                        <?php if (!empty($compatibilityChecks)): ?>
-
-                            <details class="pb-checks-details">
-
-                                <summary>
-
-                                    View compatibility check details
-
-                                    <span>
-                                        <?= count($compatibilityChecks) ?> checks
-                                    </span>
-
-                                </summary>
-
-
-                                <div class="pb-checks-list">
-
-                                    <?php foreach ($compatibilityChecks as $check): ?>
-
-                                        <?php
-                                        $checkStatus = (string) (
-                                            $check['status'] ?? 'needs_verification'
-                                        );
-                                        ?>
-
-                                        <div class="pb-check-row">
-
-                                            <span class="pb-check-indicator <?= pc_builder_e($checkStatus) ?>"></span>
-
-                                            <span class="pb-check-name">
-
-                                                <?= pc_builder_e(
-                                                    ucwords(
-                                                        str_replace(
-                                                            '_',
-                                                            ' ',
-                                                            (string) ($check['code'] ?? 'Compatibility check')
-                                                        )
-                                                    )
-                                                ) ?>
-
-                                            </span>
-
-                                            <span class="pb-check-message">
-                                                <?= pc_builder_e($check['message'] ?? '') ?>
-                                            </span>
-
-                                            <span class="pb-check-status <?= pc_builder_e($checkStatus) ?>">
-
-                                                <?= pc_builder_e(
-                                                    pc_builder_status_label($checkStatus)
-                                                ) ?>
-
-                                            </span>
-
-                                        </div>
-
-                                    <?php endforeach; ?>
-
-                                </div>
-
-                            </details>
-
-                        <?php endif; ?>
-
-
-                        <!-- Storage Policy -->
-
-                        <?php if (is_array($storagePolicy)): ?>
-
-                            <p class="pb-policy-note">
-                                Primary storage policy: SSD selected.
-                                Secondary HDD selection is not part of this build step yet.
-                            </p>
-
-                        <?php endif; ?>
-
-                    </article>
-
-
-                    <!-- =================================================
-                         ALTERNATIVE BUILDS
-                    ================================================== -->
-
-                    <?php if (!empty($alternatives)): ?>
-
-                        <div class="pb-alternatives-heading">
-
-                            <div>
-
-                                <span class="pb-section-kicker">
-                                    OTHER OPTIONS
-                                </span>
-
-                                <h3>
-                                    Compare alternatives.
-                                </h3>
-
-                                <p>
-                                    Different component combinations that also fit your requirements.
-                                </p>
-
-                            </div>
-
-                            <span class="pb-alternative-count">
-                                <?= count($alternatives) ?> alternatives
-                            </span>
-
-                        </div>
-
-
-                        <div class="pb-alternatives-grid">
-
-                            <?php foreach ($alternatives as $alternativeIndex => $alternative): ?>
-
-                                <?php
-
-                                $alternativeComponents = $alternative['components'] ?? [];
-
-                                $alternativeRam = $alternative['purpose_requirements'] ?? [];
-
+                                $alternativeComponents =
+                                    $alternative['components'] ?? [];
+
+                                $alternativeRam =
+                                    $alternative['purpose_requirements'] ?? [];
                                 ?>
 
+                    <article class="pbx-alternative-card">
 
-                                <article class="pb-alternative-card">
+                        <div class="pbx-alternative-top">
 
-                                    <div class="pb-alternative-top">
+                            <span>
+                                OPTION <?= (int) ($index + 1) ?>
+                            </span>
 
-                                        <span>
-                                            OPTION <?= (int) ($alternativeIndex + 1) ?>
-                                        </span>
-
-                                        <strong>
-
-                                            <?= is_numeric($alternative['recommendation_score'] ?? null)
+                            <strong>
+                                <?= is_numeric($alternative['recommendation_score'] ?? null)
                                                 ? pc_builder_e(
                                                     number_format(
                                                         (float) $alternative['recommendation_score'],
@@ -1440,101 +1436,66 @@ echo $storePageStart;
                                                     )
                                                 )
                                                 : '—' ?>
+                                <small>/100</small>
+                            </strong>
 
-                                            <small>
-                                                score
-                                            </small>
-
-                                        </strong>
-
-                                    </div>
+                        </div>
 
 
-                                    <div class="pb-alternative-price">
-
-                                        <?= pc_builder_e(
+                        <div class="pbx-alternative-price">
+                            <?= pc_builder_e(
                                             pc_builder_money($alternative['total_price'] ?? 0)
                                         ) ?>
+                        </div>
 
-                                    </div>
 
+                        <div class="pbx-alternative-details">
 
-                                    <div class="pb-alternative-specs">
-
-                                        <div>
-
-                                            <span>
-                                                Processor
-                                            </span>
-
-                                            <strong>
-                                                <?= pc_builder_e(
+                            <div>
+                                <span>Processor</span>
+                                <strong>
+                                    <?= pc_builder_e(
                                                     $alternativeComponents['cpu']['name'] ?? '—'
                                                 ) ?>
-                                            </strong>
+                                </strong>
+                            </div>
 
-                                        </div>
-
-
-                                        <div>
-
-                                            <span>
-                                                Graphics
-                                            </span>
-
-                                            <strong>
-                                                <?= pc_builder_e(
+                            <div>
+                                <span>Graphics</span>
+                                <strong>
+                                    <?= pc_builder_e(
                                                     $alternativeComponents['gpu']['name'] ?? '—'
                                                 ) ?>
-                                            </strong>
+                                </strong>
+                            </div>
 
-                                        </div>
-
-
-                                        <div>
-
-                                            <span>
-                                                Memory
-                                            </span>
-
-                                            <strong>
-
-                                                <?= pc_builder_e(
+                            <div>
+                                <span>Memory</span>
+                                <strong>
+                                    <?= pc_builder_e(
                                                     $alternativeRam['actual_ram_gb']
-                                                    ?? (
-                                                        $alternativeComponents['ram']['specifications']['capacity_gb']
-                                                        ?? '—'
-                                                    )
-                                                ) ?>GB
+                                                    ?? ($alternativeComponents['ram']['specifications']['capacity_gb'] ?? '—')
+                                                ) ?> GB
+                                </strong>
+                            </div>
 
-                                            </strong>
-
-                                        </div>
-
-
-                                        <div>
-
-                                            <span>
-                                                Storage
-                                            </span>
-
-                                            <strong>
-                                                <?= pc_builder_e(
+                            <div>
+                                <span>Storage</span>
+                                <strong>
+                                    <?= pc_builder_e(
                                                     $alternativeComponents['storage']['name'] ?? '—'
                                                 ) ?>
-                                            </strong>
+                                </strong>
+                            </div>
 
-                                        </div>
-
-                                    </div>
+                        </div>
 
 
-                                    <div class="pb-alternative-footer">
+                        <div class="pbx-alternative-footer">
 
-                                        <span
-                                            class="<?= ($alternative['compatibility_status'] ?? '') === 'compatible' ? 'is-good' : 'is-warning' ?>">
-
-                                            <?= pc_builder_e(
+                            <span
+                                class="<?= ($alternative['compatibility_status'] ?? '') === 'compatible' ? 'is-good' : 'is-warning' ?>">
+                                <?= pc_builder_e(
                                                 pc_builder_status_label(
                                                     (string) (
                                                         $alternative['compatibility_status']
@@ -1542,90 +1503,54 @@ echo $storePageStart;
                                                     )
                                                 )
                                             ) ?>
+                            </span>
 
-                                        </span>
-
-                                        <span>
-                                            <?= (int) ($alternative['verified_components'] ?? 0) ?>/8 verified
-                                        </span>
-
-                                    </div>
-
-                                </article>
-
-                            <?php endforeach; ?>
+                            <span>
+                                <?= (int) ($alternative['verified_components'] ?? 0) ?>/8 verified
+                            </span>
 
                         </div>
 
-                    <?php endif; ?>
+                    </article>
 
+                    <?php endforeach; ?>
 
-                    <!-- Results Disclaimer -->
-
-                    <div class="pb-results-footnote">
-
-                        <span>ⓘ</span>
-
-                        <p>
-                            Performance scores are relative rankings based on the benchmark
-                            data currently available. They are not predicted FPS for the
-                            complete PC. A build marked “Needs verification” should be
-                            reviewed before purchase.
-                        </p>
-
-                    </div>
-
-                <?php endif; ?>
+                </div>
 
             </section>
+
+            <?php endif; ?>
+
+            <?php endif; ?>
+
+        </section>
 
         <?php endif; ?>
 
 
-        <!-- =====================================================
-             BOTTOM BANNER
-        ====================================================== -->
-
-        <section class="pb-bottom-banner">
+        <!-- FINAL CTA -->
+        <section class="pbx-final-cta">
 
             <div>
-
-                <span class="pb-section-kicker">
-                    NEED A DIFFERENT CONFIGURATION?
-                </span>
-
-                <h2>
-                    Your build should work for you.
-                </h2>
-
+                <span class="pbx-section-kicker">YOUR NEXT UPGRADE STARTS HERE</span>
+                <h2>Ready to rethink your build?</h2>
                 <p>
-                    Adjust your budget or purpose and generate another set of recommendations.
+                    Change your budget, choose another purpose and explore
+                    a different configuration.
                 </p>
-
             </div>
 
-            <a href="pc_builder.php#builder-form">
-                Start again <span>→</span>
+            <a href="pc_builder.php#pbx-builder">
+                Build another PC
+                <span>↗</span>
             </a>
 
         </section>
 
-    </div><!-- /.pb-main -->
-
-</div><!-- /.pc-builder-page -->
+    </div><!-- /.pbx-page -->
 
 
-<?php
-
-/*
-|--------------------------------------------------------------------------
-| Close Existing Customer Layout
-|--------------------------------------------------------------------------
-|
-| This closes the main element and renders the existing store dialogs,
-| footer and closing HTML tags.
-|
-*/
+    <?php
 
 store_page_end();
 
