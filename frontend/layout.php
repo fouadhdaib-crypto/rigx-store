@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../backend/config/config.php';
+require_once __DIR__ . '/admin/guard.php';
 
 function regix_brand(string $assetPrefix = ''): void
 {

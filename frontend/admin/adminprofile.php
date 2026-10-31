@@ -14,7 +14,7 @@ if ($userId <= 0) {
 }
 
 if (($_SESSION['user_role'] ?? '') === 'customer') {
-    header('Location: ../user/userprofile.php');
+    header('Location: ../User/userprofile.php');
     exit;
 }
 
@@ -154,9 +154,6 @@ heading('Account', 'My Profile', 'Manage your admin account details and password
   </div>
   <div class="pf-tags">
     <span class="badge badge-role-admin"><?= e(ucfirst((string)$profile['role'])) ?></span>
-    <span class="badge <?= $profile['status'] === 'active' ? 'badge-status-active' : 'badge-status-inactive' ?>">
-      <?= e(ucfirst((string)$profile['status'])) ?>
-    </span>
   </div>
 </section>
 

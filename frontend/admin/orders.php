@@ -12,11 +12,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json; charset=utf-8');
     try {
         $db = DB_conn::getConnection();
-        $admin = $db->prepare("SELECT id FROM users WHERE email = ? AND role = 'admin' AND status = 'active' AND deleted_at IS NULL");
-        $admin->execute([(string) ($_SESSION['email'] ?? '')]);
+        $admin = $db->prepare(
+            "SELECT id FROM users
+             WHERE id = ? AND role = 'admin' AND deleted_at IS NULL"
+        );
+        $admin->execute([(int) ($_SESSION['user_id'] ?? 0)]);
         if (($_SESSION['user_role'] ?? '') !== 'admin' || !$admin->fetchColumn()) {
             http_response_code(403);
-            echo json_encode(['error' => 'Please sign in with an active admin account to manage orders.']);
+            echo json_encode(['error' => 'Please sign in with an admin account to manage orders.']);
             exit;
         }
         if (!hash_equals($_SESSION['orders_csrf'], (string) ($_POST['csrf'] ?? ''))) {

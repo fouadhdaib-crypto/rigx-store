@@ -72,6 +72,7 @@ class Product {
     public function createProduct(array $data) : bool {
 
         $sql = "INSERT INTO products (
+                seller_id,
                 category_id,
                 name,
                 brand,
@@ -82,11 +83,12 @@ class Product {
                 listing_status,
                 product_img,
                 product_variant
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         $stmt = $this->pdo->prepare($sql);
 
         return $stmt->execute([
+            $data['seller_id'],
             $data['category_id'],
             $data['name'],
             $data['brand'],

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/OrderClass.php';
 
-// PHP 8.0 alternative to an enum.
 final class OrderSaveMode
 {
     public const ADD_NEW = 'add_new';
@@ -214,7 +214,15 @@ class Order
                 throw new InvalidArgumentException('This order has no payment record. Keep payment status Pending.');
             }
 
-            // Load existing values so status edits preserve customer and shipping data.
+            if (
+                in_array($order['status'], ['pending', 'confirmed'], true) &&
+                $status === 'cancelled'
+            ) {
+                (new OrderClass())->restoreInventoryForOrder($id);
+            } elseif ($order['status'] === 'cancelled' && $status !== 'cancelled') {
+                (new OrderClass())->reserveInventoryForOrder($id);
+            }
+
             $existing = new self(
                 $this->db,
                 OrderSaveMode::UPDATE,
@@ -252,14 +260,64 @@ class Order
 
     public function delete(int $id): bool
     {
-        // Soft delete: keep the order history in the database.
-        $statement = $this->db->prepare(
-            'UPDATE orders SET deleted_at = CURRENT_TIMESTAMP
-             WHERE id = :id AND deleted_at IS NULL'
-        );
-        $statement->execute(['id' => $id]);
+        $this->db->beginTransaction();
 
-        return $statement->rowCount() > 0;
+        try {
+            $statement = $this->db->prepare(
+                'SELECT status, cart_id FROM orders
+                 WHERE id = ? AND deleted_at IS NULL FOR UPDATE'
+            );
+            $statement->execute([$id]);
+            $order = $statement->fetch(PDO::FETCH_ASSOC);
+            if (!$order) {
+                $this->db->rollBack();
+                return false;
+            }
+
+            if (in_array($order['status'], ['pending', 'confirmed'], true) && $order['cart_id'] !== null) {
+                $statement = $this->db->prepare(
+                    'SELECT id, payment_method, payment_status FROM payments
+                     WHERE cart_id = ? AND deleted_at IS NULL
+                     ORDER BY id DESC LIMIT 1 FOR UPDATE'
+                );
+                $statement->execute([$order['cart_id']]);
+                $payment = $statement->fetch(PDO::FETCH_ASSOC);
+                if ($payment && $payment['payment_status'] !== 'paid') {
+                    (new OrderClass())->restoreInventoryForOrder($id);
+                    $statement = $this->db->prepare(
+                        "UPDATE orders SET status = 'cancelled'
+                         WHERE id = ? AND status IN ('pending', 'confirmed')"
+                    );
+                    $statement->execute([$id]);
+                    if ($payment['payment_status'] === 'pending') {
+                        $statement = $this->db->prepare(
+                            "UPDATE payments SET payment_status = 'failed'
+                             WHERE id = ? AND payment_status = 'pending'"
+                        );
+                        $statement->execute([(int) $payment['id']]);
+                    }
+                    $statement = $this->db->prepare(
+                        "UPDATE carts SET status = 'active', updated_at = CURRENT_TIMESTAMP
+                         WHERE id = ? AND deleted_at IS NULL"
+                    );
+                    $statement->execute([(int) $order['cart_id']]);
+                }
+            }
+
+            $statement = $this->db->prepare(
+                'UPDATE orders SET deleted_at = CURRENT_TIMESTAMP
+                 WHERE id = ? AND deleted_at IS NULL'
+            );
+            $statement->execute([$id]);
+            $deleted = $statement->rowCount() > 0;
+            $this->db->commit();
+            return $deleted;
+        } catch (Throwable $error) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $error;
+        }
     }
 
     private function values(): array
