@@ -217,7 +217,7 @@ $pageNumbers = array_unique(array_merge([1, $totalPages], range(max(1, $page - 2
 sort($pageNumbers);
 
 page_start('Products', 'products.php');
-heading('Catalog', 'Products', 'Create, update and manage every product listed in your store.');
+heading('STORE MANAGEMENT', 'Products', 'Create, update and manage every product listed in your store.');
 ?>
 
 <link rel="stylesheet" href="../css/product_admin_view.css?v=<?= (int) @filemtime(__DIR__ . '/../css/product_admin_view.css') ?>">
@@ -347,29 +347,15 @@ heading('Catalog', 'Products', 'Create, update and manage every product listed i
     <div class="panel-heading">
         <div>
             <h2>All products</h2>
-            <p>Every listing, including deleted ones.</p>
+            <p>Manage inventory and pricing, including archived listings.</p>
         </div>
     </div>
 
     <div class="table-scroll">
-        <table>
+        <table class="catalog-table">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Category ID</th>
-                    <th>Name</th>
-                    <th>Brand</th>
-                    <th>Description</th>
-                    <th>Price</th>
-                    <th>Quantity</th>
-                    <th>Condition</th>
-                    <th>Status</th>
-                    <th>Image</th>
-                    <th>Variant</th>
-                    <th>Created At</th>
-                    <th>Updated At</th>
-                    <th>Deleted At</th>
-                    <th>Actions</th>
+                    <th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Condition</th><th>Status</th><th>Actions</th>
                 </tr>
             </thead>
 
@@ -378,7 +364,7 @@ heading('Catalog', 'Products', 'Create, update and manage every product listed i
                 <?php if (empty($products)): ?>
 
                     <tr>
-                        <td colspan="15" class="table-empty">No products yet.</td>
+                        <td colspan="7" class="table-empty">No products yet.</td>
                     </tr>
 
                 <?php else: ?>
@@ -386,26 +372,25 @@ heading('Catalog', 'Products', 'Create, update and manage every product listed i
                     <?php foreach ($products as $product): ?>
 
                         <tr>
-                            <td><?= htmlspecialchars((string)$product['id']) ?></td>
-                            <td><?= htmlspecialchars((string)$product['category_id']) ?></td>
-                            <td class="cell-strong"><?= htmlspecialchars((string)$product['name']) ?></td>
-                            <td><?= htmlspecialchars((string)$product['brand']) ?></td>
-                            <td class="cell-description"><?= htmlspecialchars((string)$product['description']) ?></td>
-                            <td class="cell-strong"><?= htmlspecialchars((string)$product['price']) ?></td>
-                            <td><?= htmlspecialchars((string)$product['quantity']) ?></td>
-                            <td><span class="badge badge-condition"><?= htmlspecialchars((string)$product['condition_type']) ?></span></td>
-                            <td><span class="badge badge-<?= htmlspecialchars((string)$product['listing_status']) ?>"><?= htmlspecialchars((string)$product['listing_status']) ?></span></td>
                             <td>
-                                <?php if (!empty($product['product_img'])): ?>
-                                    <img class="table-thumb" width="46" height="46" src="../<?= htmlspecialchars((string)$product['product_img']) ?>" alt="<?= htmlspecialchars((string)$product['name']) ?>">
-                                <?php else : ?>
-                                    <span class="table-thumb table-thumb-empty">—</span>
-                                <?php endif; ?>
+                                <div class="catalog-product">
+                                    <?php if (!empty($product['product_img'])): ?>
+                                        <img class="table-thumb" src="../<?= e($product['product_img']) ?>" alt="" width="40" height="40" loading="lazy">
+                                    <?php else: ?>
+                                        <span class="table-thumb table-thumb-empty" aria-hidden="true">▣</span>
+                                    <?php endif; ?>
+                                    <div class="catalog-product-copy">
+                                        <strong title="<?= e($product['name']) ?>"><?= e($product['name']) ?></strong>
+                                        <small><?= e((string) $product['brand']) ?> · #<?= (int) $product['id'] ?></small>
+                                        <details class="product-details"><summary>Details</summary><div><p><?= e($product['description']) ?></p><p>Variant: <?= e((string) ($product['product_variant'] ?? '—')) ?></p><p>Created: <?= e($product['created_at']) ?></p><p>Updated: <?= e($product['updated_at']) ?></p></div></details>
+                                    </div>
+                                </div>
                             </td>
-                            <td><?= htmlspecialchars((string)($product['product_variant'] ?? '')) ?></td>
-                            <td><?= htmlspecialchars((string)$product['created_at']) ?></td>
-                            <td><?= htmlspecialchars((string)$product['updated_at']) ?></td>
-                            <td><?= htmlspecialchars((string)($product['deleted_at'] ?? 'Active')) ?></td>
+                            <td><span class="catalog-category">Category #<?= (int) $product['category_id'] ?></span></td>
+                            <td class="cell-strong"><?= number_format((float) $product['price'], 2) ?><small>JOD</small></td>
+                            <td><span class="stock-count <?= (int) $product['quantity'] < 5 ? 'stock-low' : '' ?>"><?= (int) $product['quantity'] ?></span></td>
+                            <td><span class="badge badge-condition"><?= e($product['condition_type']) ?></span></td>
+                            <td><span class="badge badge-<?= $product['deleted_at'] !== null ? 'hidden' : e($product['listing_status']) ?>"><?= $product['deleted_at'] !== null ? 'Archived' : e($product['listing_status']) ?></span></td>
                             <td>
                                 <div class="row-actions">
                                     <form action="products.php?page=<?= $page ?>" method="POST">

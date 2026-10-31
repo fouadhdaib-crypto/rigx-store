@@ -91,6 +91,57 @@ class Order
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function getSummary(): array
+    {
+        $month = new DateTimeImmutable('first day of this month midnight', new DateTimeZone('Asia/Amman'));
+        $start = $month->format('Y-m-d H:i:s');
+        $next = $month->modify('+1 month')->format('Y-m-d H:i:s');
+        $previous = $month->modify('-1 month')->format('Y-m-d H:i:s');
+        $statement = $this->db->prepare(
+            "SELECT COUNT(*) AS total_orders,
+                    COALESCE(SUM(status IN ('pending', 'confirmed')), 0) AS needs_attention,
+                    COALESCE(SUM(status = 'shipped'), 0) AS in_transit,
+                    COALESCE(SUM(CASE WHEN status <> 'cancelled' THEN total_jod ELSE 0 END), 0) AS gross_sales,
+                    COALESCE(SUM(created_at >= ? AND created_at < ?), 0) AS current_orders,
+                    COALESCE(SUM(created_at >= ? AND created_at < ?), 0) AS previous_orders,
+                    COALESCE(SUM(CASE WHEN status <> 'cancelled' AND created_at >= ? AND created_at < ? THEN total_jod ELSE 0 END), 0) AS current_sales,
+                    COALESCE(SUM(CASE WHEN status <> 'cancelled' AND created_at >= ? AND created_at < ? THEN total_jod ELSE 0 END), 0) AS previous_sales
+             FROM orders WHERE deleted_at IS NULL"
+        );
+        $statement->execute([$start, $next, $previous, $start, $start, $next, $previous, $start]);
+        $summary = $statement->fetch(PDO::FETCH_ASSOC);
+        foreach (['orders', 'sales'] as $metric) {
+            $current = (float) $summary['current_' . $metric];
+            $previousValue = (float) $summary['previous_' . $metric];
+            $change = $previousValue > 0 ? ($current - $previousValue) / $previousValue * 100 : null;
+            $summary[$metric . '_change'] = $change;
+            $summary[$metric . '_comparison'] = $change === null
+                ? 'No previous-month data'
+                : ($change > 0 ? '↑ ' : ($change < 0 ? '↓ ' : '')) . number_format(abs($change), 1) . '% this month vs. last month';
+        }
+        return $summary;
+    }
+
+    public function findAllForAdmin(): array
+    {
+        return $this->db->query(
+            "SELECT o.*, u.name AS customer_name, u.email,
+                    COALESCE(i.item_count, 0) AS item_count,
+                    COALESCE(p.payment_status, 'pending') AS payment_status,
+                    COALESCE(p.payment_method, 'not_recorded') AS payment_method
+             FROM orders o
+             LEFT JOIN users u ON u.id = o.user_id
+             LEFT JOIN (SELECT order_id, SUM(quantity) AS item_count
+                        FROM order_items GROUP BY order_id) i ON i.order_id = o.id
+             LEFT JOIN payments p ON p.id = (
+                 SELECT latest.id FROM payments latest
+                 WHERE latest.cart_id = o.cart_id AND latest.deleted_at IS NULL
+                 ORDER BY latest.created_at DESC, latest.id DESC LIMIT 1
+             )
+             WHERE o.deleted_at IS NULL ORDER BY o.id DESC"
+        )->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function findByUserId(int $userId): array
     {
         $statement = $this->db->prepare(
@@ -128,6 +179,75 @@ class Order
         $statement = $this->db->prepare($sql);
 
         return $statement->execute($values);
+    }
+
+    public function updateStatuses(int $id, string $status, string $paymentStatus): bool
+    {
+        if (!in_array($status, ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'], true)
+            || !in_array($paymentStatus, ['pending', 'authorized', 'paid', 'failed', 'refunded'], true)) {
+            throw new InvalidArgumentException('Invalid order or payment status.');
+        }
+
+        $ownsTransaction = !$this->db->inTransaction();
+        if ($ownsTransaction) {
+            $this->db->beginTransaction();
+        }
+
+        try {
+            $statement = $this->db->prepare('SELECT * FROM orders WHERE id = ? AND deleted_at IS NULL FOR UPDATE');
+            $statement->execute([$id]);
+            $order = $statement->fetch(PDO::FETCH_ASSOC);
+            if (!$order) {
+                if ($ownsTransaction) {
+                    $this->db->rollBack();
+                }
+                return false;
+            }
+
+            $payment = $this->db->prepare(
+                'SELECT id FROM payments WHERE cart_id = ? AND deleted_at IS NULL
+                 ORDER BY created_at DESC, id DESC LIMIT 1 FOR UPDATE'
+            );
+            $payment->execute([$order['cart_id']]);
+            $paymentId = $payment->fetchColumn();
+            if (!$paymentId && $paymentStatus !== 'pending') {
+                throw new InvalidArgumentException('This order has no payment record. Keep payment status Pending.');
+            }
+
+            // Load existing values so status edits preserve customer and shipping data.
+            $existing = new self(
+                $this->db,
+                OrderSaveMode::UPDATE,
+                (int) $order['id'],
+                (int) $order['user_id'],
+                $order['cart_id'] === null ? null : (int) $order['cart_id'],
+                $status,
+                $order['total_jod'],
+                $order['shipping_name'],
+                $order['shipping_phone'],
+                $order['shipping_address_line1'],
+                $order['shipping_address_line2'],
+                $order['notes']
+            );
+            if (!$existing->save(OrderSaveMode::UPDATE)) {
+                throw new RuntimeException('Could not update this order.');
+            }
+
+            if ($paymentId) {
+                $statement = $this->db->prepare('UPDATE payments SET payment_status = ? WHERE id = ? AND deleted_at IS NULL');
+                $statement->execute([$paymentStatus, $paymentId]);
+            }
+
+            if ($ownsTransaction) {
+                $this->db->commit();
+            }
+            return true;
+        } catch (Throwable $error) {
+            if ($ownsTransaction && $this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $error;
+        }
     }
 
     public function delete(int $id): bool

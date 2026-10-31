@@ -9,8 +9,10 @@
    1. CONFIGURATION
 ========================================================================== */
 
-// Use the current Admin Dashboard page as the API endpoint.
-const API_URL = window.location.pathname;
+// Use the current Dashboard page as the API endpoint.
+// Normalize duplicated slashes in the pathname.
+const API_URL =
+  window.location.origin + window.location.pathname.replace(/\/{2,}/g, "/");
 
 const CURRENCY = "JD";
 
@@ -195,19 +197,19 @@ async function loadDashboard() {
   hideError();
 
   try {
-    const url = new URL(API_URL, window.location.origin);
+    // Build API URL using the current dashboard.php page.
+    const url = new URL(API_URL);
 
     url.searchParams.set("action", "dashboard");
+    url.searchParams.set("period", String(period));
 
-    url.searchParams.set("period", period);
+    console.log("Dashboard API URL:", url.toString());
 
-    const response = await fetch(url, {
+    const response = await fetch(url.toString(), {
       method: "GET",
-
       headers: {
         Accept: "application/json",
       },
-
       cache: "no-store",
     });
 
@@ -643,25 +645,23 @@ function renderCategories(categories, total) {
     row.className = "legend-row";
 
     row.innerHTML = `
+      <span
+        class="legend-color"
+        style="background:${escapeHTML(color)}">
+      </span>
 
-            <span
-                class="legend-color"
-                style="background:${escapeHTML(color)}">
-            </span>
+      <span class="legend-name">
+        ${escapeHTML(category.name)}
+      </span>
 
-            <span class="legend-name">
-                ${escapeHTML(category.name)}
-            </span>
+      <span class="legend-amount">
+        ${escapeHTML(money(category.amount))}
+      </span>
 
-            <span class="legend-amount">
-                ${escapeHTML(money(category.amount))}
-            </span>
-
-            <span class="legend-percent">
-                ${Number(category.percentage).toFixed(1)}%
-            </span>
-
-        `;
+      <span class="legend-percent">
+        ${Number(category.percentage).toFixed(1)}%
+      </span>
+    `;
 
     legend.appendChild(row);
   });
@@ -722,14 +722,12 @@ function renderProducts(products) {
 
   if (!Array.isArray(products) || products.length === 0) {
     tbody.innerHTML = `
-
-            <tr>
-                <td colspan="4">
-                    No product sales found for this period.
-                </td>
-            </tr>
-
-        `;
+      <tr>
+        <td colspan="4">
+          No product sales found for this period.
+        </td>
+      </tr>
+    `;
 
     document.getElementById("productsCount").textContent = "No product data";
 
@@ -740,61 +738,51 @@ function renderProducts(products) {
     const row = document.createElement("tr");
 
     row.innerHTML = `
+      <td>
+        <div class="product-cell">
 
-            <td>
+          <span class="product-thumb">
+            ${getProductIcon(product.category)}
+          </span>
 
-                <div class="product-cell">
+          <span class="product-name">
+            <strong>
+              ${escapeHTML(product.name)}
+            </strong>
 
-                    <span class="product-thumb">
-                        ${getProductIcon(product.category)}
-                    </span>
+            <small>
+              ${escapeHTML(product.brand || product.category)}
+            </small>
+          </span>
 
-                    <span class="product-name">
+        </div>
+      </td>
 
-                        <strong>
-                            ${escapeHTML(product.name)}
-                        </strong>
+      <td>
+        ${escapeHTML(money(product.revenue))}
+      </td>
 
-                        <small>
-                            ${escapeHTML(product.brand || product.category)}
-                        </small>
+      <td>
+        ${numberFormat(product.units)}
+      </td>
 
-                    </span>
+      <td>
+        <div class="performance-wrap">
 
-                </div>
+          <span class="performance-track">
+            <span style="width:${Math.min(
+              Math.max(Number(product.performance), 0),
+              100,
+            )}%"></span>
+          </span>
 
-            </td>
+          <small>
+            ${Number(product.performance)}%
+          </small>
 
-            <td>
-                ${escapeHTML(money(product.revenue))}
-            </td>
-
-            <td>
-                ${numberFormat(product.units)}
-            </td>
-
-            <td>
-
-                <div class="performance-wrap">
-
-                    <span class="performance-track">
-
-                        <span style="width:${Math.min(
-                          Math.max(Number(product.performance), 0),
-                          100,
-                        )}%"></span>
-
-                    </span>
-
-                    <small>
-                        ${Number(product.performance)}%
-                    </small>
-
-                </div>
-
-            </td>
-
-        `;
+        </div>
+      </td>
+    `;
 
     tbody.appendChild(row);
   });
@@ -818,18 +806,16 @@ function renderInventory(items) {
 
   if (!Array.isArray(items) || items.length === 0) {
     container.innerHTML = `
+      <div class="empty-state">
 
-            <div class="empty-state">
+        <span style="color:#a3e635;font-size:20px">✓</span>
 
-                <span style="color:#a3e635;font-size:20px">✓</span>
+        <div>
+          All products have sufficient stock.
+        </div>
 
-                <div>
-                    All products have sufficient stock.
-                </div>
-
-            </div>
-
-        `;
+      </div>
+    `;
 
     return;
   }
@@ -842,40 +828,38 @@ function renderInventory(items) {
     row.className = "inventory-item";
 
     row.innerHTML = `
+      <span class="stock-symbol">
+        ${getProductIcon(item.category)}
+      </span>
 
-            <span class="stock-symbol">
-                ${getProductIcon(item.category)}
-            </span>
+      <span class="stock-info">
 
-            <span class="stock-info">
+        <strong>
+          ${escapeHTML(item.name)}
+        </strong>
 
-                <strong>
-                    ${escapeHTML(item.name)}
-                </strong>
+        <small>
+          ${escapeHTML(item.brand || item.category)}
+        </small>
 
-                <small>
-                    ${escapeHTML(item.brand || item.category)}
-                </small>
+        <span class="stock-pill ${critical ? "critical" : "low"}">
+          ${escapeHTML(item.state)}
+        </span>
 
-                <span class="stock-pill ${critical ? "critical" : "low"}">
-                    ${escapeHTML(item.state)}
-                </span>
+      </span>
 
-            </span>
+      <span class="stock-level">
 
-            <span class="stock-level">
+        <strong>
+          ${numberFormat(item.stock)} left
+        </strong>
 
-                <strong>
-                    ${numberFormat(item.stock)} left
-                </strong>
+        <small>
+          Low stock threshold: 5
+        </small>
 
-                <small>
-                    Low stock threshold: 5
-                </small>
-
-            </span>
-
-        `;
+      </span>
+    `;
 
     container.appendChild(row);
   });
@@ -913,61 +897,53 @@ function renderOrders() {
     const statusClass = String(order.status).toLowerCase();
 
     row.innerHTML = `
+      <td>
+        <span class="order-id">
+          #${escapeHTML(order.id)}
+        </span>
+      </td>
 
-            <td>
+      <td>
+        <div class="customer-cell">
 
-                <span class="order-id">
-                    #${escapeHTML(order.id)}
-                </span>
+          <span class="customer-avatar">
+            ${escapeHTML(order.initials || "U")}
+          </span>
 
-            </td>
+          <span class="customer-name">
 
-            <td>
+            <strong>
+              ${escapeHTML(order.customer)}
+            </strong>
 
-                <div class="customer-cell">
+            <small>
+              ${escapeHTML(order.email)}
+            </small>
 
-                    <span class="customer-avatar">
-                        ${escapeHTML(order.initials || "U")}
-                    </span>
+          </span>
 
-                    <span class="customer-name">
+        </div>
+      </td>
 
-                        <strong>
-                            ${escapeHTML(order.customer)}
-                        </strong>
+      <td>
+        ${escapeHTML(order.date)}
+      </td>
 
-                        <small>
-                            ${escapeHTML(order.email)}
-                        </small>
+      <td>
+        ${numberFormat(order.items)}
+        ${Number(order.items) === 1 ? "item" : "items"}
+      </td>
 
-                    </span>
+      <td>
+        ${escapeHTML(money(order.amount))}
+      </td>
 
-                </div>
-
-            </td>
-
-            <td>
-                ${escapeHTML(order.date)}
-            </td>
-
-            <td>
-                ${numberFormat(order.items)}
-                ${Number(order.items) === 1 ? "item" : "items"}
-            </td>
-
-            <td>
-                ${escapeHTML(money(order.amount))}
-            </td>
-
-            <td>
-
-                <span class="status-badge ${escapeHTML(statusClass)}">
-                    ${escapeHTML(order.status)}
-                </span>
-
-            </td>
-
-        `;
+      <td>
+        <span class="status-badge ${escapeHTML(statusClass)}">
+          ${escapeHTML(order.status)}
+        </span>
+      </td>
+    `;
 
     elements.ordersBody.appendChild(row);
   });

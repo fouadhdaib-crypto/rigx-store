@@ -138,6 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $categories = $category->getAll($search);
 
 page_start('Categories', 'categories.php');
+heading('STORE MANAGEMENT', 'Categories', 'Organize your catalog and manage product collections.');
 ?>
 
 <!-- تم اضافة ملف الـ CSS هنا -->
@@ -146,12 +147,7 @@ page_start('Categories', 'categories.php');
 <div class="categories-page">
 
     <section class="category-toolbar">
-        <div>
-            <div class="category-kicker">YOUR STORE CATALOG</div>
-            <h2>Manage categories<span>.</span></h2>
-            <p>Create and organize collections for your products.</p>
-        </div>
-
+        <span class="catalog-toolbar-note">Keep every collection organized and easy to discover.</span>
         <button type="button" class="add-category-btn" id="openCategoryModal">
             <span aria-hidden="true">＋</span>
             Add Category
@@ -249,7 +245,7 @@ page_start('Categories', 'categories.php');
                             <tr>
                                 <td>
                                     <div class="category-name-cell">
-                                        <strong><?= e($cat['name']) ?></strong>
+                                        <strong title="<?= e($cat['name']) ?>"><?= e($cat['name']) ?></strong>
                                     </div>
                                 </td>
 
