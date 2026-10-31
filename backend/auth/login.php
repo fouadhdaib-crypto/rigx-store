@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['login_btn'])) {
             if (session_status() === PHP_SESSION_NONE) {
                 session_start();
             }
-            
+            $_SESSION['user_id']   = $user['id'];
             $_SESSION['email']     = $user['email'];
             $_SESSION['user_name'] = $user['name'];
             $_SESSION['user_role'] = $user['role'];
@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['login_btn'])) {
                 header("Location: ../../frontend/user/index.php");
                 exit();
             } else {
-                header("Location: ../../frontend/admin/dashboard.php");
+                header("Location: ../../frontend/admin/index.php");
                 exit();
             }
         } else {

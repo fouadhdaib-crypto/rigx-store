@@ -9,11 +9,8 @@ function e(string $value): string
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
-function admin_name(): string
-{
-    return isset($_SESSION['email'])
-        ? (string) ($_SESSION['user_name'] ?? $_SESSION['email'])
-        : 'Guest';
+function admin_name(): string {
+    return (string)($_SESSION['user_name'] ?? $_SESSION['admin_name'] ?? 'Store Administrator');
 }
 
 function initials(string $name): string

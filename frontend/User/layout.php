@@ -126,9 +126,25 @@ function store_page_start(
                 <a class="store-brand" href="index.php" aria-label="REGIX home">
                     <img src="../assets/regix-logo.svg" alt="REGIX — Next level shopping" width="180" height="44">
                 </a>
-                <nav class="store-nav" id="store-nav" aria-label="Store navigation">
-                <a class="store-home-link" href="index.php" <?= basename($_SERVER['SCRIPT_NAME'] ?? '') === 'index.php' ? 'aria-current="page"' : '' ?>>Home</a>
-                <a href="store.php" <?= basename($_SERVER['SCRIPT_NAME'] ?? '') === 'store.php' ? 'aria-current="page"' : '' ?>>Store</a>
+                <a class="account-link" href="<?= (!empty($_SESSION['email']) || !empty($_SESSION['user_id']))
+                    ? 'userprofile.php'
+                    : '../../backend/auth/login.php' ?>">
+                    <?= store_icon('user') ?>
+                    <span>
+                        <?= e((string) ($_SESSION['user_name'] ?? 'Sign in')) ?>
+                    </span>
+                </a>
+                <button
+                    class="menu-button"
+                    type="button"
+                    aria-controls="store-nav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation"
+                >
+                    <?= store_icon('menu') ?>
+                </button>
+            </div>
+            <nav class="store-nav wrap" id="store-nav" aria-label="Store navigation">
                 <a href="index.php#categories">Categories</a>
                 <a href="index.php#rigs">Featured rigs</a>
                 <a href="index.php#builder">Build planner</a>
@@ -179,7 +195,9 @@ function store_page_end(): void
                     <a href="index.php#categories">
                         Categories
                     </a>
-                    <a href="../../backend/auth/login.php">
+                    <a href="<?= (!empty($_SESSION['email']) || !empty($_SESSION['user_id']))
+                        ? 'userprofile.php'
+                        : '../../backend/auth/login.php' ?>">
                         Your account
                     </a>
                 </nav>
@@ -188,25 +206,7 @@ function store_page_end(): void
                 </small>
             </div>
         </footer>
-        <dialog id="store-search-dialog" class="store-search-dialog" aria-labelledby="store-search-title">
-            <div class="store-dialog-heading"><div><span class="gaming-kicker">FIND YOUR NEXT UPGRADE</span><h2 id="store-search-title">What’s on your wishlist?</h2></div><button type="button" class="store-icon-button" data-close-store-dialog aria-label="Close search"><?= store_icon('close') ?></button></div>
-            <form action="index.php#categories" method="get" class="store-search-form" id="landing-category-search" role="search"><label class="sr-only" for="header-search">Search categories</label><?= store_icon('search') ?><input id="header-search" name="q" type="search" maxlength="100" placeholder="Search hardware categories…" required><button type="submit" aria-label="Search"><?= store_icon('arrow') ?></button></form>
-            <p>Start with a category, then explore what fits your setup.</p><div class="store-search-suggestions"><a href="index.php?q=Memory#categories">Memory</a><a href="index.php?q=Storage#categories">Storage</a><a href="index.php?q=Graphics#categories">Graphics cards</a></div>
-        </dialog>
-        <dialog id="store-cart-dialog" class="store-cart-dialog" aria-labelledby="store-cart-title">
-            <div class="store-dialog-heading"><div><span class="gaming-kicker">YOUR NEXT SETUP</span><h2 id="store-cart-title">Your cart <span><?= (int) $cart['count'] ?></span></h2></div><button type="button" class="store-icon-button" data-close-store-dialog aria-label="Close cart"><?= store_icon('close') ?></button></div>
-            <?php if ($cart['error']): ?>
-                <div class="store-cart-empty"><?= store_icon('box') ?><h3>We couldn’t load your cart.</h3><p>Please refresh the page and try again.</p></div>
-            <?php elseif (!$cart['items']): ?>
-                <div class="store-cart-empty"><span class="cart-empty-orbit"><?= store_icon('cart') ?></span><span class="gaming-kicker">ROOM FOR SOMETHING GREAT</span><h3>Your next upgrade starts here.</h3><p><?= empty($_SESSION['email']) ? 'Sign in to see your saved cart, or explore the collection for your next find.' : 'Your cart is empty. Discover the components that make your setup yours.' ?></p><a class="button neon-button" href="<?= empty($_SESSION['email']) ? '../../backend/auth/login.php' : 'index.php#categories' ?>"><?= empty($_SESSION['email']) ? 'Sign in to your account' : 'Explore categories' ?> <?= store_icon('arrow') ?></a></div>
-            <?php else: ?>
-                <div class="store-cart-items"><?php foreach ($cart['items'] as $item): ?><article class="store-cart-item"><span class="cart-item-icon"><?= store_icon('box') ?></span><div><h3><?= e($item['name']) ?></h3><p>Qty <?= (int) $item['quantity'] ?> · <?= number_format((float) $item['price'], 2) ?> JOD each</p></div><strong><?= number_format((float) $item['price'] * (int) $item['quantity'], 2) ?><small>JOD</small></strong></article><?php endforeach; ?></div>
-                <div class="store-cart-summary"><span>Subtotal</span><strong><?= number_format($cart['total'], 2) ?> JOD</strong><p>Before any discounts or delivery charges.</p></div>
-            <?php endif; ?>
-            <div class="store-cart-bottom"><button class="button glass-button" type="button" data-close-store-dialog>Continue exploring <?= store_icon('arrow') ?></button><span><?= store_icon('check') ?> Your setup, one great find at a time.</span></div>
-        </dialog>
-        </body>
-
-    </html>
-    <?php
+    </body>
+</html>
+<?php
 }

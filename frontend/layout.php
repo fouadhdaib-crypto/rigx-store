@@ -33,7 +33,9 @@ function page_start(string $title, string $active, string $extraHead = ''): void
     ];
 
     $name = admin_name();
-    $isLoggedIn = !empty($_SESSION['email']);
+    $isLoggedIn = !empty($_SESSION['email']) || !empty($_SESSION['user_id']);
+    $profilePath = $inAdminDirectory ? 'adminprofile.php' : 'admin/adminprofile.php';
+    $profileHref = $isLoggedIn ? $profilePath : $loginPath;
     $roleLabels = [
         'admin' => 'Administrator',
         'customer' => 'Customer',
@@ -232,7 +234,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
                     </div>
 
                     <!-- Admin Profile -->
-                    <div class="profile-mini">
+                    <a class="profile-mini" href="<?= e($profileHref) ?>" title="View my profile">
 
                         <span class="avatar">
                             <?= e(initials($name)) ?>
@@ -256,7 +258,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
                             <?= !$isLoggedIn ? 'style="background: #64748b; box-shadow: none;"' : '' ?>
                         ></span>
 
-                    </div>
+                    </a>
 
                 </div>
 
