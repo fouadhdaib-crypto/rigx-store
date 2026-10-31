@@ -118,7 +118,8 @@ function page_start(string $title, string $active, string $extraHead = ''): void
                     <?php regix_brand($assetPrefix); ?>
 
                     <!-- Workspace Switcher -->
-                    <div class="workspace-switcher">
+                    <details class="workspace-menu">
+                    <summary class="workspace-switcher">
 
                         <span class="workspace-icon">
                             <img src="<?= e($assetPrefix) ?>assets/regix-mark.svg" alt=""
@@ -134,7 +135,18 @@ function page_start(string $title, string $active, string $extraHead = ''): void
                             ⌄
                         </span>
 
-                    </div>
+                    </summary>
+                    <nav class="workspace-menu-links" aria-label="Workspace account">
+                        <a href="<?= e($profileHref) ?>">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>
+                            Your profile
+                        </a>
+                        <a class="workspace-sign-out" href="<?= e($logoutPath) ?>">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5H4v14h5M14 8l4 4-4 4M8 12h12"/></svg>
+                            Sign out
+                        </a>
+                    </nav>
+                    </details>
 
                     <!-- Workspace Navigation -->
                     <div class="sidebar-nav-scroll" tabindex="0" role="region" aria-label="Sidebar navigation">

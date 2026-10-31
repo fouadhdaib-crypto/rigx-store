@@ -789,3 +789,25 @@
             transition: none;
         }
     }
+
+/* Compact category filters, matching the other management toolbars. */
+body[data-admin-page=categories] .category-controls { display: block; padding: 20px; }
+body.admin-management[data-admin-page=categories] .category-search { display: grid; grid-template-columns: minmax(200px, 2fr) repeat(3, minmax(125px, 1fr)) auto; align-items: center; gap: 12px; width: 100%; max-width: none; min-width: 0; margin-top: 18px; padding: 0; border: 0; border-radius: 0; background: transparent; box-sizing: border-box; }
+body.admin-management[data-admin-page=categories] .category-search:has(.clear-search) { grid-template-columns: minmax(200px, 2fr) repeat(3, minmax(125px, 1fr)) auto auto; }
+body[data-admin-page=categories] .category-search-input { display: flex; align-items: center; gap: 10px; min-width: 0; height: 40px; padding-inline: 12px; border: 1px solid #303743; border-radius: 9px; background: #191d24; }
+body[data-admin-page=categories] .category-search-input > span { color: #64748b; font-size: 22px; }
+body[data-admin-page=categories] .category-search input { width: 100%; min-width: 0; height: 38px; padding: 0; border: 0; background: transparent; font-size: 11px; }
+body[data-admin-page=categories] .category-search select { width: 100%; min-width: 0; height: 40px; padding: 9px 12px; border: 1px solid #303743; border-radius: 9px; background: #191d24; color: #e2e8f0; font: inherit; font-size: 11px; color-scheme: dark; }
+body[data-admin-page=categories] .category-search button { height: 40px; padding: 9px 16px; border-radius: 9px; font-size: 11px; }
+body[data-admin-page=categories] .category-search .clear-search { font-size: 11px; color: #94a3b8; }
+body[data-admin-page=categories] .category-search :is(select, input):focus-visible { outline: 2px solid #a3e635; outline-offset: 2px; }
+@media (max-width: 1200px) {
+    body.admin-management[data-admin-page=categories] .category-search { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    body.admin-management[data-admin-page=categories] .category-search:has(.clear-search) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    body[data-admin-page=categories] .category-search-input { grid-column: 1 / -1; }
+}
+@media (max-width: 600px) {
+    body[data-admin-page=categories] .category-controls { padding: 14px; }
+    body.admin-management[data-admin-page=categories] .category-search,
+    body.admin-management[data-admin-page=categories] .category-search:has(.clear-search) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+}

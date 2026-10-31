@@ -100,7 +100,9 @@ $initials = strtoupper(mb_substr($profile['name'], 0, 1));
 
 store_page_start('My profile');
 ?>
-<link rel="stylesheet" href="../css/userprofile.css">
+<link rel="stylesheet" href="../css/userprofile.css?v=<?= filemtime(__DIR__ . '/../css/userprofile.css') ?>">
+<div class="regix-profile">
+<a class="profile-back" href="index.php">← Back to store</a>
 
 <section class="profile-head">
     <div class="avatar" aria-hidden="true"><?= e($initials) ?></div>
@@ -109,7 +111,7 @@ store_page_start('My profile');
         <h1><?= e($profile['name']) ?></h1>
         <p class="muted"><?= e($profile['email']) ?> · Member since <?= e(substr((string)$profile['created_at'], 0, 10)) ?></p>
     </div>
-    <a class="button ghost" href="../../backend/auth/logout.php">Log out</a>
+    <a class="button ghost" href="../../backend/auth/logout.php">Sign out <?= store_icon('arrow') ?></a>
 </section>
 
 <?php if ($flash['msg'] !== ''): ?>
@@ -126,6 +128,7 @@ store_page_start('My profile');
 
     <form class="panel" method="post" novalidate>
         <h2>Personal information</h2>
+        <p class="panel-description">Your details, ready for your next upgrade.</p>
 
         <label for="name">Full name</label>
         <input id="name" name="name" type="text" maxlength="100" required value="<?= e($fName) ?>">
@@ -144,7 +147,8 @@ store_page_start('My profile');
 
     
     <form class="panel" method="post" autocomplete="off" novalidate>
-        <h2>Change password</h2>
+        <h2>Account security</h2>
+        <p class="panel-description">Use a unique password with at least 8 characters.</p>
 
         <label for="current_password">Current password</label>
         <input id="current_password" name="current_password" type="password" autocomplete="current-password" required>
@@ -165,8 +169,9 @@ store_page_start('My profile');
 
 <section class="panel orders-panel">
     <h2>Recent orders</h2>
+    <p class="panel-description">Your latest orders and their current status.</p>
     <?php if (!$orders): ?>
-        <p class="muted">You haven't placed any orders yet.</p>
+        <div class="profile-empty"><?= store_icon('box') ?><h3>Your next build starts here</h3><p class="muted">You haven't placed any orders yet.</p><a class="button" href="index.php#rigs">Explore builds <?= store_icon('arrow') ?></a></div>
     <?php else: ?>
         <div class="table-wrap">
             <table>
@@ -188,4 +193,5 @@ store_page_start('My profile');
     <?php endif; ?>
 </section>
 
+</div>
 <?php store_page_end(); ?>

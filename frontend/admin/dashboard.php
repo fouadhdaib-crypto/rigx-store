@@ -127,7 +127,7 @@ $layoutOutput = str_replace(
 $layoutOutput = str_replace(
     '<link rel="stylesheet" href="../css/admin.css">',
     '<link rel="stylesheet" href="../css/admin.css">' . PHP_EOL .
-    '        <link rel="stylesheet" href="../css/Dashboard.css">',
+    '        <link rel="stylesheet" href="../css/Dashboard.css?v=' . filemtime(__DIR__ . '/../css/Dashboard.css') . '">',
     $layoutOutput
 );
 

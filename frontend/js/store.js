@@ -53,7 +53,8 @@ document.addEventListener('keydown', (event) => {
     document.querySelectorAll('.store-account[open]').forEach((account) => account.removeAttribute('open'));
 });
 
-const categoryCards = Array.from(document.querySelectorAll('.hardware-category'));
+const categoryCards = Array.from(document.querySelectorAll('.hardware-category, .landing-featured .landing-product-card'));
+const searchingProducts = document.querySelector('.landing-featured') !== null;
 const categoryFeedback = document.getElementById('landing-category-feedback');
 
 function filterLandingCategories(query) {
@@ -62,12 +63,15 @@ function filterLandingCategories(query) {
     let matches = 0;
     categoryCards.forEach((card) => {
         card.hidden = normalized !== '' && !card.textContent.toLocaleLowerCase().includes(normalized);
-        const categoryProducts = document.querySelector(card.getAttribute('href'));
+        const target = card.getAttribute('href');
+        const categoryProducts = target ? document.querySelector(target) : null;
         if (categoryProducts) categoryProducts.hidden = card.hidden;
         if (!card.hidden) matches++;
     });
     categoryFeedback.hidden = normalized === '';
-    categoryFeedback.textContent = matches
+    categoryFeedback.textContent = searchingProducts
+        ? (matches ? `${matches} featured ${matches === 1 ? 'product' : 'products'} matching “${query.trim()}”.` : `No featured products match “${query.trim()}”.`)
+        : matches
         ? `${matches} ${matches === 1 ? 'category' : 'categories'} matching “${query.trim()}”. Choose All categories to reset.`
         : `No categories match “${query.trim()}”. Choose All categories to see everything.`;
 }
@@ -96,3 +100,102 @@ document.querySelectorAll('[data-clear-category-search]').forEach((link) => {
 
 const initialCategoryQuery = new URLSearchParams(window.location.search).get('q');
 if (initialCategoryQuery) filterLandingCategories(initialCategoryQuery);
+
+const storeFilterForm = document.querySelector('.store-catalog-filters');
+
+if (storeFilterForm) {
+    const storeSearch = document.getElementById('store-search');
+    const storeCategory = document.getElementById('store-category');
+    const storeCondition = document.getElementById('store-condition');
+    const storeClear = document.getElementById('store-clear');
+    const storeResultCount = document.getElementById('store-result-count');
+    const storeNoResults = document.getElementById('store-no-results');
+    const storeCards = Array.from(document.querySelectorAll('.store-catalog .landing-product-card'));
+    const filterButtons = Array.from(storeFilterForm.querySelectorAll('[data-filter-target]'));
+
+    const applyStoreFilters = () => {
+        filterButtons.forEach((button) => {
+            const input = button.dataset.filterTarget === 'store-category' ? storeCategory : storeCondition;
+            button.setAttribute('aria-pressed', String(button.dataset.filterValue === input.value));
+        });
+        const query = storeSearch.value.trim().toLocaleLowerCase();
+        let matches = 0;
+
+        storeCards.forEach((card) => {
+            const visible = (!query || card.dataset.search.toLocaleLowerCase().includes(query))
+                && (!storeCategory.value || card.dataset.category === storeCategory.value)
+                && (!storeCondition.value || card.dataset.condition === storeCondition.value);
+
+            card.hidden = !visible;
+            card.style.display = visible ? '' : 'none';
+
+            if (visible) {
+                matches++;
+            }
+        });
+
+        storeResultCount.textContent = matches + ' ' + (matches === 1 ? 'product' : 'products') + ' available';
+
+        if (storeNoResults) {
+            storeNoResults.style.display = storeCards.length > 0 && matches === 0 ? '' : 'none';
+        }
+
+        storeClear.disabled = !(query || storeCategory.value || storeCondition.value);
+
+        const url = new URL(window.location.href);
+
+        if (storeSearch.value.trim()) {
+            url.searchParams.set('q', storeSearch.value.trim());
+        } else {
+            url.searchParams.delete('q');
+        }
+
+        if (storeCategory.value) {
+            url.searchParams.set('category_id', storeCategory.value);
+        } else {
+            url.searchParams.delete('category_id');
+        }
+
+        if (storeCondition.value) {
+            url.searchParams.set('condition', storeCondition.value);
+        } else {
+            url.searchParams.delete('condition');
+        }
+
+        window.history.replaceState({}, '', url);
+    };
+
+    const params = new URLSearchParams(window.location.search);
+
+    storeSearch.value = params.get('q') ?? storeSearch.value;
+    storeCategory.value = params.get('category_id') ?? '';
+    storeCondition.value = params.get('condition') ?? '';
+    [storeCategory, storeCondition].forEach((input) => {
+        if (!filterButtons.some((button) => button.dataset.filterTarget === input.id && button.dataset.filterValue === input.value)) input.value = '';
+    });
+    filterButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            const input = button.dataset.filterTarget === 'store-category' ? storeCategory : storeCondition;
+            input.value = button.dataset.filterValue;
+            applyStoreFilters();
+        });
+    });
+
+    storeSearch.addEventListener('input', applyStoreFilters);
+    storeCategory.addEventListener('change', applyStoreFilters);
+    storeCondition.addEventListener('change', applyStoreFilters);
+
+    storeFilterForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+    });
+
+    storeClear.addEventListener('click', (event) => {
+        event.preventDefault();
+        storeSearch.value = '';
+        storeCategory.value = '';
+        storeCondition.value = '';
+        applyStoreFilters();
+    });
+
+    applyStoreFilters();
+}

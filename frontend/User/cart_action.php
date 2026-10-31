@@ -10,10 +10,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit('Method not allowed.');
 }
 
+$returnToStore = ($_POST['return_to'] ?? '') === 'store';
+$returnPage = $returnToStore ? 'store.php' : 'index.php';
 $token = is_string($_POST['csrf_token'] ?? null) ? $_POST['csrf_token'] : '';
 if (empty($_SESSION['cart_csrf']) || !hash_equals($_SESSION['cart_csrf'], $token)) {
     $_SESSION['cart_notice'] = 'Your session expired. Reload the page and try again.';
-    header('Location: index.php#categories');
+    header('Location: ' . $returnPage . ($returnToStore ? '' : '#categories'));
     exit;
 }
 
@@ -109,7 +111,7 @@ try {
             }
         }
         $notice = 'Product added to your cart.';
-        $anchor = '#products-' . (int) $product['category_id'];
+        $anchor = $returnToStore ? '' : '#products-' . (int) $product['category_id'];
     } elseif ($action === 'update' || $action === 'remove') {
         $cartItemId = filter_var($_POST['cart_item_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
         if ($cartItemId === false) {
@@ -153,7 +155,7 @@ try {
             $notice = 'Cart quantity updated.';
         }
 
-        $anchor = '#categories';
+        $anchor = $returnToStore ? '' : '#categories';
     } else {
         throw new InvalidArgumentException('Choose a valid cart action.');
     }
@@ -176,15 +178,15 @@ try {
         $db->rollBack();
     }
     $_SESSION['cart_notice'] = $error->getMessage();
-    $anchor = '#categories';
+    $anchor = $returnToStore ? '' : '#categories';
 } catch (Throwable $error) {
     if ($db->inTransaction()) {
         $db->rollBack();
     }
     error_log('Cart update: ' . $error->getMessage());
     $_SESSION['cart_notice'] = 'We could not update your cart. Please try again.';
-    $anchor = '#categories';
+    $anchor = $returnToStore ? '' : '#categories';
 }
 
-header('Location: index.php' . ($anchor ?? '#categories'));
+header('Location: ' . $returnPage . ($anchor ?? ($returnToStore ? '' : '#categories')));
 exit;

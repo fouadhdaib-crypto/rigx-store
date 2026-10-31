@@ -356,3 +356,18 @@ body.admin-management .modal-card :is(.form-message, .modal-actions) { grid-colu
     body.admin-management .modal-card { padding: 20px; }
     body.admin-management .modal-overlay { padding: 16px; }
 }
+/* Workspace account actions stay in the sidebar flow on short screens. */
+.workspace-menu { margin: 24px 0 25px; flex-shrink: 0; }
+.workspace-menu > .workspace-switcher { margin: 0; cursor: pointer; list-style: none; transition: border-color .18s, background .18s; }
+.workspace-menu > summary::-webkit-details-marker { display: none; }
+.workspace-menu > summary:hover, .workspace-menu[open] > summary { border-color: #526e2b; background: #171e12; }
+.workspace-menu > summary:focus-visible { outline: 2px solid #a3e635; outline-offset: 3px; }
+.workspace-menu .chevron { transition: transform .18s; }
+.workspace-menu[open] .chevron { transform: rotate(180deg); }
+.workspace-menu-links { display: grid; gap: 4px; padding: 6px; margin-top: 6px; border: 1px solid #252b33; border-radius: 10px; background: #111418; }
+.workspace-menu-links a { display: flex; align-items: center; gap: 10px; min-height: 42px; padding: 10px 12px; border-radius: 6px; color: #dce4ee; font: inherit; font-size: 13px; text-decoration: none; }
+.workspace-menu-links a svg { width: 18px; height: 18px; flex-shrink: 0; }
+.workspace-menu-links a:hover, .workspace-menu-links a:focus-visible { background: #a3e63512; color: #a3e635; }
+.workspace-menu-links .workspace-sign-out { color: #fca5a5; }
+.workspace-menu-links .workspace-sign-out:hover { color: #fecaca; background: #ef444415; }
+@media (prefers-reduced-motion: reduce) { .workspace-menu > summary, .workspace-menu .chevron { transition: none; } }

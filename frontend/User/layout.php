@@ -78,7 +78,11 @@ function store_page_start(
     bool $landing = false
 ): void {
     $cart = store_cart();
-    $signedIn = !empty($_SESSION['email']);
+    $signedIn = !empty($_SESSION['user_id']) || !empty($_SESSION['email']);
+    $currentPage = basename((string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+    $isStorePage = $currentPage === 'store.php';
+    $isProfilePage = $currentPage === 'userprofile.php';
+    $pageSearch = is_string($_GET['q'] ?? null) ? trim($_GET['q']) : '';
     if (empty($_SESSION['cart_csrf'])) {
         $_SESSION['cart_csrf'] = bin2hex(random_bytes(32));
     }
@@ -96,7 +100,7 @@ function store_page_start(
             href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oxanium:wght@500;600;700;800&display=swap"
             rel="stylesheet">
         <meta name="description"
-            content="Discover new and pre-loved products at REGIX. Browse categories and find your next everyday essential.">
+            content="Discover new and pre-loved products at REGIX. Browse featured products and find your next everyday essential.">
         <title>
             <?= e($title) ?>
             · REGIX
@@ -105,22 +109,20 @@ function store_page_start(
         <link rel="stylesheet" href="../css/store.css">
         <?php if ($landing): ?>
             <link rel="stylesheet" href="../css/landing.css">
-            <script src="../js/landing.js" defer></script>
         <?php endif; ?>
         <link rel="stylesheet" href="../css/storefront.css?v=<?= filemtime(__DIR__ . '/../css/storefront.css') ?>">
         <link rel="stylesheet" href="../css/typography.css?v=<?= filemtime(__DIR__ . '/../css/typography.css') ?>">
-        <?php if ($landing): ?>
-            <link href="https://fonts.googleapis.com/css2?family=Anton&family=Onest:wght@400;500;600&display=swap"
-                rel="stylesheet">
+        <?php if ($landing || $isStorePage || $isProfilePage): ?>
+            <link href="https://fonts.googleapis.com/css2?family=Anton&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
             <link rel="stylesheet" href="../css/cinematic.css?v=<?= filemtime(__DIR__ . '/../css/cinematic.css') ?>">
+        <?php endif; ?>
+        <?php if ($landing): ?>
             <script src="../js/cinematic.js?v=<?= filemtime(__DIR__ . '/../js/cinematic.js') ?>" defer></script>
         <?php endif; ?>
         <script src="../js/store.js?v=<?= filemtime(__DIR__ . '/../js/store.js') ?>" defer></script>
     </head>
-    <body<?= $landing ? ' class="gaming-page"' : '' ?>>
-        <div class="store-ambient" aria-hidden="true"><span class="ambient-glow ambient-glow-one"></span><span
-                class="ambient-glow ambient-glow-two"></span><span class="ambient-grid"></span><span
-                class="ambient-stars"></span></div>
+    <body<?= $landing ? ' class="gaming-page"' : ($isStorePage ? ' class="gaming-page store-page"' : ($isProfilePage ? ' class="gaming-page profile-page"' : '')) ?>>
+        <div class="store-ambient" aria-hidden="true"><span class="ambient-glow ambient-glow-one"></span><span class="ambient-glow ambient-glow-two"></span><span class="ambient-grid"></span><span class="ambient-stars"></span></div>
         <a class="skip-link" href="#main-content">
             Skip to content
         </a>
@@ -138,15 +140,15 @@ function store_page_start(
                     <img src="../assets/regix-logo.svg" alt="REGIX — Next level shopping" width="180" height="44">
                 </a>
                 <nav class="store-nav" id="store-nav" aria-label="Store navigation">
-                    <a href="index.php" <?= $landing ? ' aria-current="page"' : '' ?>>Home</a>
-                    <a href="store.php">Store</a>
-                    <a href="index.php#categories">Categories</a>
-                    <a href="index.php#rigs">Featured rigs</a>
-                    <a href="pc_builder.php">Build planner</a>
+                <a href="index.php"<?= $landing ? ' aria-current="page"' : '' ?>>Home</a>
+                <a href="store.php"<?= $isStorePage ? ' aria-current="page"' : '' ?>>Store</a>
+               <a href="index.php#categories">Categories</a>
+                <a href="index.php#featured-products">Featured products</a>
+                <a href="index.php#rigs">Featured rigs</a>
+                <a href="pc_builder.php">Build planner</a>
                 </nav>
                 <div class="store-header-actions">
-                    <button class="store-icon-button" type="button" data-open-store-dialog="store-search-dialog"
-                        aria-label="Search categories" title="Search categories"><?= store_icon('search') ?></button>
+                    <button class="store-icon-button" type="button" data-open-store-dialog="store-search-dialog" aria-label="<?= $isStorePage ? 'Search products' : 'Search categories' ?>" title="<?= $isStorePage ? 'Search products' : 'Search categories' ?>"><?= store_icon('search') ?></button>
                     <?php if ($signedIn): ?>
                         <details class="store-account">
                             <summary aria-label="Your account"><?= store_icon('user') ?><span
@@ -182,21 +184,20 @@ function store_page_end(): void
 {
     $cart = store_cart();
     $signedIn = !empty($_SESSION['user_id']) && ($_SESSION['user_role'] ?? '') === 'customer';
+    $isStorePage = basename((string) ($_SERVER['SCRIPT_NAME'] ?? '')) === 'store.php';
+    $pageSearch = is_string($_GET['q'] ?? null) ? trim($_GET['q']) : '';
     ?>
         </main>
         <dialog class="store-search-dialog" id="store-search-dialog" aria-labelledby="store-search-title">
             <div class="store-dialog-heading">
-                <div><span class="gaming-kicker">FIND YOUR NEXT UPGRADE</span>
-                    <h2 id="store-search-title">Search categories</h2>
-                </div>
-                <button class="store-icon-button" type="button" data-close-store-dialog
-                    aria-label="Close search"><?= store_icon('close') ?></button>
+                <div><span class="gaming-kicker">FIND YOUR NEXT UPGRADE</span><h2 id="store-search-title"><?= $isStorePage ? 'Search products' : 'Search categories' ?></h2></div>
+                <button class="store-icon-button" type="button" data-close-store-dialog aria-label="Close search"><?= store_icon('close') ?></button>
             </div>
-            <p>Search the categories currently available in the store.</p>
-            <form class="store-search-form" id="landing-category-search" action="index.php#categories" method="get">
+            <p><?= $isStorePage ? 'Find a product by name, brand, or description.' : 'Search the categories currently available in the store.' ?></p>
+            <form class="store-search-form" id="landing-category-search" action="<?= $isStorePage ? 'store.php' : 'index.php#categories' ?>" method="get">
                 <?= store_icon('search') ?>
-                <label class="sr-only" for="header-search">Search categories</label>
-                <input id="header-search" name="q" type="search" placeholder="Search categories" autocomplete="off">
+                <label class="sr-only" for="header-search"><?= $isStorePage ? 'Search products' : 'Search categories' ?></label>
+                <input id="header-search" name="q" type="search" value="<?= $isStorePage ? e($pageSearch) : '' ?>" placeholder="<?= $isStorePage ? 'Search products' : 'Search categories' ?>" autocomplete="off">
                 <button type="submit" aria-label="Search"><?= store_icon('arrow') ?></button>
             </form>
         </dialog>
@@ -215,8 +216,8 @@ function store_page_end(): void
                     <span class="cart-empty-orbit"><?= store_icon('cart') ?></span>
                     <span class="gaming-kicker">NOTHING HERE YET</span>
                     <h3>Your next upgrade is waiting.</h3>
-                    <p>Browse the available categories and add products to your cart.</p>
-                    <button class="button" type="button" data-close-store-dialog>Explore categories</button>
+                    <p>Explore featured products and add your favorites to your cart.</p>
+                    <button class="button" type="button" data-close-store-dialog>Explore products</button>
                 </div>
             <?php else: ?>
                 <div class="store-cart-items">
@@ -297,62 +298,6 @@ function store_page_end(): void
                 </small>
             </div>
         </footer>
-        <dialog class="store-search-dialog" id="store-search-dialog" aria-labelledby="store-search-title">
-            <div class="store-dialog-heading">
-                <div><span class="gaming-kicker">FIND YOUR UPGRADE</span>
-                    <h2 id="store-search-title">Search categories</h2>
-                </div>
-                <button class="store-icon-button" type="button" data-close-store-dialog
-                    aria-label="Close search"><?= store_icon('close') ?></button>
-            </div>
-            <form class="store-search-form" id="landing-category-search" action="index.php#categories" method="get">
-                <?= store_icon('search') ?>
-                <label class="sr-only" for="header-search">Search categories</label>
-                <input id="header-search" name="q" type="search" placeholder="Graphics, memory, processors…">
-                <button type="submit" aria-label="Search"><?= store_icon('arrow') ?></button>
-            </form>
-            <p>Find the right components for your next build.</p>
-            <div class="store-search-suggestions"><a href="index.php?q=Graphics#categories">Graphics</a><a
-                    href="index.php?q=Memory#categories">Memory</a><a href="index.php#categories"
-                    data-clear-category-search>All categories</a></div>
-        </dialog>
-        <dialog class="store-cart-dialog" id="store-cart-dialog" aria-labelledby="store-cart-title">
-            <div class="store-dialog-heading">
-                <div><span class="gaming-kicker">YOUR NEXT UPGRADE</span>
-                    <h2 id="store-cart-title">Your cart <span><?= (int) $cart['count'] ?></span></h2>
-                </div>
-                <button class="store-icon-button" type="button" data-close-store-dialog
-                    aria-label="Close cart"><?= store_icon('close') ?></button>
-            </div>
-            <?php if ($cart['items']): ?>
-                <div class="store-cart-items">
-                    <?php foreach ($cart['items'] as $item): ?>
-                        <article class="store-cart-item">
-                            <span class="cart-item-icon"><?= store_icon('box') ?></span>
-                            <div>
-                                <h3><?= e((string) $item['name']) ?></h3>
-                                <p>Quantity: <?= (int) $item['quantity'] ?></p>
-                            </div>
-                            <strong>JD <?= number_format((float) $item['price'] * (int) $item['quantity'], 2) ?></strong>
-                        </article>
-                    <?php endforeach; ?>
-                </div>
-                <div class="store-cart-summary"><span>Subtotal</span><strong>JD <?= number_format($cart['total'], 2) ?></strong>
-                    <p>Shipping and taxes are calculated at checkout.</p>
-                </div>
-            <?php else: ?>
-                <div class="store-cart-empty">
-                    <span class="cart-empty-orbit"><?= store_icon('cart') ?></span>
-                    <h3><?= $cart['error'] ? 'Your cart is unavailable' : 'Your next upgrade starts here' ?></h3>
-                    <p><?= $cart['error'] ? 'Please try again in a moment.' : (empty($_SESSION['email']) ? 'Sign in to see your saved cart.' : 'Your cart is empty. Explore components for your next build.') ?>
-                    </p>
-                    <?php if (empty($_SESSION['email'])): ?><a class="button" href="../../backend/auth/login.php">Sign in
-                            <?= store_icon('arrow') ?></a><?php endif; ?>
-                </div>
-            <?php endif; ?>
-            <div class="store-cart-bottom"><button class="button" type="button" data-close-store-dialog>Continue exploring
-                    <?= store_icon('arrow') ?></button></div>
-        </dialog>
         </body>
 
     </html>

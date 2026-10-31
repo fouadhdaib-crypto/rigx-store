@@ -72,6 +72,7 @@ $orders = array_map(static function (array $order): array {
         'customer' => (string) ($order['customer_name'] ?? $order['shipping_name']),
         'email' => (string) ($order['email'] ?? 'Email unavailable'),
         'date' => date('M d, Y', strtotime($order['created_at'])),
+        'created' => strtotime($order['created_at']),
         'items' => $order['item_count'] . ' items',
         'total' => number_format((float) $order['total_jod'], 2) . ' JOD',
         'payment' => ucfirst($order['payment_status']),
@@ -160,23 +161,10 @@ heading(
             </div>
             <p>Review and track every order in your store.</p>
         </div>
-        <button class="orders-export" id="orders-export" type="button">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v3h14v-3" />
-            </svg>
-            Export CSV
-        </button>
+
     </div>
 
     <div class="orders-controls">
-        <div class="orders-tabs" role="group" aria-label="Filter orders by status">
-            <button type="button" class="orders-filter active" data-status-filter="all" aria-pressed="true">All <span><?= $statusCounts['all'] ?></span></button>
-            <button type="button" class="orders-filter" data-status-filter="pending" aria-pressed="false">Pending <span><?= $statusCounts['pending'] ?></span></button>
-            <button type="button" class="orders-filter" data-status-filter="confirmed" aria-pressed="false">Confirmed <span><?= $statusCounts['confirmed'] ?></span></button>
-            <button type="button" class="orders-filter" data-status-filter="shipped" aria-pressed="false">Shipped <span><?= $statusCounts['shipped'] ?></span></button>
-            <button type="button" class="orders-filter" data-status-filter="delivered" aria-pressed="false">Delivered <span><?= $statusCounts['delivered'] ?></span></button>
-            <button type="button" class="orders-filter" data-status-filter="cancelled" aria-pressed="false">Cancelled <span><?= $statusCounts['cancelled'] ?></span></button>
-        </div>
         <label class="orders-search">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <circle cx="10.8" cy="10.8" r="6.8" />
@@ -185,6 +173,30 @@ heading(
             <span class="visually-hidden">Search orders</span>
             <input id="orders-search" type="search" placeholder="Search orders..." autocomplete="off">
         </label>
+        <select id="orders-status-select" class="orders-toolbar-select" aria-label="Filter by order status">
+            <option value="all">All statuses</option>
+            <?php foreach (['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'] as $status): ?>
+                <option value="<?= e($status) ?>"><?= e(ucfirst($status)) ?></option>
+            <?php endforeach; ?>
+        </select>
+        <select id="orders-payment-select" class="orders-toolbar-select" aria-label="Filter by payment status">
+            <option value="all">All payments</option>
+            <?php foreach (['pending', 'authorized', 'paid', 'failed', 'refunded'] as $payment): ?>
+                <option value="<?= e($payment) ?>"><?= e(ucfirst($payment)) ?></option>
+            <?php endforeach; ?>
+        </select>
+        <select id="orders-sort-select" class="orders-toolbar-select" aria-label="Sort orders">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="total-desc">Total: high to low</option>
+            <option value="total-asc">Total: low to high</option>
+        </select>
+        <button class="orders-export" id="orders-export" type="button">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v3h14v-3" />
+            </svg>
+            Export CSV
+        </button>
     </div>
 
     <div class="table-scroll orders-table-scroll">
@@ -205,6 +217,7 @@ heading(
                     <tr
                         data-order-row
                         data-order-id="<?= e($order['database_id']) ?>"
+                        data-created="<?= (int) $order['created'] ?>"
                         data-status="<?= e(strtolower($order['status'])) ?>"
                     >
                         <td><strong class="orders-id"><?= e($order['id']) ?></strong></td>

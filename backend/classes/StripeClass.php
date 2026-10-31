@@ -2,39 +2,10 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/PaymentCurrency.php';
+
 class StripeClass
 {
-    public static function verifyWebhookSignature(string $payload, string $signatureHeader, string $secret): bool
-    {
-        if ($secret === '' || $signatureHeader === '') {
-            return false;
-        }
-
-        $timestamp = null;
-        $signatures = [];
-        foreach (explode(',', $signatureHeader) as $part) {
-            [$key, $value] = array_pad(explode('=', trim($part), 2), 2, '');
-            if ($key === 't' && ctype_digit($value)) {
-                $timestamp = (int) $value;
-            } elseif ($key === 'v1' && $value !== '') {
-                $signatures[] = $value;
-            }
-        }
-
-        if ($timestamp === null || abs(time() - $timestamp) > 300 || $signatures === []) {
-            return false;
-        }
-
-        $expected = hash_hmac('sha256', $timestamp . '.' . $payload, $secret);
-        foreach ($signatures as $signature) {
-            if (hash_equals($expected, $signature)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     public function createCheckoutSession(array $items, int $orderId, string $returnBaseUrl): array
     {
         if (!defined('STRIPE_SECRET_KEY') || STRIPE_SECRET_KEY === '') {
@@ -46,13 +17,14 @@ class StripeClass
 
         $data = [
             'mode' => 'payment',
-            'currency' => 'jod',
+            'currency' => PaymentCurrency::STRIPE_CURRENCY,
             'success_url' => $returnBaseUrl . '/payment_success.php?session_id={CHECKOUT_SESSION_ID}&order_id=' . $orderId,
             'cancel_url' => $returnBaseUrl . '/payment_cancel.php?order_id=' . $orderId,
             'client_reference_id' => (string) $orderId,
             'metadata' => ['order_id' => (string) $orderId],
         ];
 
+        $totalMinorUnits = 0;
         foreach ($items as $index => $item) {
             $price = (float) ($item['price'] ?? 0);
             $quantity = (int) ($item['quantity'] ?? 0);
@@ -60,14 +32,20 @@ class StripeClass
                 throw new InvalidArgumentException('Invalid Stripe line item.');
             }
 
+            $unitAmount = PaymentCurrency::toStripeMinorUnits($price);
+            $totalMinorUnits += $unitAmount * $quantity;
             $data['line_items'][$index] = [
                 'price_data' => [
-                    'currency' => 'jod',
+                    'currency' => PaymentCurrency::STRIPE_CURRENCY,
                     'product_data' => ['name' => (string) $item['name']],
-                    'unit_amount' => (int) round($price * 1000),
+                    'unit_amount' => $unitAmount,
                 ],
                 'quantity' => $quantity,
             ];
+        }
+
+        if ($totalMinorUnits < 50) {
+            throw new InvalidArgumentException('The Stripe payment total must be at least 0.50 USD.');
         }
 
         return $this->sendRequest('POST', '/v1/checkout/sessions', $data);

@@ -5,6 +5,7 @@ require_once __DIR__ . '/../../backend/config/db.php';
 require_once __DIR__ . '/../../backend/config/stripe.php';
 require_once __DIR__ . '/../../backend/classes/StripeClass.php';
 require_once __DIR__ . '/../../backend/classes/OrderClass.php';
+require_once __DIR__ . '/../../backend/classes/PaymentCurrency.php';
 
 if (empty($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'customer') {
     header('Location: ../../backend/auth/login.php');
@@ -73,6 +74,11 @@ $subtotal = array_reduce(
         $total + ((float) $item['price'] * (int) $item['quantity']),
     0.0
 );
+$stripeTotalMinorUnits = array_sum(array_map(
+    static fn(array $item): int =>
+        PaymentCurrency::toStripeMinorUnits((float) $item['price']) * (int) $item['quantity'],
+    $items
+));
 if ($confirmation) {
     $subtotal = (float) $confirmation['total_jod'];
 }
@@ -310,12 +316,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             paymentForm.querySelectorAll('input[name="payment_method"]').forEach(input => {
                 input.addEventListener('change', () => {
                     const isStripe = input.value === 'stripe' && input.checked;
+                    const stripeTotal = <?= json_encode(number_format($stripeTotalMinorUnits / 100, 2, '.', '')) ?>;
 
                     paymentSubmit.textContent = isStripe
                         ? 'Continue to secure payment'
                         : 'Place cash on delivery order';
                     paymentHelp.lastElementChild.textContent = isStripe
-                        ? 'Payment details are handled securely by Stripe.'
+                        ? `Stripe will charge $${stripeTotal} USD at the test rate of 1 JOD = $1.41 USD. Card details are handled securely by Stripe.`
                         : 'Pay in cash when your order is delivered.';
                 });
             });

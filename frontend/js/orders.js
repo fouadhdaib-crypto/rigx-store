@@ -10,6 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let rows = Array.from(tableBody.querySelectorAll('[data-order-row]'));
   let activeStatus = 'all';
+  const statusSelect = document.getElementById('orders-status-select');
+  const paymentSelect = document.getElementById('orders-payment-select');
+  const sortSelect = document.getElementById('orders-sort-select');
 
   const updateSummary = (summary) => {
     if (!summary) return;
@@ -25,11 +28,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const updateRows = () => {
     const query = searchInput.value.trim().toLocaleLowerCase();
     let visibleCount = 0;
+    const sort = sortSelect?.value || 'newest';
+    const total = (row) => Number(row.querySelector('.orders-total').textContent.replace(/[^0-9.]/g, ''));
+    rows.sort((a, b) => sort.startsWith('total-')
+      ? (total(a) - total(b)) * (sort === 'total-asc' ? 1 : -1) || Number(b.dataset.orderId) - Number(a.dataset.orderId)
+      : (Number(a.dataset.created) - Number(b.dataset.created) || Number(a.dataset.orderId) - Number(b.dataset.orderId)) * (sort === 'oldest' ? 1 : -1));
+    rows.forEach((row) => tableBody.insertBefore(row, emptyRow));
 
     rows.forEach((row) => {
       const matchesStatus = activeStatus === 'all' || row.dataset.status === activeStatus;
       const matchesSearch = row.textContent.toLocaleLowerCase().includes(query);
-      const visible = matchesStatus && matchesSearch;
+      const payment = row.querySelector('.orders-payment').textContent.trim().toLowerCase();
+      const matchesPayment = !paymentSelect || paymentSelect.value === 'all' || paymentSelect.value === payment;
+      const visible = matchesStatus && matchesSearch && matchesPayment;
       row.hidden = !visible;
       if (visible) visibleCount += 1;
     });
@@ -57,6 +68,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   searchInput.addEventListener('input', updateRows);
+  statusSelect?.addEventListener('change', () => {
+    activeStatus = statusSelect.value;
+    updateRows();
+  });
+  paymentSelect?.addEventListener('change', updateRows);
+  sortSelect?.addEventListener('change', updateRows);
 
   const deleteDialog = document.getElementById('order-delete-dialog');
   let deletingRow = null;
