@@ -128,18 +128,23 @@ if (storeFilterForm) {
     const storeNoResults = document.getElementById('store-no-results');
     const storeCards = Array.from(document.querySelectorAll('.store-catalog .landing-product-card'));
     const filterButtons = Array.from(storeFilterForm.querySelectorAll('[data-filter-target]'));
+    let storeSearchTimer;
 
     const applyStoreFilters = () => {
+        clearTimeout(storeSearchTimer);
         filterButtons.forEach((button) => {
             const input = button.dataset.filterTarget === 'store-category' ? storeCategory : storeCondition;
             button.setAttribute('aria-pressed', String(button.dataset.filterValue === input.value));
         });
         const query = storeSearch.value.trim().toLocaleLowerCase();
+        const mergedCategory = filterButtons.find(button => button.dataset.filterTarget === 'store-category'
+            && button.dataset.values && button.dataset.values.split(',').includes(storeCategory.value));
+        const selectedCategories = mergedCategory ? mergedCategory.dataset.values.split(',') : [storeCategory.value];
         let matches = 0;
 
         storeCards.forEach((card) => {
             const visible = (!query || card.dataset.search.toLocaleLowerCase().includes(query))
-                && (!storeCategory.value || card.dataset.category === storeCategory.value)
+                && (!storeCategory.value || selectedCategories.includes(card.dataset.category))
                 && (!storeCondition.value || card.dataset.condition === storeCondition.value);
 
             card.hidden = !visible;
@@ -179,6 +184,7 @@ if (storeFilterForm) {
         }
 
         window.history.replaceState({}, '', url);
+        storeFilterForm.dispatchEvent(new CustomEvent('store:filters-updated'));
     };
 
     const params = new URLSearchParams(window.location.search);
@@ -197,7 +203,10 @@ if (storeFilterForm) {
         });
     });
 
-    storeSearch.addEventListener('input', applyStoreFilters);
+    storeSearch.addEventListener('input', () => {
+        clearTimeout(storeSearchTimer);
+        storeSearchTimer = setTimeout(applyStoreFilters, 300);
+    });
     storeCategory.addEventListener('change', applyStoreFilters);
     storeCondition.addEventListener('change', applyStoreFilters);
 
@@ -214,4 +223,16 @@ if (storeFilterForm) {
     });
 
     applyStoreFilters();
+}
+
+// Browser-only enhancement: no edits to the PHP filter markup are needed.
+if (storeFilterForm) {
+    const enhancementBase = new URL('.', document.currentScript.src);
+    const filterStyles = document.createElement('link');
+    filterStyles.rel = 'stylesheet';
+    filterStyles.href = new URL('../css/store-filter-enhancements.css?v=1', enhancementBase);
+    document.head.append(filterStyles);
+    const filterEnhancements = document.createElement('script');
+    filterEnhancements.src = new URL('store-filter-enhancements.js?v=1', enhancementBase);
+    document.head.append(filterEnhancements);
 }
