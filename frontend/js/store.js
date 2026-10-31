@@ -53,7 +53,8 @@ document.addEventListener('keydown', (event) => {
     document.querySelectorAll('.store-account[open]').forEach((account) => account.removeAttribute('open'));
 });
 
-const categoryCards = Array.from(document.querySelectorAll('.hardware-category'));
+const categoryCards = Array.from(document.querySelectorAll('.hardware-category, .landing-featured .landing-product-card'));
+const searchingProducts = document.querySelector('.landing-featured') !== null;
 const categoryFeedback = document.getElementById('landing-category-feedback');
 
 function filterLandingCategories(query) {
@@ -62,12 +63,15 @@ function filterLandingCategories(query) {
     let matches = 0;
     categoryCards.forEach((card) => {
         card.hidden = normalized !== '' && !card.textContent.toLocaleLowerCase().includes(normalized);
-        const categoryProducts = document.querySelector(card.getAttribute('href'));
+        const target = card.getAttribute('href');
+        const categoryProducts = target ? document.querySelector(target) : null;
         if (categoryProducts) categoryProducts.hidden = card.hidden;
         if (!card.hidden) matches++;
     });
     categoryFeedback.hidden = normalized === '';
-    categoryFeedback.textContent = matches
+    categoryFeedback.textContent = searchingProducts
+        ? (matches ? `${matches} featured ${matches === 1 ? 'product' : 'products'} matching “${query.trim()}”.` : `No featured products match “${query.trim()}”.`)
+        : matches
         ? `${matches} ${matches === 1 ? 'category' : 'categories'} matching “${query.trim()}”. Choose All categories to reset.`
         : `No categories match “${query.trim()}”. Choose All categories to see everything.`;
 }

@@ -28,7 +28,7 @@ html.lenis-smooth { scroll-behavior: auto; }
 .gaming-page .store-footer p, .gaming-page .store-footer nav, .gaming-page .store-footer small { font-family: var(--campaign-body); }
 .gaming-page h1, .gaming-page h2 { font-family: var(--campaign-display); font-weight: 400; }
 .gaming-page h3 { font-family: var(--campaign-body); }
-.campaign-section { padding: clamp(65px, 9vw, 150px) var(--campaign-gutter); max-width: 1800px; margin-inline: auto; }
+.campaign-section { padding: clamp(28px, 3vw, 44px) var(--campaign-gutter); max-width: 1800px; margin-inline: auto; }
 .campaign-label { display: inline-flex; align-items: center; gap: 11px; font-size: 9px; font-weight: 500; line-height: 1.5; letter-spacing: 2px; color: var(--campaign-muted); text-transform: uppercase; }
 .campaign-label::before { content: ''; flex-shrink: 0; width: 5px; height: 5px; border-radius: 50%; background: #a3e635; }
 .campaign-link { display: inline-flex; align-items: center; gap: 22px; font-size: 11px; color: var(--campaign-ink); transition: color .25s, gap .25s; }
@@ -62,8 +62,10 @@ html.lenis-smooth { scroll-behavior: auto; }
 .campaign-section-heading h2 { font: 400 clamp(45px, 6.5vw, 110px)/.98 var(--campaign-display); letter-spacing: -.02em; margin-top: 22px; }
 .campaign-section-heading h2 span { color: #a3e635; }
 .campaign-section-heading > p { max-width: 250px; font-size: 11px; line-height: 1.8; color: var(--campaign-muted); }
-.campaign-story { display: grid; grid-template-columns: 1fr .8fr; align-items: start; gap: 10%; }
+.campaign-story { display: grid; grid-template-columns: 1fr 1fr; align-items: start; gap: 32px 5%; }
 .campaign-story .campaign-section-heading { display: block; margin-bottom: 0; }
+.campaign-story .campaign-label { font-size: 12px; }
+.campaign-story .campaign-section-heading h2 { font-size: clamp(48px, 6.5vw, 110px); }
 .campaign-story-copy { padding-top: 40px; }
 .campaign-story-copy > p { font-size: 13px; color: var(--campaign-muted); line-height: 1.9; }
 .campaign-story-copy > .campaign-lead { margin-bottom: 20px; color: #f3f1ea; font-size: clamp(20px, 2.2vw, 34px); line-height: 1.35; letter-spacing: -.6px; }
@@ -72,6 +74,8 @@ html.lenis-smooth { scroll-behavior: auto; }
 .campaign-principles article > span { font-size: 9px; color: #a3e635; padding-top: 4px; }
 .campaign-principles h3 { font-size: 14px; font-weight: 500; margin-bottom: 7px; }
 .campaign-principles p { font-size: 11px; color: var(--campaign-muted); line-height: 1.8; max-width: 360px; }
+.campaign-story > .campaign-principles { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; margin-top: 0; }
+.campaign-story > .campaign-principles article { gap: 16px; padding-block: 18px 0; }
 .campaign-categories { padding-top: 20px; }
 .campaign-category-list { border-top: 1px solid var(--campaign-line); }
 .gaming-page .campaign-category-list .hardware-category { display: flex; align-items: center; gap: 25px; padding: 27px 0; border: 0; border-bottom: 1px solid var(--campaign-line); border-radius: 0; background: none; transform: none; }
@@ -84,6 +88,9 @@ html.lenis-smooth { scroll-behavior: auto; }
 .campaign-category-list .hardware-category:hover > svg { transform: rotate(-40deg); }
 .campaign-category-list .hardware-category[hidden] { display: none; }
 .campaign-rigs { padding-top: 10px; }
+.campaign-rigs.campaign-section { padding-bottom: 18px; }
+.campaign-playstyles.campaign-section { padding-top: 18px; }
+.campaign-playstyles .campaign-section-heading { margin-bottom: 22px; }
 .campaign-rig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 50px 35px; align-items: start; }
 .campaign-rig:nth-child(2) { margin-top: 110px; }
 .campaign-rig-image { position: relative; display: block; aspect-ratio: 16/11; overflow: hidden; background: #131613; }
@@ -100,7 +107,7 @@ html.lenis-smooth { scroll-behavior: auto; }
 .campaign-custom-rig h3 { position: relative; z-index: 1; font: 400 clamp(45px, 6.8vw, 100px)/1 var(--campaign-display); margin: 28px 0 18px; letter-spacing: -1px; }
 .campaign-custom-rig p { position: relative; z-index: 1; font-size: 12px; color: var(--campaign-muted); margin-bottom: 28px; }
 .campaign-custom-cross { position: absolute; right: -20px; top: 90px; color: #a3e63512; font-size: 310px; line-height: 1; pointer-events: none; }
-.campaign-playstyle-grid { display: grid; grid-template-columns: 1fr 1.25fr; gap: 8%; }
+.campaign-playstyle-grid { display: grid; grid-template-columns: 1fr 1.25fr; align-items: start; gap: 5%; }
 .campaign-playstyle-tabs button { width: 100%; display: flex; align-items: center; gap: 23px; padding: 24px 0; background: transparent; border: 0; border-top: 1px solid var(--campaign-line); color: #8c8f85; text-align: left; cursor: pointer; }
 .campaign-playstyle-tabs button:last-child { border-bottom: 1px solid var(--campaign-line); }
 .campaign-playstyle-tabs button > span:first-child { font-size: 9px; color: var(--campaign-muted); }
@@ -110,7 +117,7 @@ html.lenis-smooth { scroll-behavior: auto; }
 .campaign-playstyle-tabs button[aria-selected=true] { color: #f3f1ea; }
 .campaign-playstyle-tabs button[aria-selected=true] > span:first-child { color: #a3e635; }
 .campaign-playstyle-tabs button[aria-selected=true] i { opacity: 1; }
-.campaign-focus-panel { position: relative; padding: 25px 0; }
+.campaign-focus-panel { position: relative; padding: 0; }
 .campaign-focus-glyph { display: block; color: #a3e635; font: 400 100px/.9 var(--campaign-display); margin-bottom: 26px; }
 .campaign-focus-panel > p { max-width: 32ch; font-size: clamp(21px, 2.5vw, 36px); line-height: 1.35; letter-spacing: -.8px; }
 .campaign-focus-panel .campaign-link { margin-top: 30px; }
@@ -177,10 +184,12 @@ body.regix-intro-loading { overflow: hidden; }
     .campaign-marquee { padding-block: 19px 26px; }
     .marquee-track > div { gap: 25px; padding-right: 25px; font-size: 52px; }
     .campaign-story { grid-template-columns: 1fr; gap: 30px; }
+    .campaign-story > .campaign-principles { grid-template-columns: 1fr; gap: 16px; }
     .campaign-story-copy { padding: 0; }
     .campaign-section-heading { margin-bottom: 30px; gap: 25px; flex-direction: column; align-items: flex-start; }
     .campaign-section-heading h2 { font-size: clamp(42px, 11vw, 70px); margin-top: 16px; }
     .campaign-story .campaign-section-heading { margin: 0; }
+    .campaign-story .campaign-section-heading h2 { font-size: clamp(46px, 12vw, 78px); }
     .campaign-story-copy > .campaign-lead { font-size: 24px; }
     .campaign-story-copy > p { font-size: 12px; }
     .campaign-category-list .hardware-category { gap: 13px; }
@@ -222,7 +231,7 @@ body.regix-intro-loading { overflow: hidden; }
     .gaming-page { --campaign-gutter: clamp(20px, 2.6vw, 52px); }
     .gaming-page .header-main { min-height: 70px; padding-block: 13px; }
     .gaming-page .store-brand img { width: 128px; }
-    .campaign-section { padding-block: clamp(55px, 7.2vw, 120px); }
+    .campaign-section { padding-block: clamp(32px, 3vw, 44px); }
     .campaign-hero {
         min-height: 560px;
         height: max(560px, calc(85svh - 70px));
@@ -251,7 +260,7 @@ body.regix-intro-loading { overflow: hidden; }
     .campaign-custom-rig h3 { font-size: clamp(45px, 5.5vw, 80px); }
     .campaign-playstyle-tabs button { padding-block: 19px; }
     .campaign-playstyle-tabs button > span:nth-child(2) { font-size: clamp(17px, 1.8vw, 25px); }
-    .campaign-focus-glyph { font-size: 80px; margin-bottom: 21px; }
+    .campaign-focus-glyph { font-size: 58px; margin-bottom: 12px; }
     .campaign-focus-panel > p { font-size: clamp(21px, 2vw, 29px); }
     .gaming-page .build-planner { padding: 40px; }
     .gaming-page .planner-copy h2 { font-size: clamp(40px, 4vw, 63px); }

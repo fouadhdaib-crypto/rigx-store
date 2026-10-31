@@ -97,7 +97,7 @@ function store_page_start(
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oxanium:wght@500;600;700;800&display=swap" rel="stylesheet">
         <meta name="description"
-            content="Discover new and pre-loved products at REGIX. Browse categories and find your next everyday essential.">
+            content="Discover new and pre-loved products at REGIX. Browse featured products and find your next everyday essential.">
         <title>
             <?= e($title) ?>
             · REGIX
@@ -138,12 +138,12 @@ function store_page_start(
                 <nav class="store-nav" id="store-nav" aria-label="Store navigation">
                 <a href="index.php"<?= $landing ? ' aria-current="page"' : '' ?>>Home</a>
                 <a href="store.php"<?= $isStorePage ? ' aria-current="page"' : '' ?>>Store</a>
-                <a href="index.php#categories">Categories</a>
+               <a href="index.php#categories">Featured products</a>
                 <a href="index.php#rigs">Featured rigs</a>
                 <a href="index.php#builder">Build planner</a>
                 </nav>
                 <div class="store-header-actions">
-                    <button class="store-icon-button" type="button" data-open-store-dialog="store-search-dialog" aria-label="Search categories" title="Search categories"><?= store_icon('search') ?></button>
+                    <button class="store-icon-button" type="button" data-open-store-dialog="store-search-dialog" aria-label="Search featured products" title="Search featured products"><?= store_icon('search') ?></button>
                     <?php if ($signedIn): ?>
                         <details class="store-account">
                             <summary aria-label="Your account"><?= store_icon('user') ?><span class="account-name"><?= e((string) ($_SESSION['user_name'] ?? 'Account')) ?></span><?= store_icon('chevron') ?></summary>
@@ -194,8 +194,8 @@ function store_page_end(): void
                     <span class="cart-empty-orbit"><?= store_icon('cart') ?></span>
                     <span class="gaming-kicker">NOTHING HERE YET</span>
                     <h3>Your next upgrade is waiting.</h3>
-                    <p>Browse the available categories and add products to your cart.</p>
-                    <button class="button" type="button" data-close-store-dialog>Explore categories</button>
+                    <p>Explore featured products and add your favorites to your cart.</p>
+                    <button class="button" type="button" data-close-store-dialog>Explore products</button>
                 </div>
             <?php else: ?>
                 <div class="store-cart-items">
@@ -271,17 +271,17 @@ function store_page_end(): void
         </footer>
         <dialog class="store-search-dialog" id="store-search-dialog" aria-labelledby="store-search-title">
             <div class="store-dialog-heading">
-                <div><span class="gaming-kicker">FIND YOUR UPGRADE</span><h2 id="store-search-title">Search categories</h2></div>
+                <div><span class="gaming-kicker">FIND YOUR UPGRADE</span><h2 id="store-search-title">Search featured products</h2></div>
                 <button class="store-icon-button" type="button" data-close-store-dialog aria-label="Close search"><?= store_icon('close') ?></button>
             </div>
             <form class="store-search-form" id="landing-category-search" action="index.php#categories" method="get">
                 <?= store_icon('search') ?>
-                <label class="sr-only" for="header-search">Search categories</label>
+                <label class="sr-only" for="header-search">Search featured products</label>
                 <input id="header-search" name="q" type="search" placeholder="Graphics, memory, processors…">
                 <button type="submit" aria-label="Search"><?= store_icon('arrow') ?></button>
             </form>
-            <p>Find the right components for your next build.</p>
-            <div class="store-search-suggestions"><a href="index.php?q=Graphics#categories">Graphics</a><a href="index.php?q=Memory#categories">Memory</a><a href="index.php#categories" data-clear-category-search>All categories</a></div>
+            <p>Search featured products for your next build.</p>
+            <div class="store-search-suggestions"><a href="index.php?q=Graphics#categories">Graphics</a><a href="index.php?q=Memory#categories">Memory</a><a href="index.php#categories" data-clear-category-search>All featured products</a></div>
         </dialog>
         <dialog class="store-cart-dialog" id="store-cart-dialog" aria-labelledby="store-cart-title">
             <div class="store-dialog-heading">
