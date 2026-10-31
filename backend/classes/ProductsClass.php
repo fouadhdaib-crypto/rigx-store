@@ -29,37 +29,26 @@ class Product {
         return empty($results) ? false : $results;
     }
 
-    public function countProducts(bool $deleted_at = true) : int {
+    public function getAllProductsWithCategory(bool $deleted_at = true) : array {
 
         if ($deleted_at) {
-            $sql = "SELECT COUNT(*) FROM products WHERE deleted_at IS NULL";
+            $sql = "SELECT p.*, c.name AS category_name
+                FROM products p
+                LEFT JOIN categories c ON c.id = p.category_id
+                WHERE p.deleted_at IS NULL
+                ORDER BY p.id DESC";
         } else {
-            $sql = "SELECT COUNT(*) FROM products";
+            $sql = "SELECT p.*, c.name AS category_name
+                FROM products p
+                LEFT JOIN categories c ON c.id = p.category_id
+                ORDER BY p.id DESC";
         }
 
         $stmt = $this->pdo->prepare($sql);
 
         $stmt->execute();
 
-        return (int) $stmt->fetchColumn();
-    }
-
-    public function getProductsPage(int $limit, int $offset, bool $deleted_at = true) : array {
-
-        if ($deleted_at) {
-            $sql = "SELECT * FROM products WHERE deleted_at IS NULL ORDER BY id DESC LIMIT ? OFFSET ?";
-        } else {
-            $sql = "SELECT * FROM products ORDER BY id DESC LIMIT ? OFFSET ?";
-        }
-
-        $stmt = $this->pdo->prepare($sql);
-
-        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(2, $offset, PDO::PARAM_INT);
-
-        $stmt->execute();
-
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
     public function getProduct(int $id, bool $includeDeleted = false) : array|false {

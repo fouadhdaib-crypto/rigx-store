@@ -3,14 +3,18 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../backend/config/db.php';
 require_once __DIR__ . '/../../backend/classes/ProductsClass.php';
+require_once __DIR__ . '/../../backend/classes/CategorieClass.php';
 require_once __DIR__ . '/../layout.php';
 
 $productModel = new Product();
+$categoryModel = new Categorie();
 
 $errorMessages = [];
 $successMessage = "";
 $data = [];
-$page = max(1, (int) ($_GET['page'] ?? 1));
+
+$categories = $categoryModel->getAll();
+$categoryIds = array_map('intval', array_column($categories, 'id'));
 
 function getFormData () : array {
     $currentImage = trim($_POST['product_img'] ?? '');
@@ -29,11 +33,11 @@ function getFormData () : array {
         ];
 }
 
-function validateFormData (array $data) : array {
+function validateFormData (array $data, array $categoryIds) : array {
     $errors = [];
 
-    if (!ctype_digit((string) $data['category_id']) || (int) $data['category_id'] <= 0) {
-        $errors['category_id'] = "Category must be a valid number.";
+    if (!ctype_digit((string) $data['category_id']) || !in_array((int) $data['category_id'], $categoryIds, true)) {
+        $errors['category_id'] = "Please choose a valid category.";
     }
     if ($data['name'] === '') {
         $errors['name'] = "Product name is required.";
@@ -108,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_product'])) {
 
         $data = getFormData();
-        $errorMessages = validateFormData($data);
+        $errorMessages = validateFormData($data, $categoryIds);
 
         if (empty($errorMessages)) {
             $upload = uploadProductImage();
@@ -138,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $data = getFormData();
         $data['id'] = (int) ($_POST['productId'] ?? 0);
-        $errorMessages = validateFormData($data);
+        $errorMessages = validateFormData($data, $categoryIds);
 
         if (empty($errorMessages)) {
             $upload = uploadProductImage();
@@ -207,23 +211,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$perPage = 10;
-$totalProducts = $productModel->countProducts(false);
-$totalPages = max(1, (int) ceil($totalProducts / $perPage));
-$page = min($page, $totalPages);
-$products = $productModel->getProductsPage($perPage, ($page - 1) * $perPage, false);
-
-$pageNumbers = array_unique(array_merge([1, $totalPages], range(max(1, $page - 2), min($totalPages, $page + 2))));
-sort($pageNumbers);
+$products = $productModel->getAllProductsWithCategory(false);
 
 page_start('Products', 'products.php');
-heading('STORE MANAGEMENT', 'Products', 'Create, update and manage every product listed in your store.');
+heading('Catalog', 'Products', 'Create, update and manage every product listed in your store.');
 ?>
 
 <link rel="stylesheet" href="../css/product_admin_view.css?v=<?= (int) @filemtime(__DIR__ . '/../css/product_admin_view.css') ?>">
 
 <div class="toolbar">
-    <span class="demo-label"><?= $totalProducts ?> products in total</span>
+    <span class="demo-label" id="product-count"><?= count($products) ?> products in total</span>
     <button type="button" id="add-product-btn" class="primary-button">
         <span aria-hidden="true">+</span> Add product
     </button>
@@ -241,7 +238,7 @@ heading('STORE MANAGEMENT', 'Products', 'Create, update and manage every product
 
 <div class="modal-overlay<?= !empty($data) ? ' open' : '' ?>" id="product-modal">
 
-<form action="products.php?page=<?= $page ?>" method="POST" enctype="multipart/form-data" class="add-product-form">
+<form action="products.php" method="POST" enctype="multipart/form-data" class="add-product-form">
 
     <div class="form-header">
         <h2><?= isset($data['id']) ? 'Update product' : 'Add product'; ?></h2>
@@ -252,8 +249,14 @@ heading('STORE MANAGEMENT', 'Products', 'Create, update and manage every product
 
         <div class="form-field">
             <label for="category_id">Category</label>
-            <input type="number" name="category_id" id="category_id" min="1"
-            value="<?= htmlspecialchars((string) ($data['category_id'] ?? '')); ?>" required>
+            <select name="category_id" id="category_id" required>
+                <option value="">Select category</option>
+                <?php foreach ($categories as $category): ?>
+                    <option value="<?= (int) $category['id'] ?>" <?= (int) ($data['category_id'] ?? 0) === (int) $category['id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars((string) $category['name']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
         </div>
 
         <div class="form-field">
@@ -351,11 +354,67 @@ heading('STORE MANAGEMENT', 'Products', 'Create, update and manage every product
         </div>
     </div>
 
+    <div class="filter-bar">
+
+        <div class="filter-field filter-search">
+            <label for="filter_q">Search</label>
+            <div class="search-box">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7"/>
+                    <path d="m20 20-3.5-3.5"/>
+                </svg>
+                <input type="search" id="filter_q" placeholder="Search by name, brand, category or description" autocomplete="off">
+            </div>
+        </div>
+
+        <div class="filter-field">
+            <label for="filter_category">Category</label>
+            <select id="filter_category">
+                <option value="">All categories</option>
+                <?php foreach ($categories as $category): ?>
+                    <option value="<?= (int) $category['id'] ?>"><?= htmlspecialchars((string) $category['name']) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <div class="filter-field">
+            <label for="filter_condition">Condition</label>
+            <select id="filter_condition">
+                <option value="">Any condition</option>
+                <option value="new">New</option>
+                <option value="used">Used</option>
+            </select>
+        </div>
+
+        <div class="filter-field">
+            <label for="filter_status">Status</label>
+            <select id="filter_status">
+                <option value="">Any status</option>
+                <option value="available">Available</option>
+                <option value="sold">Sold</option>
+                <option value="hidden">Hidden</option>
+                <option value="reserved">Reserved</option>
+                <option value="archived">Archived</option>
+            </select>
+        </div>
+
+        <div class="filter-actions">
+            <button type="button" id="filter-reset" class="btn-ghost">Reset</button>
+        </div>
+
+    </div>
+
     <div class="table-scroll">
-        <table class="catalog-table">
+        <table class="products-table">
             <thead>
                 <tr>
-                    <th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Condition</th><th>Status</th><th>Actions</th>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Condition</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
 
@@ -371,29 +430,60 @@ heading('STORE MANAGEMENT', 'Products', 'Create, update and manage every product
 
                     <?php foreach ($products as $product): ?>
 
-                        <tr>
+                        <?php $stock = (int) $product['quantity']; ?>
+                        <?php $rowStatus = $product['deleted_at'] !== null ? 'archived' : (string) $product['listing_status']; ?>
+
+                        <tr class="product-row"
+                        data-search="<?= htmlspecialchars(implode(' ', [(string) $product['name'], (string) $product['brand'], (string) $product['description'], (string) ($product['product_variant'] ?? ''), (string) ($product['category_name'] ?? '')])) ?>"
+                        data-category="<?= (int) $product['category_id'] ?>"
+                        data-condition="<?= htmlspecialchars((string) $product['condition_type']) ?>"
+                        data-status="<?= htmlspecialchars($rowStatus) ?>">
                             <td>
-                                <div class="catalog-product">
+                                <div class="product-info">
                                     <?php if (!empty($product['product_img'])): ?>
-                                        <img class="table-thumb" src="../<?= e($product['product_img']) ?>" alt="" width="40" height="40" loading="lazy">
-                                    <?php else: ?>
-                                        <span class="table-thumb table-thumb-empty" aria-hidden="true">▣</span>
+                                        <img class="product-photo" width="60" height="60" src="../<?= htmlspecialchars((string)$product['product_img']) ?>" alt="<?= htmlspecialchars((string)$product['name']) ?>">
+                                    <?php else : ?>
+                                        <span class="product-photo product-photo-empty">—</span>
                                     <?php endif; ?>
-                                    <div class="catalog-product-copy">
-                                        <strong title="<?= e($product['name']) ?>"><?= e($product['name']) ?></strong>
-                                        <small><?= e((string) $product['brand']) ?> · #<?= (int) $product['id'] ?></small>
-                                        <details class="product-details"><summary>Details</summary><div><p><?= e($product['description']) ?></p><p>Variant: <?= e((string) ($product['product_variant'] ?? '—')) ?></p><p>Created: <?= e($product['created_at']) ?></p><p>Updated: <?= e($product['updated_at']) ?></p></div></details>
+
+                                    <div class="product-text">
+                                        <strong><?= htmlspecialchars((string)$product['name']) ?></strong>
+                                        <span class="product-meta"><?= htmlspecialchars((string)$product['brand']) ?> · #<?= (int) $product['id'] ?></span>
+
+                                        <details class="product-details">
+                                            <summary>Details</summary>
+                                            <div class="product-details-body">
+                                                <span><?= htmlspecialchars((string)$product['description']) ?></span>
+                                                <?php if (!empty($product['product_variant'])): ?>
+                                                    <span>Variant: <?= htmlspecialchars((string)$product['product_variant']) ?></span>
+                                                <?php endif; ?>
+                                                <span>Created: <?= htmlspecialchars((string)$product['created_at']) ?></span>
+                                                <span>Updated: <?= htmlspecialchars((string)$product['updated_at']) ?></span>
+                                                <?php if ($product['deleted_at'] !== null): ?>
+                                                    <span>Archived: <?= htmlspecialchars((string)$product['deleted_at']) ?></span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </details>
                                     </div>
                                 </div>
                             </td>
-                            <td><span class="catalog-category">Category #<?= (int) $product['category_id'] ?></span></td>
-                            <td class="cell-strong"><?= number_format((float) $product['price'], 2) ?><small>JOD</small></td>
-                            <td><span class="stock-count <?= (int) $product['quantity'] < 5 ? 'stock-low' : '' ?>"><?= (int) $product['quantity'] ?></span></td>
-                            <td><span class="badge badge-condition"><?= e($product['condition_type']) ?></span></td>
-                            <td><span class="badge badge-<?= $product['deleted_at'] !== null ? 'hidden' : e($product['listing_status']) ?>"><?= $product['deleted_at'] !== null ? 'Archived' : e($product['listing_status']) ?></span></td>
+                            <td class="category-cell"><?= htmlspecialchars((string)($product['category_name'] ?? 'Uncategorized')) ?></td>
+                            <td class="price-cell">
+                                <strong><?= htmlspecialchars((string)$product['price']) ?></strong>
+                                <small>JOD</small>
+                            </td>
+                            <td><span class="stock-value <?= $stock === 0 ? 'stock-out' : ($stock <= 4 ? 'stock-low' : '') ?>"><?= $stock ?></span></td>
+                            <td><span class="badge badge-condition"><?= htmlspecialchars(ucfirst((string)$product['condition_type'])) ?></span></td>
+                            <td>
+                                <?php if ($product['deleted_at'] !== null): ?>
+                                    <span class="badge badge-archived">Archived</span>
+                                <?php else : ?>
+                                    <span class="badge badge-<?= htmlspecialchars((string)$product['listing_status']) ?>"><?= htmlspecialchars(ucfirst((string)$product['listing_status'])) ?></span>
+                                <?php endif; ?>
+                            </td>
                             <td>
                                 <div class="row-actions">
-                                    <form action="products.php?page=<?= $page ?>" method="POST">
+                                    <form action="products.php" method="POST">
                                         <input type="hidden" name="productId" value="<?= (int) $product['id']; ?>">
                                         <button type="submit" name="updateAction" class="btn-small">
                                             Update
@@ -401,16 +491,16 @@ heading('STORE MANAGEMENT', 'Products', 'Create, update and manage every product
                                     </form>
 
                                     <?php if ($product['deleted_at'] === null): ?>
-                                        <form action="products.php?page=<?= $page ?>" method="POST">
+                                        <form action="products.php" method="POST">
                                             <input type="hidden" name="productId" value="<?= (int) $product['id']; ?>">
                                             <button type="submit" name="action" value="delete" class="btn-small btn-danger">
                                                 Delete
                                             </button>
                                         </form>
                                     <?php else : ?>
-                                        <form action="products.php?page=<?= $page ?>" method="POST">
+                                        <form action="products.php" method="POST">
                                             <input type="hidden" name="productId" value="<?= (int) $product['id']; ?>">
-                                            <button type="submit" name="action" value="reactivate" class="btn-small btn-success">
+                                            <button type="submit" name="action" value="reactivate" class="btn-small">
                                                 Reactivate
                                             </button>
                                         </form>
@@ -421,48 +511,20 @@ heading('STORE MANAGEMENT', 'Products', 'Create, update and manage every product
 
                     <?php endforeach; ?>
 
+                    <tr id="no-results" hidden>
+                        <td colspan="7" class="table-empty">No products match your filters.</td>
+                    </tr>
+
                 <?php endif; ?>
 
             </tbody>
         </table>
     </div>
 
-    <?php if ($totalProducts > 0): ?>
-        <div class="pagination-bar">
-            <span class="pagination-info">
-                Showing <strong><?= (($page - 1) * $perPage) + 1 ?>–<?= min($page * $perPage, $totalProducts) ?></strong> of <strong><?= $totalProducts ?></strong> products
-            </span>
-
-            <?php if ($totalPages > 1): ?>
-                <nav class="pagination" aria-label="Products pagination">
-
-                    <?php if ($page > 1): ?>
-                        <a class="page-link page-arrow" href="products.php?page=<?= $page - 1 ?>"><span aria-hidden="true">‹</span> Previous</a>
-                    <?php else : ?>
-                        <span class="page-link page-arrow disabled"><span aria-hidden="true">‹</span> Previous</span>
-                    <?php endif; ?>
-
-                    <?php $previousNumber = 0; ?>
-                    <?php foreach ($pageNumbers as $number): ?>
-                        <?php if ($number - $previousNumber > 1): ?>
-                            <span class="page-gap">…</span>
-                        <?php endif; ?>
-                        <a class="page-link <?= $number === $page ? 'active' : '' ?>"
-                        href="products.php?page=<?= $number ?>"
-                        <?= $number === $page ? 'aria-current="page"' : '' ?>><?= $number ?></a>
-                        <?php $previousNumber = $number; ?>
-                    <?php endforeach; ?>
-
-                    <?php if ($page < $totalPages): ?>
-                        <a class="page-link page-arrow" href="products.php?page=<?= $page + 1 ?>">Next <span aria-hidden="true">›</span></a>
-                    <?php else : ?>
-                        <span class="page-link page-arrow disabled">Next <span aria-hidden="true">›</span></span>
-                    <?php endif; ?>
-
-                </nav>
-            <?php endif; ?>
-        </div>
-    <?php endif; ?>
+    <div class="pagination-bar" id="pagination-bar" hidden>
+        <span class="pagination-info" id="pagination-info"></span>
+        <nav class="pagination" id="pagination" aria-label="Products pagination"></nav>
+    </div>
 
 </section>
 
