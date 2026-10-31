@@ -2,79 +2,85 @@
 
 require_once __DIR__ . '/../layout.php';
 
-$orders = [
-    [
-        'id' => '#RGX-1048',
-        'customer' => 'Olivia Rhye',
-        'email' => 'olivia.rhye@example.com',
-        'date' => 'Oct 24, 2026',
-        'items' => '2 items',
-        'total' => '$248.00',
-        'payment' => 'Paid',
-        'status' => 'Processing',
-        'method' => 'Visa ···· 4242',
-    ],
-    [
-        'id' => '#RGX-1047',
-        'customer' => 'Phoenix Baker',
-        'email' => 'phoenix.baker@example.com',
-        'date' => 'Oct 24, 2026',
-        'items' => '1 item',
-        'total' => '$89.00',
-        'payment' => 'Paid',
-        'status' => 'Shipped',
-        'method' => 'PayPal',
-    ],
-    [
-        'id' => '#RGX-1046',
-        'customer' => 'Lana Steiner',
-        'email' => 'lana.steiner@example.com',
-        'date' => 'Oct 23, 2026',
-        'items' => '3 items',
-        'total' => '$412.50',
-        'payment' => 'Paid',
-        'status' => 'Delivered',
-        'method' => 'Mastercard ···· 8210',
-    ],
-    [
-        'id' => '#RGX-1045',
-        'customer' => 'Demi Wilkinson',
-        'email' => 'demi.wilkinson@example.com',
-        'date' => 'Oct 23, 2026',
-        'items' => '1 item',
-        'total' => '$129.00',
-        'payment' => 'Pending',
-        'status' => 'Pending',
-        'method' => 'Visa ···· 1098',
-    ],
-    [
-        'id' => '#RGX-1044',
-        'customer' => 'Candice Wu',
-        'email' => 'candice.wu@example.com',
-        'date' => 'Oct 22, 2026',
-        'items' => '4 items',
-        'total' => '$536.00',
-        'payment' => 'Paid',
-        'status' => 'Processing',
-        'method' => 'Apple Pay',
-    ],
-    [
-        'id' => '#RGX-1043',
-        'customer' => 'Natali Craig',
-        'email' => 'natali.craig@example.com',
-        'date' => 'Oct 21, 2026',
-        'items' => '2 items',
-        'total' => '$184.00',
-        'payment' => 'Refunded',
-        'status' => 'Cancelled',
-        'method' => 'Visa ···· 5567',
-    ],
-];
+require_once __DIR__ . '/../../backend/classes/ordersClass.php';
+
+if (empty($_SESSION['orders_csrf'])) {
+    $_SESSION['orders_csrf'] = bin2hex(random_bytes(32));
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json; charset=utf-8');
+    try {
+        $db = DB_conn::getConnection();
+        $admin = $db->prepare("SELECT id FROM users WHERE email = ? AND role = 'admin' AND status = 'active' AND deleted_at IS NULL");
+        $admin->execute([(string) ($_SESSION['email'] ?? '')]);
+        if (($_SESSION['user_role'] ?? '') !== 'admin' || !$admin->fetchColumn()) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Please sign in with an active admin account to manage orders.']);
+            exit;
+        }
+        if (!hash_equals($_SESSION['orders_csrf'], (string) ($_POST['csrf'] ?? ''))) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Your session expired. Refresh this page and try again.']);
+            exit;
+        }
+        $id = filter_var($_POST['order_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        $action = $_POST['action'] ?? '';
+        if (!in_array($action, ['delete_order', 'update_order'], true) || $id === false || $id === null) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid order request.']);
+            exit;
+        }
+        $orderModel = new Order($db);
+        if ($action === 'update_order') {
+            $status = (string) ($_POST['status'] ?? '');
+            $paymentStatus = (string) ($_POST['payment_status'] ?? '');
+            if (!$orderModel->updateStatuses($id, $status, $paymentStatus)) {
+                http_response_code(404);
+                echo json_encode(['error' => 'Order not found. Refresh the page.']);
+                exit;
+            }
+            echo json_encode(['success' => true, 'status' => $status, 'payment_status' => $paymentStatus, 'summary' => $orderModel->getSummary()]);
+            exit;
+        }
+        if (!$orderModel->delete($id)) {
+            http_response_code(404);
+            echo json_encode(['error' => 'This order was already deleted or does not exist. Refresh the page.']);
+            exit;
+        }
+        echo json_encode(['success' => true, 'summary' => $orderModel->getSummary()]);
+    } catch (InvalidArgumentException $error) {
+        http_response_code(422);
+        echo json_encode(['error' => $error->getMessage()]);
+    } catch (Throwable $error) {
+        error_log('Order action failed: ' . $error->getMessage());
+        http_response_code(500);
+        echo json_encode(['error' => 'Could not save the order change. Please try again.']);
+    }
+    exit;
+}
+
+$orderModel = new Order(DB_conn::getConnection());
+$summary = $orderModel->getSummary();
+$orders = array_map(static function (array $order): array {
+    return [
+        'database_id' => (string) $order['id'],
+        'id' => '#RGX-' . $order['id'],
+        'customer' => (string) ($order['customer_name'] ?? $order['shipping_name']),
+        'email' => (string) ($order['email'] ?? 'Email unavailable'),
+        'date' => date('M d, Y', strtotime($order['created_at'])),
+        'items' => $order['item_count'] . ' items',
+        'total' => number_format((float) $order['total_jod'], 2) . ' JOD',
+        'payment' => ucfirst($order['payment_status']),
+        'status' => ucfirst($order['status']),
+        'method' => ucwords(str_replace('_', ' ', $order['payment_method'])),
+    ];
+}, $orderModel->findAllForAdmin());
 
 $statusCounts = [
     'all' => count($orders),
     'pending' => 0,
-    'processing' => 0,
+    'confirmed' => 0,
     'shipped' => 0,
     'delivered' => 0,
     'cancelled' => 0,
@@ -82,12 +88,13 @@ $statusCounts = [
 
 foreach ($orders as $order) {
     $status = strtolower($order['status']);
-    $statusCounts[$status]++;
+    $statusCounts[$status] = ($statusCounts[$status] ?? 0) + 1;
 }
 
 page_start('Orders', 'orders.php');
 
 ?>
+<link rel="stylesheet" href="../css/order-update.css?v=<?= filemtime(__DIR__ . '/../css/order-update.css') ?>">
 <div class="orders-page">
 <?php
 
@@ -106,8 +113,8 @@ heading(
                 <svg viewBox="0 0 24 24" fill="none"><path d="M4 17 10 11l4 4 6-8M14 7h6v6"/></svg>
             </span>
         </div>
-        <strong>1,284</strong>
-        <small><span class="orders-positive">↑ 12.8%</span><span>vs. last month</span></small>
+        <strong id="orders-stat-total"><?= number_format((int) $summary['total_orders']) ?></strong>
+        <small><span id="orders-stat-count-change"><?= e($summary['orders_comparison']) ?></span></small>
     </article>
     <article class="orders-stat">
         <div class="orders-stat-top">
@@ -116,7 +123,7 @@ heading(
                 <svg viewBox="0 0 24 24" fill="none"><path d="M12 8v4m0 4h.01"/><path d="m10.3 3.9-8 14a2 2 0 0 0 1.7 3h16a2 2 0 0 0 1.7-3l-8-14a2 2 0 0 0-3.4 0Z"/></svg>
             </span>
         </div>
-        <strong>28</strong>
+        <strong id="orders-stat-attention"><?= number_format((int) $summary['needs_attention']) ?></strong>
         <small><span>Orders awaiting fulfillment</span></small>
     </article>
     <article class="orders-stat">
@@ -126,7 +133,7 @@ heading(
                 <svg viewBox="0 0 24 24" fill="none"><path d="M3 7h11v11H3zM14 11h4l3 3v4h-7z"/><circle cx="7.5" cy="18.5" r="1.5"/><circle cx="17.5" cy="18.5" r="1.5"/></svg>
             </span>
         </div>
-        <strong>64</strong>
+        <strong id="orders-stat-transit"><?= number_format((int) $summary['in_transit']) ?></strong>
         <small><span>Orders on their way</span></small>
     </article>
     <article class="orders-stat">
@@ -136,8 +143,8 @@ heading(
                 <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v18m4-14H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H7"/></svg>
             </span>
         </div>
-        <strong>$48,290</strong>
-        <small><span class="orders-positive">↑ 8.2%</span><span>vs. last month</span></small>
+        <strong id="orders-stat-sales" title="All-time order value excluding cancelled and deleted orders"><?= number_format((float) $summary['gross_sales'], 2) ?> JOD</strong>
+        <small><span id="orders-stat-sales-change"><?= e($summary['sales_comparison']) ?></span></small>
     </article>
 </section>
 
@@ -146,7 +153,7 @@ heading(
         <div>
             <div class="orders-title-line">
                 <h2 id="orders-list-title">All orders</h2>
-                <span class="orders-sample-tag"><span></span> SAMPLE DATA</span>
+                <span class="orders-sample-tag"><span></span> LIVE ORDERS</span>
             </div>
             <p>Review and track every order in your store.</p>
         </div>
@@ -162,7 +169,7 @@ heading(
         <div class="orders-tabs" role="group" aria-label="Filter orders by status">
             <button type="button" class="orders-filter active" data-status-filter="all" aria-pressed="true">All <span><?= $statusCounts['all'] ?></span></button>
             <button type="button" class="orders-filter" data-status-filter="pending" aria-pressed="false">Pending <span><?= $statusCounts['pending'] ?></span></button>
-            <button type="button" class="orders-filter" data-status-filter="processing" aria-pressed="false">Processing <span><?= $statusCounts['processing'] ?></span></button>
+            <button type="button" class="orders-filter" data-status-filter="confirmed" aria-pressed="false">Confirmed <span><?= $statusCounts['confirmed'] ?></span></button>
             <button type="button" class="orders-filter" data-status-filter="shipped" aria-pressed="false">Shipped <span><?= $statusCounts['shipped'] ?></span></button>
             <button type="button" class="orders-filter" data-status-filter="delivered" aria-pressed="false">Delivered <span><?= $statusCounts['delivered'] ?></span></button>
             <button type="button" class="orders-filter" data-status-filter="cancelled" aria-pressed="false">Cancelled <span><?= $statusCounts['cancelled'] ?></span></button>
@@ -194,6 +201,7 @@ heading(
                 <?php foreach ($orders as $index => $order): ?>
                     <tr
                         data-order-row
+                        data-order-id="<?= e($order['database_id']) ?>"
                         data-status="<?= e(strtolower($order['status'])) ?>"
                     >
                         <td><strong class="orders-id"><?= e($order['id']) ?></strong></td>
@@ -216,9 +224,17 @@ heading(
                             <small class="orders-method"><?= e($order['method']) ?></small>
                         </td>
                         <td>
+                            <div class="order-status-actions">
                             <span class="orders-status orders-status-<?= e(strtolower($order['status'])) ?>">
                                 <span></span><?= e($order['status']) ?>
                             </span>
+                            <button class="order-edit-button" type="button" data-edit-order aria-label="Update order <?= e($order['id']) ?>" title="Update order">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15Z"/></svg>
+                            </button>
+                            <button class="order-edit-button order-delete-button" type="button" data-delete-order aria-label="Delete order <?= e($order['id']) ?>" title="Delete order">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7"/></svg>
+                            </button>
+                            </div>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -230,11 +246,44 @@ heading(
     </div>
 
     <div class="orders-table-footer">
-        <span id="orders-result-count" aria-live="polite">Showing 6 sample orders</span>
-        <span class="orders-demo-note">October 2026</span>
+        <span id="orders-result-count" aria-live="polite">Showing <?= count($orders) ?> orders</span>
+        <span class="orders-demo-note">Live database</span>
     </div>
 </section>
 
-<script src="../js/orders.js" defer></script>
+<p class="order-update-message" id="order-update-message" role="status"></p>
+<dialog class="order-update-dialog" id="order-update-dialog" aria-labelledby="order-update-title" aria-describedby="order-update-description">
+    <form id="order-update-form" method="post" action="orders.php">
+        <input type="hidden" name="action" value="update_order">
+        <input type="hidden" name="csrf" value="<?= e($_SESSION['orders_csrf']) ?>">
+        <div class="order-update-heading">
+            <div><span class="order-update-eyebrow">ORDER MANAGEMENT</span><h2 id="order-update-title">Update order</h2></div>
+            <button type="button" class="order-update-close" data-close-order aria-label="Close update popup">&times;</button>
+        </div>
+        <p id="order-update-description">Review the order and save its order and payment statuses.</p>
+        <div class="order-update-summary"><div><small>CUSTOMER</small><strong id="order-update-customer"></strong><span id="order-update-email"></span></div><div><small>ORDER TOTAL</small><strong id="order-update-total"></strong></div></div>
+        <div class="order-update-fields">
+            <div><label for="order-update-status">Order status</label><select id="order-update-status" name="status" required><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select></div>
+            <div><label for="order-update-payment">Payment status</label><select id="order-update-payment" name="payment_status" required><option value="pending">Pending</option><option value="authorized">Authorized</option><option value="paid">Paid</option><option value="failed">Failed</option><option value="refunded">Refunded</option></select></div>
+        </div>
+        <p class="order-update-note">Changes are saved to the database.</p>
+        <p id="order-update-error" role="alert" style="color: #f87171"></p>
+        <div class="order-update-footer"><button type="button" data-close-order>Cancel</button><button type="submit">Save changes</button></div>
+    </form>
+</dialog>
+<dialog class="order-update-dialog" id="order-delete-dialog" aria-labelledby="order-delete-title" aria-describedby="order-delete-description">
+    <form id="order-delete-form" method="post" action="orders.php">
+        <input type="hidden" name="action" value="delete_order">
+        <input type="hidden" name="csrf" value="<?= e($_SESSION['orders_csrf']) ?>">
+        <div class="order-update-heading">
+            <div><span class="order-update-eyebrow">ORDER MANAGEMENT</span><h2 id="order-delete-title">Delete order?</h2></div>
+            <button type="button" class="order-update-close" data-close-delete aria-label="Close delete popup">&times;</button>
+        </div>
+        <p id="order-delete-description">Delete this order from the order list? Its history, items, and payments will be retained in the database.</p>
+        <p id="order-delete-error" role="alert" style="color: #f87171"></p>
+        <div class="order-update-footer"><button type="button" data-close-delete>Keep order</button><button type="submit" class="order-delete-confirm">Delete order</button></div>
+    </form>
+</dialog>
+<script src="../js/orders.js?v=<?= filemtime(__DIR__ . '/../js/orders.js') ?>" defer></script>
 </div>
 <?php page_end(); ?>

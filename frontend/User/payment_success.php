@@ -70,7 +70,7 @@ $content = [
             <a class="payment-brand" href="index.php" aria-label="REGIX Store home">
                 <img src="../assets/regix-logo.svg" alt="REGIX Store" width="220" height="53">
             </a>
-            <a class="payment-brand-link" href="user_categories.php">Continue shopping</a>
+            <a class="payment-brand-link" href="index.php#categories">Continue shopping</a>
         </div>
     </header>
 
@@ -84,7 +84,7 @@ $content = [
             <h1 id="paymentTitle"><?= htmlspecialchars($content['title'], ENT_QUOTES, 'UTF-8') ?></h1>
             <p><?= htmlspecialchars($content['message'], ENT_QUOTES, 'UTF-8') ?></p>
             <div class="payment-actions">
-                <a class="payment-link primary" href="user_categories.php">Continue shopping</a>
+                <a class="payment-link primary" href="index.php#categories">Continue shopping</a>
                 <?php if ($state !== 'paid'): ?>
                     <a class="payment-link" href="checkout.php">Return to checkout</a>
                 <?php endif; ?>

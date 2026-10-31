@@ -29,89 +29,26 @@ class Product {
         return empty($results) ? false : $results;
     }
 
-    public function countProducts(
-        bool $deleted_at = true,
-        string $search = '',
-        ?int $categoryId = null
-    ) : int {
+    public function getAllProductsWithCategory(bool $deleted_at = true) : array {
 
-        [$where, $parameters] = $this->buildProductFilters(
-            $deleted_at,
-            $search,
-            $categoryId
-        );
-        $stmt = $this->pdo->prepare(
-            "SELECT COUNT(*) FROM products" . $where
-        );
-
-        $stmt->execute($parameters);
-
-        return (int) $stmt->fetchColumn();
-    }
-
-    public function getProductsPage(
-        int $limit,
-        int $offset,
-        bool $deleted_at = true,
-        string $search = '',
-        ?int $categoryId = null
-    ) : array {
-
-        [$where, $parameters] = $this->buildProductFilters(
-            $deleted_at,
-            $search,
-            $categoryId
-        );
-        $stmt = $this->pdo->prepare(
-            "SELECT * FROM products" . $where .
-            " ORDER BY id DESC LIMIT ? OFFSET ?"
-        );
-
-        foreach ($parameters as $index => $parameter) {
-            $stmt->bindValue(
-                $index + 1,
-                $parameter,
-                is_int($parameter) ? PDO::PARAM_INT : PDO::PARAM_STR
-            );
+        if ($deleted_at) {
+            $sql = "SELECT p.*, c.name AS category_name
+                FROM products p
+                LEFT JOIN categories c ON c.id = p.category_id
+                WHERE p.deleted_at IS NULL
+                ORDER BY p.id DESC";
+        } else {
+            $sql = "SELECT p.*, c.name AS category_name
+                FROM products p
+                LEFT JOIN categories c ON c.id = p.category_id
+                ORDER BY p.id DESC";
         }
 
-        $stmt->bindValue(count($parameters) + 1, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(count($parameters) + 2, $offset, PDO::PARAM_INT);
+        $stmt = $this->pdo->prepare($sql);
 
         $stmt->execute();
 
-        return $stmt->fetchAll();
-    }
-
-    private function buildProductFilters(
-        bool $includeActiveOnly,
-        string $search,
-        ?int $categoryId
-    ) : array {
-        $conditions = [];
-        $parameters = [];
-
-        if ($includeActiveOnly) {
-            $conditions[] = 'deleted_at IS NULL';
-        }
-
-        if ($search !== '') {
-            $conditions[] = '(name LIKE ? OR brand LIKE ?)';
-            $searchTerm = '%' . $search . '%';
-            $parameters[] = $searchTerm;
-            $parameters[] = $searchTerm;
-        }
-
-        if ($categoryId !== null) {
-            $conditions[] = 'category_id = ?';
-            $parameters[] = $categoryId;
-        }
-
-        $where = $conditions
-            ? ' WHERE ' . implode(' AND ', $conditions)
-            : '';
-
-        return [$where, $parameters];
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
     public function getProduct(int $id, bool $includeDeleted = false) : array|false {

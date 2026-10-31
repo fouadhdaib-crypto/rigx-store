@@ -6,7 +6,7 @@ function regix_brand(string $assetPrefix = ''): void
 {
     ?>
     <a class="brand" href="dashboard.php" aria-label="REGIX dashboard">
-        <img class="brand-logo" src="<?= e($assetPrefix) ?>assets/regix-logo.svg" src="../assets/regix-logo.svg"
+        <img class="brand-logo" src="<?= e($assetPrefix) ?>assets/regix-logo.svg"
             alt="REGIX — Next level shopping" width="220" height="53">
     </a>
     <?php
@@ -33,6 +33,17 @@ function page_start(string $title, string $active, string $extraHead = ''): void
     ];
 
     $name = admin_name();
+    $isLoggedIn = !empty($_SESSION['email']) || !empty($_SESSION['user_id']);
+    $profilePath = $inAdminDirectory ? 'adminprofile.php' : 'admin/adminprofile.php';
+    $profileHref = $isLoggedIn ? $profilePath : $loginPath;
+    $roleLabels = [
+        'admin' => 'Administrator',
+        'customer' => 'Customer',
+        'seller' => 'Seller',
+    ];
+    $roleLabel = $isLoggedIn
+        ? ($roleLabels[$_SESSION['user_role'] ?? ''] ?? 'User')
+        : 'Not signed in';
 
     $icons = [
         'overview' =>
@@ -75,29 +86,24 @@ function page_start(string $title, string $active, string $extraHead = ''): void
 
         <meta name="theme-color" content="#090a0c">
         <meta name="color-scheme" content="dark">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oxanium:wght@500;600;700;800&display=swap" rel="stylesheet">
 
         <title><?= e($title) ?> · REGIX Admin</title>
 
         <link rel="icon" type="image/svg+xml" href="<?= e($assetPrefix) ?>assets/favicon.svg">
 
         <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/admin.css">
-        <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/product_admin_view.css">
-
-
-        <script src="<?= e($assetPrefix) ?>js/admin.js" defer></script>
-        href="../assets/favicon.svg"
-        >
-
-        <link rel="stylesheet" href="../css/admin.css">
-
-        <script src="../js/admin.js" defer></script>
         <script src="<?= e($assetPrefix) ?>js/admin.js" defer></script>
 
         <?= $extraHead ?>
+        <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/admin-unified.css?v=<?= filemtime(__DIR__ . '/css/admin-unified.css') ?>">
+        <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/typography.css?v=<?= filemtime(__DIR__ . '/css/typography.css') ?>">
 
     </head>
 
-    <body>
+    <body data-admin-page="<?= e(pathinfo($active, PATHINFO_FILENAME)) ?>" class="<?= in_array($active, ['products.php', 'categories.php', 'users.php'], true) ? 'admin-management' : 'admin-dashboard' ?>">
 
         <input class="nav-toggle" type="checkbox" id="nav-toggle" aria-label="Open navigation">
 
@@ -114,7 +120,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
                     <div class="workspace-switcher">
 
                         <span class="workspace-icon">
-                            <img src="<?= e($assetPrefix) ?>assets/regix-mark.svg" src="../assets/regix-mark.svg" alt=""
+                            <img src="<?= e($assetPrefix) ?>assets/regix-mark.svg" alt=""
                                 width="27" height="27">
                         </span>
 
@@ -130,6 +136,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
                     </div>
 
                     <!-- Workspace Navigation -->
+                    <div class="sidebar-nav-scroll" tabindex="0" role="region" aria-label="Sidebar navigation">
                     <div class="nav-label">
                         WORKSPACE
                     </div>
@@ -172,6 +179,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
 
                     <nav class="main-nav" aria-label="Account">
 
+                        <?php if (!$isLoggedIn): ?>
                         <a class="nav-link" href="<?= e($loginPath) ?>">
 
                             <span class="nav-icon" aria-hidden="true">
@@ -182,6 +190,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
 
                         </a>
 
+                        <?php else: ?>
                         <a class="nav-link" href="<?= e($logoutPath) ?>">
 
                             <span class="nav-icon" aria-hidden="true">
@@ -191,9 +200,11 @@ function page_start(string $title, string $active, string $extraHead = ''): void
                             <span>Sign out</span>
 
                         </a>
+                        <?php endif; ?>
 
                     </nav>
 
+                    </div>
                 </div>
 
                 <!-- Sidebar Bottom -->
@@ -223,7 +234,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
                     </div>
 
                     <!-- Admin Profile -->
-                    <div class="profile-mini">
+                    <a class="profile-mini" href="<?= e($profileHref) ?>" title="View my profile">
 
                         <span class="avatar">
                             <?= e(initials($name)) ?>
@@ -236,14 +247,18 @@ function page_start(string $title, string $active, string $extraHead = ''): void
                             </strong>
 
                             <small>
-                                Store Administrator
+                                <?= e($roleLabel) ?>
                             </small>
 
                         </span>
 
-                        <span class="profile-status" title="Workspace"></span>
+                        <span
+                            class="profile-status"
+                            title="<?= $isLoggedIn ? 'Signed in' : 'Not signed in' ?>"
+                            <?= !$isLoggedIn ? 'style="background: #64748b; box-shadow: none;"' : '' ?>
+                        ></span>
 
-                    </div>
+                    </a>
 
                 </div>
 
@@ -332,15 +347,6 @@ function heading(
             </p>
 
         </div>
-
-        <!-- Heading Badge -->
-        <span class="heading-chip">
-
-            <span class="heading-chip-dot"></span>
-
-            REGIX / ADMIN
-
-        </span>
 
     </section>
 

@@ -45,253 +45,38 @@ $rigs = [
     ],
 ];
 
-store_page_start('Level up your setup', '', true);
+store_page_start('Next level. No limits.', '', true);
 ?>
-<section class="gaming-hero" aria-labelledby="gaming-title">
-    <div class="gaming-hero-copy">
-        <span class="gaming-kicker">
-            <span class="status-dot">
-            </span>
-            YOUR NEXT LEVEL STARTS HERE
-        </span>
-        <h1 id="gaming-title">
-            UNLEASH YOUR
-            <br>
-            <span>
-                GAMING BEAST.
-            </span>
-        </h1>
-        <p>
-            Big ideas need serious hardware. Discover gaming rigs, powerful components, and the finishing touches for a setup that’s unmistakably yours.
-        </p>
-        <div class="gaming-actions">
-            <a class="button neon-button" href="#builder">
-                Plan your build <?= store_icon('arrow') ?>
-            </a>
-            <a class="button glass-button" href="#rigs">
-                Explore builds
-            </a>
-        </div>
-        <div class="hero-specs">
-            <div>
-                <strong>
-                    01 / DISCOVER
-                </strong>
-                <span>
-                    Find your components
-                </span>
-            </div>
-            <div>
-                <strong>
-                    02 / COMBINE
-                </strong>
-                <span>
-                    Plan your dream setup
-                </span>
-            </div>
-            <div>
-                <strong>
-                    03 / LEVEL UP
-                </strong>
-                <span>
-                    Make it your own
-                </span>
-            </div>
-        </div>
+<div class="regix-intro" id="regix-intro" hidden aria-hidden="true"><span>REGIX / NEXT LEVEL SHOPPING</span><button type="button" id="skip-regix-intro">Skip intro ↗</button><strong><span id="regix-load-count">0</span><em>%</em></strong></div>
+<section class="campaign-hero" id="top" aria-labelledby="campaign-title">
+    <div class="campaign-hero-top">
+        <p class="campaign-roles"><span>PERFORMANCE.</span><span>PRECISION.</span><span>POSSIBILITY.</span></p>
+        <div class="campaign-hero-note"><span class="campaign-label">HARDWARE FOR WHAT’S NEXT</span><p>For the late-night players. The big-idea creators. The ones who never settle for the ordinary.</p><a href="#rigs" class="campaign-link">Find your next level <?= store_icon('arrow') ?></a></div>
     </div>
-    <div class="gaming-visual">
-        <div class="visual-grid" aria-hidden="true">
-        </div>
-        <figure class="pc-frame">
-            <img
-                src="https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=900&q=85"
-                alt="Gaming desktop with illuminated components"
-                width="600"
-                height="640"
-                fetchpriority="high"
-            >
-            <figcaption>
-                <span class="status-dot">
-                </span>
-                BUILT FOR YOUR NEXT LEVEL
-                <span>
-                    REGIX / 01
-                </span>
-            </figcaption>
-        </figure>
-        <div class="floating-spec spec-top">
-            <?= store_icon('box') ?>
-            <div>
-                <small>
-                    THE POWER TO PLAY
-                </small>
-                <strong>
-                    Graphics. Reimagined.
-                </strong>
-            </div>
-        </div>
-        <div class="floating-spec spec-bottom">
-            <span class="cooling-symbol" aria-hidden="true">
-                ✳
-            </span>
-            <div>
-                <small>
-                    KEEP YOUR COOL
-                </small>
-                <strong>
-                    Performance in balance.
-                </strong>
-            </div>
-        </div>
-    </div>
+    <h1 class="campaign-hero-title" id="campaign-title" aria-label="Next level."><span class="hero-word" aria-hidden="true"><span>N</span><span>E</span><span>X</span><span>T</span></span><span class="hero-word" aria-hidden="true"><span>L</span><span>E</span><span>V</span><span>E</span><span>L</span><span>.</span></span></h1>
+    <figure class="campaign-hero-product campaign-liquid" data-bare><img src="../assets/regix-hero-tower.png" alt="Black gaming tower with lime illuminated cooling fans" width="1024" height="1536" fetchpriority="high"></figure>
+    <div class="campaign-hero-base" aria-hidden="true"></div>
+    <div class="campaign-hero-bottom"><span>REGIX — HARDWARE WITH INTENT.</span><a href="#story">SCROLL TO EXPLORE <span>↓</span></a><span>AMMAN, JO / JOD</span></div>
 </section>
-<div class="hardware-strip" aria-label="Hardware focus">
-    <span>
-        THE FOUNDATION OF A GREAT SETUP
-    </span>
-    <strong>
-        PROCESSORS
-    </strong>
-    <i>
-        +
-    </i>
-    <strong>
-        GRAPHICS
-    </strong>
-    <i>
-        +
-    </i>
-    <strong>
-        MEMORY
-    </strong>
-    <i>
-        +
-    </i>
-    <strong>
-        STORAGE
-    </strong>
-</div>
-<section class="gaming-section" id="categories" aria-labelledby="category-title">
-    <div class="gaming-section-heading">
-        <div>
-            <span class="gaming-kicker">
-                EVERY COMPONENT COUNTS
-            </span>
-            <h2 id="category-title">
-                Small parts.
-                <span>
-                    Big possibilities.
-                </span>
-            </h2>
-        </div>
-        <a class="gaming-text-link" href="#categories">
-            All categories <?= store_icon('arrow') ?>
-        </a>
-    </div>
-    <div class="hardware-categories">
-        <?php foreach ($categories as [$name, $description, $symbol, $query]): ?>
-            <a class="hardware-category" href="#builder">
-                <span class="component-icon" aria-hidden="true">
-                    <span>
-                        <?= e($symbol) ?>
-                    </span>
-                </span>
-                <h3>
-                    <?= e($name) ?>
-                </h3>
-                <p>
-                    <?= e($description) ?>
-                </p>
-                <span class="category-arrow">
-                    <?= store_icon('arrow') ?>
-                </span>
-            </a>
-        <?php endforeach; ?>
-    </div>
+<section class="campaign-marquee" aria-label="Play. Create. Go beyond."><div class="marquee-track" aria-hidden="true"><?php for ($i = 0; $i < 2; $i++): ?><div><span>PLAY.</span><span class="marquee-outline">CREATE.</span><span>GO BEYOND.</span><span class="marquee-star">✳</span></div><?php endfor; ?></div><button type="button" id="campaign-motion-toggle" aria-pressed="false">Pause motion Ⅱ</button></section>
+<section class="campaign-story campaign-section" id="story">
+    <div class="campaign-section-heading campaign-reveal"><span class="campaign-label">01 / THE REGIX MINDSET</span><h2>GREAT SETUPS<br>DON’T HAPPEN<br><span>BY ACCIDENT.</span></h2></div>
+    <div class="campaign-story-copy campaign-reveal"><p class="campaign-lead">Every great session starts long before you press play.</p><p>It starts with the right parts. A considered choice. A setup that feels like an extension of you. REGIX brings the possibilities together, from your first upgrade to your next ambitious build.</p><div class="campaign-principles"><article><span>01</span><div><h3>Choose with intent.</h3><p>Build around what you actually do. Play, create, work, or a little of everything.</p></div></article><article><span>02</span><div><h3>Make room for more.</h3><p>Find components that fit your plans today and leave possibilities for tomorrow.</p></div></article><article><span>03</span><div><h3>Make it yours.</h3><p>New hardware or a pre-loved find. Your next setup doesn’t have to look like anyone else’s.</p></div></article></div></div>
 </section>
-<section class="gaming-section" id="rigs" aria-labelledby="rig-title">
-    <div class="gaming-section-heading">
-        <div>
-            <span class="gaming-kicker">
-                FIND YOUR PLAYSTYLE
-            </span>
-            <h2 id="rig-title">
-                Meet your next
-                <span>
-                    battle station.
-                </span>
-            </h2>
-            <p>
-                Three build concepts to inspire your next setup.
-            </p>
-        </div>
-        <a class="gaming-text-link" href="#builder">
-            Plan your setup <?= store_icon('arrow') ?>
-        </a>
-    </div>
-    <div class="rig-grid">
-        <?php foreach ($rigs as [$name, $description, $badge, $cpu, $gpu, $ram, $photo, $preset, $accent]): ?>
-            <article class="rig-card accent-<?= e($accent) ?>">
-                <div class="rig-image">
-                    <img
-                        src="https://images.unsplash.com/<?= e($photo) ?>?auto=format&fit=crop&w=650&q=80"
-                        alt="<?= e($name) ?> gaming setup inspiration"
-                        width="650"
-                        height="430"
-                        loading="lazy"
-                    >
-                    <span class="rig-badge">
-                        <?= e($badge) ?>
-                    </span>
-                    <span class="rig-number">
-                        0<?= array_search($preset, ['ultra', 'apex', 'phantom'], true) + 1 ?>
-                    </span>
-                </div>
-                <div class="rig-content">
-                    <h3>
-                        <?= e($name) ?>
-                    </h3>
-                    <p>
-                        <?= e($description) ?>
-                    </p>
-                    <ul>
-                        <li>
-                            <span>
-                                CPU
-                            </span>
-                            <?= e($cpu) ?>
-                        </li>
-                        <li>
-                            <span>
-                                GPU
-                            </span>
-                            <?= e($gpu) ?>
-                        </li>
-                        <li>
-                            <span>
-                                RAM
-                            </span>
-                            <?= e($ram) ?>
-                        </li>
-                    </ul>
-                    <div class="rig-bottom">
-                        <small>
-                            CONCEPT BUILD
-                            <br>
-                            <span>
-                                Explore the possibilities
-                            </span>
-                        </small>
-                        <a class="button rig-button" data-preset="<?= e($preset) ?>" href="#builder">
-                            Customize <?= store_icon('arrow') ?>
-                        </a>
-                    </div>
-                </div>
-            </article>
-        <?php endforeach; ?>
-    </div>
+<section class="campaign-categories campaign-section" id="categories" aria-labelledby="category-title">
+    <div class="campaign-section-heading campaign-reveal"><div><span class="campaign-label">02 / THE BUILDING BLOCKS</span><h2 id="category-title">SMALL PARTS.<br><span>BIG POSSIBILITIES.</span></h2></div><a class="campaign-link" href="#categories" data-clear-category-search>All categories <?= store_icon('arrow') ?></a></div>
+    <p class="landing-category-feedback" id="landing-category-feedback" role="status" hidden></p>
+    <div class="campaign-category-list"><?php foreach ($categories as $i => [$name, $description, $symbol, $query]): ?><a class="hardware-category campaign-reveal" href="#builder"><span class="campaign-category-number">0<?= $i + 1 ?></span><span class="campaign-category-name"><?= e($name) ?></span><span class="campaign-category-description"><?= e($description) ?></span><span class="campaign-category-symbol"><?= e($symbol) ?></span><?= store_icon('arrow') ?></a><?php endforeach; ?></div>
 </section>
-<section class="build-planner gaming-section" id="builder" aria-labelledby="builder-title">
+<section class="campaign-rigs campaign-section" id="rigs" aria-labelledby="rig-title">
+    <div class="campaign-section-heading campaign-reveal"><div><span class="campaign-label">03 / SELECTED BUILD CONCEPTS</span><h2 id="rig-title">THE NEXT THING.<br><span>YOUR THING.</span></h2></div><p>03 concepts. Countless possibilities.<br>Illustrative configurations to spark your next build.</p></div>
+    <div class="campaign-rig-grid"><?php foreach ($rigs as $i => [$name, $description, $badge, $cpu, $gpu, $ram, $photo, $preset, $accent]): ?><article class="campaign-rig campaign-reveal"><a class="campaign-rig-image campaign-liquid" href="#builder" data-preset="<?= e($preset) ?>" aria-label="Plan the <?= e($name) ?> build"><img src="https://images.unsplash.com/<?= e($photo) ?>?auto=format&fit=crop&w=1100&q=85" alt="<?= e($name) ?> gaming setup inspiration" width="1100" height="760" loading="lazy"><span class="campaign-image-index">0<?= $i + 1 ?> / REGIX CONCEPT</span><span class="campaign-image-arrow"><?= store_icon('arrow') ?></span></a><div class="campaign-rig-caption"><div><h3><?= e($name) ?></h3><p><?= e($description) ?></p></div><span><?= e($badge) ?></span></div><p class="campaign-rig-spec"><?= e($cpu) ?> / <?= e($gpu) ?> / <?= e($ram) ?></p></article><?php endforeach; ?><article class="campaign-custom-rig campaign-reveal"><span class="campaign-label">THE MOST IMPORTANT BUILD IS YOURS.</span><h3>YOUR RULES.<br>YOUR RIG.</h3><p>Start with a concept. Make it personal.</p><a href="#builder" class="campaign-link">Open the build planner <?= store_icon('arrow') ?></a><span class="campaign-custom-cross" aria-hidden="true">✳</span></article></div>
+</section>
+<section class="campaign-playstyles campaign-section" id="playstyles">
+    <div class="campaign-section-heading campaign-reveal"><div><span class="campaign-label">04 / FIND YOUR FOCUS</span><h2>WHAT DRIVES<br><span>YOUR SETUP?</span></h2></div></div>
+    <div class="campaign-playstyle-grid campaign-reveal"><div class="campaign-playstyle-tabs" role="tablist" aria-label="Choose your setup focus"><button type="button" role="tab" id="focus-play" aria-selected="true" aria-controls="focus-panel" data-focus="play"><span>01</span><span>THE PLAYER<small>FRAMES. FOCUS. FLOW.</small></span><i>↗</i></button><button type="button" role="tab" id="focus-create" aria-selected="false" aria-controls="focus-panel" tabindex="-1" data-focus="create"><span>02</span><span>THE CREATOR<small>IDEAS INTO REALITY.</small></span><i>↗</i></button><button type="button" role="tab" id="focus-everyday" aria-selected="false" aria-controls="focus-panel" tabindex="-1" data-focus="everyday"><span>03</span><span>THE EVERYDAY<small>LESS WAITING. MORE DOING.</small></span><i>↗</i></button></div><div class="campaign-focus-panel" role="tabpanel" id="focus-panel" aria-labelledby="focus-play" tabindex="0"><span class="campaign-focus-glyph" aria-hidden="true">↗</span><p id="focus-copy">Stay in the moment. Start with graphics performance, a balanced processor, and the responsiveness that makes every session feel right.</p><a href="#builder" class="campaign-link">Plan your setup <?= store_icon('arrow') ?></a></div></div>
+</section>
+<section class="build-planner gaming-section campaign-reveal" id="builder" aria-labelledby="builder-title">
     <div class="planner-copy">
         <span class="gaming-kicker">
             YOUR SETUP. YOUR RULES.
@@ -399,20 +184,6 @@ store_page_start('Level up your setup', '', true);
         </noscript>
     </div>
 </section>
-<section class="gaming-final">
-    <div>
-        <span class="gaming-kicker">
-            READY WHEN YOU ARE
-        </span>
-        <h2>
-            Your next upgrade
-            <span>
-                is out there.
-            </span>
-        </h2>
-    </div>
-    <a class="button neon-button" href="#builder">
-        Start your build <?= store_icon('arrow') ?>
-    </a>
-</section>
+
+<section class="campaign-contact campaign-section" id="contact"><span class="campaign-label campaign-reveal">YOUR NEXT CHAPTER STARTS HERE.</span><h2 class="campaign-reveal">MAKE IT<br><span>YOURS.</span></h2><div class="campaign-contact-bottom campaign-reveal"><p>One component. A whole new setup.<br>There’s always a next level.</p><a href="#builder" class="campaign-contact-link">LET’S BUILD <?= store_icon('arrow') ?></a><a href="store.php" class="campaign-link">Explore the store ↗</a></div></section>
 <?php store_page_end(); ?>
