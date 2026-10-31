@@ -33,7 +33,7 @@ function store_cart(): array
     }
 
     $cart = ['items' => [], 'count' => 0, 'total' => 0.0, 'error' => false];
-    if (empty($_SESSION['email'])) {
+    if (empty($_SESSION['user_id'])) {
         return $cart;
     }
 
@@ -41,19 +41,22 @@ function store_cart(): array
         require_once __DIR__ . '/../../backend/config/db.php';
         $db = DB_conn::getConnection();
         $statement = $db->prepare(
-            "SELECT c.id FROM carts c JOIN users u ON u.id = c.user_id
-             WHERE u.email = ? AND u.deleted_at IS NULL
+            "SELECT c.id FROM carts c
+             WHERE c.user_id = ?
                AND c.status = 'active' AND c.deleted_at IS NULL
              ORDER BY c.created_at DESC, c.id DESC LIMIT 1"
         );
-        $statement->execute([$_SESSION['email']]);
+        $statement->execute([(int) $_SESSION['user_id']]);
         $id = $statement->fetchColumn();
         if ($id) {
             $statement = $db->prepare(
-                'SELECT p.name, p.price, ci.quantity
-                 FROM cart_items ci JOIN products p ON p.id = ci.product_id
+                "SELECT ci.id AS cart_item_id, p.id AS product_id,
+                        COALESCE(p.name, 'Unavailable product') AS name, p.price,
+                        ci.quantity, p.quantity AS stock, p.listing_status,
+                        p.deleted_at AS product_deleted_at
+                 FROM cart_items ci LEFT JOIN products p ON p.id = ci.product_id
                  WHERE ci.cart_id = ? AND ci.deleted_at IS NULL AND ci.quantity > 0
-                 ORDER BY ci.id'
+                 ORDER BY ci.id"
             );
             $statement->execute([$id]);
             $cart['items'] = $statement->fetchAll(PDO::FETCH_ASSOC);
@@ -76,6 +79,9 @@ function store_page_start(
 ): void {
     $cart = store_cart();
     $signedIn = !empty($_SESSION['email']);
+    if (empty($_SESSION['cart_csrf'])) {
+        $_SESSION['cart_csrf'] = bin2hex(random_bytes(32));
+    }
     ?>
     <!doctype html>
     <html lang="en">
@@ -157,8 +163,78 @@ function store_page_start(
 function store_page_end(): void
 {
     $cart = store_cart();
+    $signedIn = !empty($_SESSION['user_id']) && ($_SESSION['user_role'] ?? '') === 'customer';
     ?>
         </main>
+        <dialog class="store-search-dialog" id="store-search-dialog" aria-labelledby="store-search-title">
+            <div class="store-dialog-heading">
+                <div><span class="gaming-kicker">FIND YOUR NEXT UPGRADE</span><h2 id="store-search-title">Search categories</h2></div>
+                <button class="store-icon-button" type="button" data-close-store-dialog aria-label="Close search"><?= store_icon('close') ?></button>
+            </div>
+            <p>Search the categories currently available in the store.</p>
+            <form class="store-search-form" id="landing-category-search" action="index.php#categories" method="get">
+                <?= store_icon('search') ?>
+                <label class="sr-only" for="header-search">Search categories</label>
+                <input id="header-search" name="q" type="search" placeholder="Search categories" autocomplete="off">
+                <button type="submit" aria-label="Search"><?= store_icon('arrow') ?></button>
+            </form>
+        </dialog>
+        <dialog class="store-cart-dialog" id="store-cart-dialog" aria-labelledby="store-cart-title">
+            <div class="store-dialog-heading">
+                <div><span class="gaming-kicker">YOUR SELECTION</span><h2 id="store-cart-title">Your cart <span><?= (int) $cart['count'] ?></span></h2></div>
+                <button class="store-icon-button" type="button" data-close-store-dialog aria-label="Close cart"><?= store_icon('close') ?></button>
+            </div>
+            <?php if ($cart['error']): ?>
+                <p class="store-cart-empty" role="alert">Your cart could not be loaded. Please try again.</p>
+            <?php elseif ($cart['items'] === []): ?>
+                <div class="store-cart-empty">
+                    <span class="cart-empty-orbit"><?= store_icon('cart') ?></span>
+                    <span class="gaming-kicker">NOTHING HERE YET</span>
+                    <h3>Your next upgrade is waiting.</h3>
+                    <p>Browse the available categories and add products to your cart.</p>
+                    <button class="button" type="button" data-close-store-dialog>Explore categories</button>
+                </div>
+            <?php else: ?>
+                <div class="store-cart-items">
+                    <?php foreach ($cart['items'] as $item): ?>
+                        <article class="store-cart-item">
+                            <span class="cart-item-icon"><?= store_icon('box') ?></span>
+                            <div>
+                                <h3><?= e((string) $item['name']) ?></h3>
+                                <p><?= number_format((float) $item['price'], 2) ?> JOD each</p>
+                                <?php if ($signedIn): ?>
+                                    <form class="store-cart-quantity" method="post" action="cart_action.php">
+                                        <input type="hidden" name="csrf_token" value="<?= e((string) $_SESSION['cart_csrf']) ?>">
+                                        <input type="hidden" name="action" value="update">
+                                        <input type="hidden" name="cart_item_id" value="<?= (int) $item['cart_item_id'] ?>">
+                                        <label class="sr-only" for="cart-quantity-<?= (int) $item['cart_item_id'] ?>">Quantity for <?= e((string) $item['name']) ?></label>
+                                        <input id="cart-quantity-<?= (int) $item['cart_item_id'] ?>" name="quantity" type="number" min="1" max="<?= (int) $item['stock'] ?>" value="<?= (int) $item['quantity'] ?>" <?= empty($item['stock']) || $item['product_deleted_at'] !== null || $item['listing_status'] !== 'available' ? 'disabled' : '' ?>>
+                                        <button type="submit" <?= empty($item['stock']) || $item['product_deleted_at'] !== null || $item['listing_status'] !== 'available' ? 'disabled' : '' ?>>Update</button>
+                                    </form>
+                                    <form method="post" action="cart_action.php">
+                                        <input type="hidden" name="csrf_token" value="<?= e((string) $_SESSION['cart_csrf']) ?>">
+                                        <input type="hidden" name="action" value="remove">
+                                        <input type="hidden" name="cart_item_id" value="<?= (int) $item['cart_item_id'] ?>">
+                                        <button class="store-cart-remove" type="submit">Remove</button>
+                                    </form>
+                                <?php endif; ?>
+                                <?php if ($item['product_deleted_at'] !== null || $item['listing_status'] !== 'available' || (int) $item['stock'] < 1): ?><small>This product is no longer available.</small><?php endif; ?>
+                            </div>
+                            <strong><?= number_format((float) $item['price'] * (int) $item['quantity'], 2) ?><small>JOD</small></strong>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+                <div class="store-cart-summary"><span>Subtotal</span><strong><?= number_format((float) $cart['total'], 2) ?> JOD</strong><p>Delivery charges, if any, are confirmed at checkout.</p></div>
+                <div class="store-cart-bottom">
+                    <?php if ($signedIn): ?>
+                        <a class="button" href="checkout.php">Proceed to checkout <?= store_icon('arrow') ?></a>
+                    <?php else: ?>
+                        <a class="button" href="../../backend/auth/login.php">Sign in to checkout <?= store_icon('arrow') ?></a>
+                    <?php endif; ?>
+                    <span><?= store_icon('check') ?> Current prices are checked again at checkout.</span>
+                </div>
+            <?php endif; ?>
+        </dialog>
         <footer class="store-footer">
             <div class="wrap footer-inner">
                 <div>

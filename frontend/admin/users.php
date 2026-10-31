@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/guard.php';
 require_once __DIR__ . '/../../backend/classes/UsersClass.php';   
 
 $usersObj = new UsersClass();
@@ -7,8 +8,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json; charset=utf-8');
 
     $allowedRoles    = ['Admin', 'Customer'];
-    $allowedStatuses = ['Active', 'Inactive'];
-
     $action   = $_POST['action'] ?? '';
     $id       = (int)($_POST['id'] ?? 0);
     $name     = trim($_POST['name'] ?? '');
@@ -16,7 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
     $confirm  = $_POST['confirm_password'] ?? '';
     $role     = $_POST['role'] ?? '';
-    $status   = $_POST['status'] ?? '';
 
     $respond = function (bool $ok, string $msg = '') {
         echo json_encode(['success' => $ok, 'message' => $msg]);
@@ -29,8 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     $respond(false, 'Please enter a valid name and email.');
                 }
-                if (!in_array($role, $allowedRoles, true) || !in_array($status, $allowedStatuses, true)) {
-                    $respond(false, 'Invalid role or status.');
+                if (!in_array($role, $allowedRoles, true)) {
+                    $respond(false, 'Invalid role.');
                 }
                 if (strlen($password) < 8) {
                     $respond(false, 'Password must be at least 8 characters.');
@@ -41,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($usersObj->emailExists($email)) {
                     $respond(false, 'This email is already used.');
                 }
-                $ok = $usersObj->addUser($name, $email, $password, $role, $status);
+                $ok = $usersObj->addUser($name, $email, $password, $role);
                 $respond($ok, $ok ? 'User added.' : 'Could not add user.');
                 break;
 
@@ -49,8 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($id <= 0 || $name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     $respond(false, 'Please enter a valid name and email.');
                 }
-                if (!in_array($role, $allowedRoles, true) || !in_array($status, $allowedStatuses, true)) {
-                    $respond(false, 'Invalid role or status.');
+                if (!in_array($role, $allowedRoles, true)) {
+                    $respond(false, 'Invalid role.');
                 }
                 if ($password !== '') {
                     if (strlen($password) < 8) {
@@ -63,16 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($usersObj->emailExists($email, $id)) {
                     $respond(false, 'This email is already used.');
                 }
-                $ok = $usersObj->updateUser($id, $name, $email, $role, $status, $password);
+                $ok = $usersObj->updateUser($id, $name, $email, $role, $password);
                 $respond($ok, $ok ? 'User updated.' : 'Could not update user.');
-                break;
-
-            case 'status':
-                if ($id <= 0 || !in_array($status, $allowedStatuses, true)) {
-                    $respond(false, 'Invalid request.');
-                }
-                $ok = $usersObj->updateStatus($id, $status);
-                $respond($ok, $ok ? 'Status updated.' : 'Could not update status.');
                 break;
 
             case 'delete':
@@ -118,7 +108,7 @@ $extraHead = '
 
 page_start('Users', 'users.php', $extraHead);
 
-heading('STORE MANAGEMENT', 'Customers & users', 'Manage customers and admins, their status and spending.');
+heading('STORE MANAGEMENT', 'Customers & users', 'Manage customers and admins, permissions and spending.');
 ?>
 
     <section class="metrics-grid">
@@ -137,10 +127,10 @@ heading('STORE MANAGEMENT', 'Customers & users', 'Manage customers and admins, t
 
       <div class="metric-card">
         <div>
-          <div class="metric-title">ACTIVE CUSTOMERS</div>
+          <div class="metric-title">CUSTOMER ACCOUNTS</div>
           <div class="metric-value"><?= number_format($stats['active_customers']) ?></div>
           <div class="metric-subtext green">
-            <i class="fa-solid fa-circle" style="font-size: 0.5rem; vertical-align: middle;"></i> <?= $stats['active_rate'] ?>% <span class="muted">active rate</span>
+            <i class="fa-solid fa-circle" style="font-size: 0.5rem; vertical-align: middle;"></i> Available to sign in
           </div>
         </div>
         <div class="metric-icon-box blue">
@@ -186,12 +176,6 @@ heading('STORE MANAGEMENT', 'Customers & users', 'Manage customers and admins, t
             <option value="Customer">Customer</option>
           </select>
 
-          <select id="filterStatus" class="select-filter" aria-label="Filter by status" onchange="filterAndSortUsers()">
-            <option value="">All Status</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
-
           <select id="sortSpent" class="select-filter" aria-label="Sort by spending" onchange="filterAndSortUsers()">
             <option value="">Sort by Spent</option>
             <option value="spent-desc">Spent: High to Low</option>
@@ -219,7 +203,6 @@ heading('STORE MANAGEMENT', 'Customers & users', 'Manage customers and admins, t
           <tr>
             <th>User</th>
             <th>Role</th>
-            <th>Status</th>
             <th>Orders</th>
             <th>Total Spent</th>
             <th>Joined Date</th>
@@ -228,7 +211,7 @@ heading('STORE MANAGEMENT', 'Customers & users', 'Manage customers and admins, t
         </thead>
         <tbody id="usersTbody">
           <?php foreach ($users as $u): ?>
-          <tr data-id="<?= (int)$u['id'] ?>" data-name="<?= e(mb_strtolower($u['name'])) ?>" data-email="<?= e(mb_strtolower($u['email'])) ?>" data-role="<?= e($u['role']) ?>" data-status="<?= e($u['status']) ?>" data-spent="<?= $u['total_spent'] ?>" data-orders="<?= $u['orders_count'] ?>">
+          <tr data-id="<?= (int)$u['id'] ?>" data-name="<?= e(mb_strtolower($u['name'])) ?>" data-email="<?= e(mb_strtolower($u['email'])) ?>" data-role="<?= e($u['role']) ?>" data-spent="<?= $u['total_spent'] ?>" data-orders="<?= $u['orders_count'] ?>">
             <td>
               <div class="user-info-cell">
                 <div class="user-avatar">
@@ -245,25 +228,11 @@ heading('STORE MANAGEMENT', 'Customers & users', 'Manage customers and admins, t
                 <?= e($u['role']) ?>
               </span>
             </td>
-            <td>
-              <span class="badge status-badge <?= $u['status'] === 'Active' ? 'badge-status-active' : 'badge-status-inactive' ?>">
-                <?= e($u['status']) ?>
-              </span>
-            </td>
             <td><?= $u['orders_count'] ?></td>
             <td><strong>JD <?= number_format($u['total_spent'], 2) ?></strong></td>
             <td><?= e($u['created_at']) ?></td>
             <td style="text-align: right;">
               <button class="action-btn" title="Edit User" onclick="openEditUserModal(this)"><i class="fa-solid fa-pen-to-square"></i></button>
-              <?php if ($u['status'] === 'Active'): ?>
-                <button class="action-btn ban" title="Ban User" onclick="toggleUserStatus(this, 'Inactive')">
-                  <i class="fa-solid fa-ban"></i>
-                </button>
-              <?php else: ?>
-                <button class="action-btn unban" title="Activate User" onclick="toggleUserStatus(this, 'Active')">
-                  <i class="fa-solid fa-check-circle"></i>
-                </button>
-              <?php endif; ?>
               <button class="action-btn delete" title="Delete User" onclick="deleteUser(this)"><i class="fa-solid fa-trash"></i></button>
             </td>
           </tr>
@@ -320,13 +289,6 @@ heading('STORE MANAGEMENT', 'Customers & users', 'Manage customers and admins, t
             <option value="Admin">Admin</option>
           </select>
         </div>
-        <div class="form-group">
-          <label for="newUserStatus">Status</label>
-          <select id="newUserStatus" class="form-control" required>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
-        </div>
         <div id="addUserError" class="form-message"></div>
         <div class="modal-actions">
           <button type="button" class="btn-secondary" onclick="closeAddUserModal()">Cancel</button>
@@ -365,13 +327,6 @@ heading('STORE MANAGEMENT', 'Customers & users', 'Manage customers and admins, t
           <select id="editUserRole" class="form-control" required>
             <option value="Customer">Customer</option>
             <option value="Admin">Admin</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="editUserStatus">Status</label>
-          <select id="editUserStatus" class="form-control" required>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
           </select>
         </div>
         <div id="editUserError" class="form-message"></div>
@@ -435,8 +390,7 @@ heading('STORE MANAGEMENT', 'Customers & users', 'Manage customers and admins, t
         email: document.getElementById('newUserEmail').value,
         password: password,
         confirm_password: confirmPassword,
-        role: document.getElementById('newUserRole').value,
-        status: document.getElementById('newUserStatus').value
+        role: document.getElementById('newUserRole').value
       });
 
       if (!result.success) {
@@ -455,7 +409,6 @@ heading('STORE MANAGEMENT', 'Customers & users', 'Manage customers and admins, t
       document.getElementById('editUserName').value = row.querySelector('.user-name').textContent.trim();
       document.getElementById('editUserEmail').value = row.querySelector('.user-email').textContent.trim();
       document.getElementById('editUserRole').value = row.getAttribute('data-role');
-      document.getElementById('editUserStatus').value = row.getAttribute('data-status');
       document.getElementById('editUserPassword').value = '';
       document.getElementById('editUserConfirmPassword').value = '';
       document.getElementById('editUserModal').classList.add('active');
@@ -486,8 +439,7 @@ heading('STORE MANAGEMENT', 'Customers & users', 'Manage customers and admins, t
         email: document.getElementById('editUserEmail').value,
         password: password,
         confirm_password: confirmPassword,
-        role: document.getElementById('editUserRole').value,
-        status: document.getElementById('editUserStatus').value
+        role: document.getElementById('editUserRole').value
       });
 
       if (!result.success) {
@@ -524,7 +476,6 @@ heading('STORE MANAGEMENT', 'Customers & users', 'Manage customers and admins, t
     function filterAndSortUsers(resetPage = true) {
       const searchVal = document.getElementById('searchInput').value.toLowerCase();
       const roleVal   = document.getElementById('filterRole').value;
-      const statusVal = document.getElementById('filterStatus').value;
       const spentSort  = document.getElementById('sortSpent').value;
       const ordersSort = document.getElementById('sortOrders').value;
 
@@ -549,12 +500,10 @@ heading('STORE MANAGEMENT', 'Customers & users', 'Manage customers and admins, t
         const name   = row.getAttribute('data-name');
         const email  = row.getAttribute('data-email');
         const role   = row.getAttribute('data-role');
-        const status = row.getAttribute('data-status');
 
         const matchesSearch = name.includes(searchVal) || email.includes(searchVal);
         const matchesRole   = !roleVal   || role === roleVal;
-        const matchesStatus = !statusVal || status === statusVal;
-        return matchesSearch && matchesRole && matchesStatus;
+        return matchesSearch && matchesRole;
       });
 
       rows.forEach(row => { row.style.display = 'none'; });
@@ -633,39 +582,6 @@ heading('STORE MANAGEMENT', 'Customers & users', 'Manage customers and admins, t
       pageSize = parseInt(document.getElementById('pageSize').value, 10) || 10;
       currentPage = 1;
       renderPage();
-    }
-
-    async function toggleUserStatus(button, newStatus) {
-      const row = button.closest('tr');
-      const statusBadge = row.querySelector('.status-badge');
-      hideMessage('pageMessage');
-
-      const result = await sendRequest({ action: 'status', id: row.getAttribute('data-id'), status: newStatus });
-
-      if (!result.success) {
-        showMessage('pageMessage', result.message);
-        return;
-      }
-
-      row.setAttribute('data-status', newStatus);
-
-      if (newStatus === 'Inactive') {
-        statusBadge.className = 'badge status-badge badge-status-inactive';
-        statusBadge.textContent = 'Inactive';
-
-        button.className = 'action-btn unban';
-        button.title = 'Activate User';
-        button.innerHTML = '<i class="fa-solid fa-check-circle"></i>';
-        button.setAttribute('onclick', "toggleUserStatus(this, 'Active')");
-      } else {
-        statusBadge.className = 'badge status-badge badge-status-active';
-        statusBadge.textContent = 'Active';
-
-        button.className = 'action-btn ban';
-        button.title = 'Ban User';
-        button.innerHTML = '<i class="fa-solid fa-ban"></i>';
-        button.setAttribute('onclick', "toggleUserStatus(this, 'Inactive')");
-      }
     }
 
    

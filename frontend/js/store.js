@@ -53,7 +53,6 @@ document.addEventListener('keydown', (event) => {
     document.querySelectorAll('.store-account[open]').forEach((account) => account.removeAttribute('open'));
 });
 
-// Category search stays on the landing page now that browsing is consolidated.
 const categoryCards = Array.from(document.querySelectorAll('.hardware-category'));
 const categoryFeedback = document.getElementById('landing-category-feedback');
 
@@ -63,6 +62,8 @@ function filterLandingCategories(query) {
     let matches = 0;
     categoryCards.forEach((card) => {
         card.hidden = normalized !== '' && !card.textContent.toLocaleLowerCase().includes(normalized);
+        const categoryProducts = document.querySelector(card.getAttribute('href'));
+        if (categoryProducts) categoryProducts.hidden = card.hidden;
         if (!card.hidden) matches++;
     });
     categoryFeedback.hidden = normalized === '';

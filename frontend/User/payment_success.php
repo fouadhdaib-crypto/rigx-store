@@ -1,13 +1,17 @@
 <?php
+require_once __DIR__ . '/../../backend/config/config.php';
 require_once __DIR__ . '/../../backend/config/stripe.php';
 require_once __DIR__ . '/../../backend/classes/StripeClass.php';
+require_once __DIR__ . '/../../backend/classes/OrderClass.php';
 
 $state = 'unverified';
 $sessionId = $_GET['session_id'] ?? '';
+$orderId = filter_var($_GET['order_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
 
 if (
     is_string($sessionId) &&
-    preg_match('/\Acs_[A-Za-z0-9_]+\z/', $sessionId)
+    preg_match('/\Acs_[A-Za-z0-9_]+\z/', $sessionId) &&
+    $orderId !== false
 ) {
     try {
         $stripeSession = (new StripeClass())->getSession($sessionId);
@@ -15,11 +19,17 @@ if (
         if (
             is_array($stripeSession) &&
             isset($stripeSession['id']) &&
-            hash_equals($sessionId, $stripeSession['id'])
+            hash_equals($sessionId, $stripeSession['id']) &&
+            (int) ($stripeSession['client_reference_id'] ?? 0) === $orderId &&
+            (int) ($stripeSession['metadata']['order_id'] ?? 0) === $orderId
         ) {
-            $state = ($stripeSession['payment_status'] ?? '') === 'paid'
-                ? 'paid'
-                : 'not-paid';
+            $isPaid = ($stripeSession['payment_status'] ?? '') === 'paid';
+            $saved = $isPaid && (new OrderClass())->confirmStripePayment(
+                $orderId,
+                (int) ($stripeSession['amount_total'] ?? 0),
+                (string) ($stripeSession['currency'] ?? '')
+            );
+            $state = $saved ? 'paid' : 'not-paid';
         }
     } catch (Throwable $exception) {
         error_log($exception->getMessage());

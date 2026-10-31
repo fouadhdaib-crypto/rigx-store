@@ -119,7 +119,6 @@ store_page_start('My profile');
 <section class="profile-stats">
     <div class="stat"><span>ORDERS</span><strong><?= number_format($profile['orders_count']) ?></strong></div>
     <div class="stat"><span>TOTAL SPENT</span><strong><?= number_format($profile['total_spent'], 2) ?> JOD</strong></div>
-    <div class="stat"><span>STATUS</span><strong><?= e(ucfirst((string)$profile['status'])) ?></strong></div>
 </section>
 
 <div class="profile-grid">

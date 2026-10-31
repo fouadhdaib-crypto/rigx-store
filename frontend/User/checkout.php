@@ -1,25 +1,67 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
+declare(strict_types=1);
+require_once __DIR__ . '/../../backend/config/config.php';
+require_once __DIR__ . '/../../backend/config/db.php';
 require_once __DIR__ . '/../../backend/config/stripe.php';
 require_once __DIR__ . '/../../backend/classes/StripeClass.php';
 require_once __DIR__ . '/../../backend/classes/OrderClass.php';
 
-$items = [
-    ['name' => 'RTX 4070', 'price' => 599.99, 'quantity' => 1],
-    ['name' => 'Ryzen 7 7800X3D', 'price' => 399.00, 'quantity' => 1],
-];
+if (empty($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'customer') {
+    header('Location: ../../backend/auth/login.php');
+    exit;
+}
 
-$orderId = 1;
+$db = DB_conn::getConnection();
+$userStatement = $db->prepare(
+    'SELECT id, name, email, phone, address_line1
+     FROM users
+     WHERE id = ? AND role = \'customer\' AND deleted_at IS NULL'
+);
+$userStatement->execute([(int) $_SESSION['user_id']]);
+$user = $userStatement->fetch(PDO::FETCH_ASSOC);
+if (!$user) {
+    http_response_code(403);
+    exit('A valid customer account is required.');
+}
+
+$confirmation = $_SESSION['checkout_confirmation'] ?? null;
+unset($_SESSION['checkout_confirmation']);
+
+$cartStatement = $db->prepare(
+    "SELECT id FROM carts
+     WHERE user_id = ? AND status = 'active' AND deleted_at IS NULL
+     ORDER BY id DESC LIMIT 1"
+);
+$cartStatement->execute([(int) $user['id']]);
+$cartId = (int) $cartStatement->fetchColumn();
+if ($cartId < 1 && !$confirmation) {
+    header('Location: index.php#categories');
+    exit;
+}
+
+$items = [];
+if ($cartId > 0) {
+    $itemsStatement = $db->prepare(
+        "SELECT ci.product_id, COALESCE(p.name, 'Unavailable product') AS name,
+                p.price, ci.quantity
+         FROM cart_items ci
+         LEFT JOIN products p ON p.id = ci.product_id
+         WHERE ci.cart_id = ? AND ci.deleted_at IS NULL
+         ORDER BY ci.id"
+    );
+    $itemsStatement->execute([$cartId]);
+    $items = $itemsStatement->fetchAll(PDO::FETCH_ASSOC);
+}
+if ($items === [] && !$confirmation) {
+    header('Location: index.php#categories');
+    exit;
+}
+
 $checkoutError = '';
-$cashOnDeliveryConfirmation = $_SESSION['cash_on_delivery_confirmation'] ?? null;
-$selectedPaymentMethod = 'stripe';
-unset($_SESSION['cash_on_delivery_confirmation']);
-$customerName = '';
-$customerPhone = '';
-$deliveryAddress = '';
+$selectedPaymentMethod = 'cash_on_delivery';
+$customerName = (string) $user['name'];
+$customerPhone = (string) ($user['phone'] ?? '');
+$deliveryAddress = (string) ($user['address_line1'] ?? '');
 
 if (empty($_SESSION['checkout_csrf'])) {
     $_SESSION['checkout_csrf'] = bin2hex(random_bytes(32));
@@ -28,66 +70,96 @@ if (empty($_SESSION['checkout_csrf'])) {
 $subtotal = array_reduce(
     $items,
     static fn(float $total, array $item): float =>
-        $total + ($item['price'] * $item['quantity']),
+        $total + ((float) $item['price'] * (int) $item['quantity']),
     0.0
 );
+if ($confirmation) {
+    $subtotal = (float) $confirmation['total_jod'];
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $selectedPaymentMethod = is_string($_POST['payment_method'] ?? null)
-        ? $_POST['payment_method']
-        : '';
-    $customerName = is_string($_POST['customer_name'] ?? null)
-        ? trim($_POST['customer_name'])
-        : '';
-    $customerPhone = is_string($_POST['customer_phone'] ?? null)
-        ? trim($_POST['customer_phone'])
-        : '';
-    $deliveryAddress = is_string($_POST['delivery_address'] ?? null)
-        ? trim($_POST['delivery_address'])
-        : '';
-    $submittedToken = is_string($_POST['csrf_token'] ?? null)
-        ? $_POST['csrf_token']
-        : '';
+    $selectedPaymentMethod = is_string($_POST['payment_method'] ?? null) ? $_POST['payment_method'] : '';
+    $customerName = is_string($_POST['customer_name'] ?? null) ? trim($_POST['customer_name']) : '';
+    $customerPhone = is_string($_POST['customer_phone'] ?? null) ? trim($_POST['customer_phone']) : '';
+    $deliveryAddress = is_string($_POST['delivery_address'] ?? null) ? trim($_POST['delivery_address']) : '';
+    $submittedToken = is_string($_POST['csrf_token'] ?? null) ? $_POST['csrf_token'] : '';
 
     if (!hash_equals($_SESSION['checkout_csrf'], $submittedToken)) {
         $checkoutError = 'Your checkout session expired. Please reload and try again.';
-    } elseif ($selectedPaymentMethod === 'cash_on_delivery') {
+    } elseif (!in_array($selectedPaymentMethod, ['cash_on_delivery', 'stripe'], true)) {
+        $checkoutError = 'Choose a payment method to continue.';
+    } else {
+        $order = null;
         try {
-            $order = (new OrderClass())->createCashOnDeliveryOrder(
+            $paymentMethod = $selectedPaymentMethod === 'stripe' ? 'card' : 'cash_on_delivery';
+            $order = (new OrderClass())->createOrder(
+                (int) $user['id'],
+                $cartId,
                 [
                     'name' => $customerName,
                     'phone' => $customerPhone,
                     'address' => $deliveryAddress,
                 ],
-                $items
+                $paymentMethod
             );
 
-            $_SESSION['cash_on_delivery_confirmation'] = $order;
-            $_SESSION['checkout_csrf'] = bin2hex(random_bytes(32));
-            header('Location: checkout.php');
-            exit;
-        } catch (InvalidArgumentException $exception) {
-            $checkoutError = $exception->getMessage();
-        } catch (Throwable $exception) {
-            error_log($exception->getMessage());
-            $checkoutError = 'We could not save your order. Please try again.';
-        }
-    } elseif ($selectedPaymentMethod === 'stripe') {
-        try {
-            $stripe = new StripeClass();
-            $checkoutSession = $stripe->createCheckoutSession($items, $orderId);
-
-            if (!empty($checkoutSession['url'])) {
-                header('Location: ' . $checkoutSession['url']);
+            if ($selectedPaymentMethod === 'cash_on_delivery') {
+                $_SESSION['checkout_confirmation'] = [
+                    'id' => $order['id'],
+                    'total_jod' => $order['total_jod'],
+                ];
+                $_SESSION['checkout_csrf'] = bin2hex(random_bytes(32));
+                header('Location: checkout.php');
                 exit;
             }
-        } catch (Throwable $exception) {
-            error_log($exception->getMessage());
-        }
 
-        $checkoutError = 'Secure checkout is unavailable right now. Please try again.';
-    } else {
-        $checkoutError = 'Choose a payment method to continue.';
+            (new OrderClass())->holdCart($cartId);
+            $returnBaseUrl = defined('SITE_URL') && filter_var(SITE_URL, FILTER_VALIDATE_URL)
+                ? rtrim(SITE_URL, '/')
+                : '';
+            if ($returnBaseUrl === '') {
+                $host = (string) ($_SERVER['HTTP_HOST'] ?? '');
+                if (!preg_match('/\A(?:localhost|127\.0\.0\.1|\[::1\])(?::\d{1,5})?\z/i', $host)) {
+                    throw new RuntimeException('Set a valid public SITE_URL to enable Stripe checkout.');
+                }
+                $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                $scriptDirectory = str_replace('\\', '/', dirname((string) ($_SERVER['SCRIPT_NAME'] ?? '/')));
+                $returnBaseUrl = $scheme . '://' . $host . rtrim($scriptDirectory, '/');
+            } elseif (!str_ends_with($returnBaseUrl, '/frontend/User')) {
+                $returnBaseUrl .= '/frontend/User';
+            }
+            $checkoutSession = (new StripeClass())->createCheckoutSession(
+                $order['items'],
+                (int) $order['id'],
+                $returnBaseUrl
+            );
+
+            if (empty($checkoutSession['url']) || !filter_var($checkoutSession['url'], FILTER_VALIDATE_URL)) {
+                throw new RuntimeException('Stripe did not return a valid checkout URL.');
+            }
+
+            header('Location: ' . $checkoutSession['url']);
+            exit;
+        } catch (InvalidArgumentException $exception) {
+            if ($order !== null && $selectedPaymentMethod === 'stripe') {
+                try {
+                    (new OrderClass())->failPayment((int) $order['id'], (int) $user['id']);
+                } catch (Throwable $failureError) {
+                    error_log('Stripe order cleanup: ' . $failureError->getMessage());
+                }
+            }
+            $checkoutError = $exception->getMessage();
+        } catch (Throwable $exception) {
+            if ($order !== null && $selectedPaymentMethod === 'stripe') {
+                try {
+                    (new OrderClass())->failPayment((int) $order['id'], (int) $user['id']);
+                } catch (Throwable $failureError) {
+                    error_log('Stripe order cleanup: ' . $failureError->getMessage());
+                }
+            }
+            error_log('Checkout: ' . $exception->getMessage());
+            $checkoutError = 'We could not complete checkout. Your cart is still available; please try again.';
+        }
     }
 }
 ?>
@@ -139,9 +211,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <strong><?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?></strong>
                                 <span>Quantity: <?= (int) $item['quantity'] ?></span>
                             </div>
-                            <span class="item-price">$<?= number_format($item['price'] * $item['quantity'], 2) ?></span>
+                            <span class="item-price"><?= number_format((float) $item['price'] * (int) $item['quantity'], 2) ?> JOD</span>
                         </div>
                     <?php endforeach; ?>
+                    <?php if ($items === [] && $confirmation): ?><p>Order confirmed. Thank you for shopping with REGIX.</p><?php endif; ?>
                 </div>
                 <section class="checkout-policies" aria-labelledby="checkoutPoliciesTitle">
                     <h3 id="checkoutPoliciesTitle">Store policies</h3>
@@ -165,16 +238,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <h2 id="summaryTitle">Order summary</h2>
                 </div>
                 <div class="summary-body">
-                    <div class="summary-line"><span>Subtotal</span><span>$<?= number_format($subtotal, 2) ?></span>
+                    <div class="summary-line"><span>Subtotal</span><span><?= number_format($subtotal, 2) ?> JOD</span>
                     </div>
                     <div class="summary-line"><span>Shipping</span><span>Calculated at payment</span></div>
                     <div class="summary-total"><span>Total
-                            due</span><strong>$<?= number_format($subtotal, 2) ?></strong></div>
-                    <?php if ($cashOnDeliveryConfirmation): ?>
+                            due</span><strong><?= number_format($subtotal, 2) ?> JOD</strong></div>
+                    <?php if ($confirmation): ?>
                         <div class="checkout-confirmation" role="status">
                             <strong>Cash on delivery order placed</strong>
-                            <span>Order <?= htmlspecialchars($cashOnDeliveryConfirmation['order_number'], ENT_QUOTES, 'UTF-8') ?></span>
-                            Total due on delivery: $<?= number_format((float) $cashOnDeliveryConfirmation['subtotal'], 2) ?>
+                            <span>Order #<?= (int) $confirmation['id'] ?></span>
+                            Total due on delivery: <?= number_format((float) $confirmation['total_jod'], 2) ?> JOD
                             <a href="index.php#categories">Continue shopping</a>
                         </div>
                     <?php else: ?>
@@ -201,18 +274,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <span class="payment-option-badge">Secure</span>
                                 </label>
                             </fieldset>
-                            <div class="delivery-fields" id="deliveryFields" <?= $selectedPaymentMethod === 'cash_on_delivery' ? '' : 'hidden' ?>>
+                            <div class="delivery-fields" id="deliveryFields">
                                 <label for="customerName">
                                     Full name
-                                    <input id="customerName" name="customer_name" type="text" maxlength="100" value="<?= htmlspecialchars($customerName, ENT_QUOTES, 'UTF-8') ?>" autocomplete="name" <?= $selectedPaymentMethod === 'cash_on_delivery' ? 'required' : '' ?>>
+                                    <input id="customerName" name="customer_name" type="text" maxlength="120" value="<?= htmlspecialchars($customerName, ENT_QUOTES, 'UTF-8') ?>" autocomplete="name" required>
                                 </label>
                                 <label for="customerPhone">
                                     Phone number
-                                    <input id="customerPhone" name="customer_phone" type="tel" maxlength="30" value="<?= htmlspecialchars($customerPhone, ENT_QUOTES, 'UTF-8') ?>" autocomplete="tel" <?= $selectedPaymentMethod === 'cash_on_delivery' ? 'required' : '' ?>>
+                                    <input id="customerPhone" name="customer_phone" type="tel" maxlength="30" value="<?= htmlspecialchars($customerPhone, ENT_QUOTES, 'UTF-8') ?>" autocomplete="tel" required>
                                 </label>
                                 <label for="deliveryAddress">
                                     Delivery address
-                                    <textarea id="deliveryAddress" name="delivery_address" maxlength="2000" autocomplete="street-address" <?= $selectedPaymentMethod === 'cash_on_delivery' ? 'required' : '' ?>><?= htmlspecialchars($deliveryAddress, ENT_QUOTES, 'UTF-8') ?></textarea>
+                                    <textarea id="deliveryAddress" name="delivery_address" maxlength="255" autocomplete="street-address" required><?= htmlspecialchars($deliveryAddress, ENT_QUOTES, 'UTF-8') ?></textarea>
                                 </label>
                             </div>
                             <p class="secure-note" id="paymentHelp"><span class="secure-mark"
@@ -233,17 +306,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (paymentForm) {
             const paymentSubmit = document.getElementById('paymentSubmit');
             const paymentHelp = document.getElementById('paymentHelp');
-            const deliveryFields = document.getElementById('deliveryFields');
-            const deliveryInputs = deliveryFields.querySelectorAll('input, textarea');
 
             paymentForm.querySelectorAll('input[name="payment_method"]').forEach(input => {
                 input.addEventListener('change', () => {
                     const isStripe = input.value === 'stripe' && input.checked;
 
-                    deliveryFields.hidden = isStripe;
-                    deliveryInputs.forEach(field => {
-                        field.required = !isStripe;
-                    });
                     paymentSubmit.textContent = isStripe
                         ? 'Continue to secure payment'
                         : 'Place cash on delivery order';

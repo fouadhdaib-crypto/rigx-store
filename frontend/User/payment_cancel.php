@@ -1,3 +1,19 @@
+require_once __DIR__ . '/../../backend/config/config.php';
+require_once __DIR__ . '/../../backend/classes/OrderClass.php';
+
+$orderId = filter_var($_GET['order_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+if (
+    $orderId !== false &&
+    !empty($_SESSION['user_id']) &&
+    ($_SESSION['user_role'] ?? '') === 'customer'
+) {
+    try {
+        (new OrderClass())->failPayment($orderId, (int) $_SESSION['user_id']);
+    } catch (Throwable $exception) {
+        error_log('Stripe cancellation: ' . $exception->getMessage());
+    }
+}
+?>
 <!doctype html>
 <html lang="en">
 
@@ -27,7 +43,7 @@
             <div class="payment-symbol" aria-hidden="true">!</div>
             <div class="payment-eyebrow">CHECKOUT CANCELED</div>
             <h1 id="cancelTitle">Your payment was canceled.</h1>
-            <p>No payment was completed. You can return to checkout to try again, or continue browsing the store.</p>
+            <p>No payment was completed. Your cart is available if you want to try again, or you can continue browsing.</p>
             <div class="payment-actions">
                 <a class="payment-link primary" href="checkout.php">Return to checkout</a>
                 <a class="payment-link" href="index.php#categories">Continue shopping</a>

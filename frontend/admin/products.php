@@ -2,19 +2,18 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../backend/config/db.php';
-require_once __DIR__ . '/../../backend/classes/ProductsClass.php';
 require_once __DIR__ . '/../../backend/classes/CategorieClass.php';
+require_once __DIR__ . '/../../backend/classes/ProductsClass.php';
 require_once __DIR__ . '/../layout.php';
 
 $productModel = new Product();
 $categoryModel = new Categorie();
+$categories = $categoryModel->getAll();
+$categoryIds = array_map('intval', array_column($categories, 'id'));
 
 $errorMessages = [];
 $successMessage = "";
 $data = [];
-
-$categories = $categoryModel->getAll();
-$categoryIds = array_map('intval', array_column($categories, 'id'));
 
 function getFormData () : array {
     $currentImage = trim($_POST['product_img'] ?? '');
@@ -126,6 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (empty($errorMessages)) {
             try {
+                $data['seller_id'] = (int) $_SESSION['user_id'];
                 if ($productModel->createProduct($data)) {
                     $successMessage = "Product has been created successfully.";
                     $data = [];
@@ -249,14 +249,17 @@ heading('Catalog', 'Products', 'Create, update and manage every product listed i
 
         <div class="form-field">
             <label for="category_id">Category</label>
-            <select name="category_id" id="category_id" required>
-                <option value="">Select category</option>
+            <select name="category_id" id="category_id" required <?= $categories === [] ? 'disabled' : '' ?>>
+                <option value=""><?= $categories === [] ? 'No categories available' : 'Select a category' ?></option>
                 <?php foreach ($categories as $category): ?>
                     <option value="<?= (int) $category['id'] ?>" <?= (int) ($data['category_id'] ?? 0) === (int) $category['id'] ? 'selected' : '' ?>>
-                        <?= htmlspecialchars((string) $category['name']) ?>
+                        <?= htmlspecialchars((string) $category['name'], ENT_QUOTES, 'UTF-8') ?>
                     </option>
                 <?php endforeach; ?>
             </select>
+            <?php if ($categories === []): ?>
+                <a href="categories.php">Add a category first</a>
+            <?php endif; ?>
         </div>
 
         <div class="form-field">
@@ -469,7 +472,7 @@ heading('Catalog', 'Products', 'Create, update and manage every product listed i
                             </td>
                             <td class="category-cell"><?= htmlspecialchars((string)($product['category_name'] ?? 'Uncategorized')) ?></td>
                             <td class="price-cell">
-                                <strong><?= htmlspecialchars((string)$product['price']) ?></strong>
+                                <strong><?= number_format((float) $product['price'], 2) ?></strong>
                                 <small>JOD</small>
                             </td>
                             <td><span class="stock-value <?= $stock === 0 ? 'stock-out' : ($stock <= 4 ? 'stock-low' : '') ?>"><?= $stock ?></span></td>

@@ -57,7 +57,6 @@ class DashboardDAL
             FROM users
             WHERE deleted_at IS NULL
               AND role = 'customer'
-              AND status = 'active'
               AND created_at >= :start_date
               AND created_at < :end_date
         ";

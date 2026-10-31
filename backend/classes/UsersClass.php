@@ -7,14 +7,17 @@ class UsersClass
     public function register($name, $email, $password, $role) {
         $dbh = DB_conn::getConnection();
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-        $inst = $dbh->prepare("INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)");
+        $inst = $dbh->prepare("INSERT INTO users (name, email, password_hash, role, address_line1) VALUES (?, ?, ?, ?, '')");
         return $inst->execute([$name, $email, $hashedPassword, $role]);
     }
 
     public function login($email, $password) {
         try {
             $dbh = DB_conn::getConnection();
-            $stmt = $dbh->prepare("SELECT * FROM users WHERE email = ?");
+            $stmt = $dbh->prepare(
+                "SELECT * FROM users
+                 WHERE email = ? AND deleted_at IS NULL"
+            );
             $stmt->execute([$email]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($user && password_verify($password, $user['password_hash'])) {
@@ -31,7 +34,7 @@ class UsersClass
     {
         $dbh = DB_conn::getConnection();
 
-        $sql = "SELECT u.id, u.name, u.email, u.role, u.status, u.created_at,
+        $sql = "SELECT u.id, u.name, u.email, u.role, u.created_at,
                        COALESCE(p.orders_count, 0) AS orders_count,
                        COALESCE(p.total_spent, 0)  AS total_spent
                 FROM users u
@@ -51,7 +54,6 @@ class UsersClass
 
         foreach ($rows as &$row) {
             $row['role']         = ucfirst($row['role']);
-            $row['status']       = ucfirst($row['status']);
             $row['orders_count'] = (int)$row['orders_count'];
             $row['total_spent']  = (float)$row['total_spent'];
             $row['created_at']   = substr($row['created_at'], 0, 10);
@@ -65,7 +67,7 @@ class UsersClass
     {
         $dbh  = DB_conn::getConnection();
         $stmt = $dbh->prepare(
-            "SELECT id, name, email, role, status, created_at
+            "SELECT id, name, email, role, created_at
              FROM users WHERE id = ? AND deleted_at IS NULL"
         );
         $stmt->execute([$id]);
@@ -87,7 +89,6 @@ class UsersClass
 
         $c = $dbh->query(
             "SELECT COUNT(*)                                                AS total,
-                    SUM(status = 'active')                                  AS active,
                     SUM(created_at >= DATE_FORMAT(NOW(), '%Y-%m-01'))       AS new_month
              FROM users
              WHERE role = 'customer' AND deleted_at IS NULL"
@@ -105,64 +106,53 @@ class UsersClass
         )->fetch(PDO::FETCH_ASSOC);
 
         $total  = (int)$c['total'];
-        $active = (int)$c['active'];
         $this_m = (float)$r['this_month'];
         $last_m = (float)$r['last_month'];
 
         return [
             'total_customers'  => $total,
-            'active_customers' => $active,
+            'active_customers' => $total,
             'new_this_month'   => (int)$c['new_month'],
-            'active_rate'      => $total > 0 ? round($active / $total * 100, 1) : 0,
             'revenue_total'    => (float)$r['total'],
             'revenue_growth'   => $last_m > 0 ? round(($this_m - $last_m) / $last_m * 100, 1) : 0,
         ];
     }
 
 
-    public function addUser(string $name, string $email, string $password, string $role, string $status): bool
+    public function addUser(string $name, string $email, string $password, string $role): bool
     {
         $dbh  = DB_conn::getConnection();
         $hash = password_hash($password, PASSWORD_DEFAULT);
 
         $stmt = $dbh->prepare(
-            "INSERT INTO users (name, email, password_hash, role, status, address_line1)
-             VALUES (?, ?, ?, ?, ?, '')"
+            "INSERT INTO users (name, email, password_hash, role, address_line1)
+             VALUES (?, ?, ?, ?, '')"
         );
-        return $stmt->execute([$name, $email, $hash, strtolower($role), strtolower($status)]);
+        return $stmt->execute([$name, $email, $hash, strtolower($role)]);
     }
 
   
-    public function updateUser(int $id, string $name, string $email, string $role, string $status, string $password = ''): bool
+    public function updateUser(int $id, string $name, string $email, string $role, string $password = ''): bool
     {
         $dbh = DB_conn::getConnection();
 
         if ($password !== '') {
             $stmt = $dbh->prepare(
                 "UPDATE users
-                 SET name = ?, email = ?, role = ?, status = ?, password_hash = ?
+                 SET name = ?, email = ?, role = ?, password_hash = ?
                  WHERE id = ? AND deleted_at IS NULL"
             );
             return $stmt->execute([
-                $name, $email, strtolower($role), strtolower($status),
-                password_hash($password, PASSWORD_DEFAULT), $id
+                $name, $email, strtolower($role), password_hash($password, PASSWORD_DEFAULT), $id
             ]);
         }
 
         $stmt = $dbh->prepare(
             "UPDATE users
-             SET name = ?, email = ?, role = ?, status = ?
+             SET name = ?, email = ?, role = ?
              WHERE id = ? AND deleted_at IS NULL"
         );
-        return $stmt->execute([$name, $email, strtolower($role), strtolower($status), $id]);
-    }
-
-   
-    public function updateStatus(int $id, string $status): bool
-    {
-        $dbh  = DB_conn::getConnection();
-        $stmt = $dbh->prepare("UPDATE users SET status = ? WHERE id = ? AND deleted_at IS NULL");
-        return $stmt->execute([strtolower($status), $id]);
+        return $stmt->execute([$name, $email, strtolower($role), $id]);
     }
 
   
@@ -178,7 +168,7 @@ class UsersClass
     {
         $dbh  = DB_conn::getConnection();
         $stmt = $dbh->prepare(
-            "SELECT u.id, u.name, u.email, u.role, u.status, u.address_line1, u.created_at,
+            "SELECT u.id, u.name, u.email, u.role, u.address_line1, u.created_at,
                     (SELECT COUNT(*) FROM orders o
                       WHERE o.user_id = u.id
                         AND o.deleted_at IS NULL
