@@ -75,7 +75,9 @@ function store_page_start(
                 <a class="button header-explore" href="index.php#rigs">
                     Explore builds <?= store_icon('arrow') ?>
                 </a>
-                <a class="account-link" href="../../backend/auth/login.php">
+                <a class="account-link" href="<?= (!empty($_SESSION['email']) || !empty($_SESSION['user_id']))
+                    ? 'userprofile.php'
+                    : '../../backend/auth/login.php' ?>">
                     <?= store_icon('user') ?>
                     <span>
                         <?= e((string) ($_SESSION['user_name'] ?? 'Sign in')) ?>
@@ -129,7 +131,9 @@ function store_page_end(): void
                     <a href="index.php#categories">
                         Categories
                     </a>
-                    <a href="../../backend/auth/login.php">
+                    <a href="<?= (!empty($_SESSION['email']) || !empty($_SESSION['user_id']))
+                        ? 'userprofile.php'
+                        : '../../backend/auth/login.php' ?>">
                         Your account
                     </a>
                 </nav>

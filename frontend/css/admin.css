@@ -1810,7 +1810,15 @@ td small {
   letter-spacing: 1.7px;
   text-align: center;
 }
-
+a.profile-mini {
+  text-decoration: none;
+  color: inherit;
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast);
+}
+a.profile-mini:hover {
+  background: var(--color-surface-hover);
+}
 /* Compact responsive breakpoints --------------------------------------- */
 @keyframes grow {
   from {

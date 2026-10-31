@@ -5,17 +5,9 @@ require_once __DIR__ . '/../backend/config/config.php';
 function regix_brand(string $assetPrefix = ''): void
 {
     ?>
-    <a class="brand" href="index.php" aria-label="REGIX dashboard">
-        <img
-            class="brand-logo"
-
-            src="<?= e($assetPrefix) ?>assets/regix-logo.svg"
-=======
-            src="../assets/regix-logo.svg"
-            alt="REGIX — Next level shopping"
-            width="220"
-            height="53"
-        >
+    <a class="brand" href="dashboard.php" aria-label="REGIX dashboard">
+        <img class="brand-logo" src="<?= e($assetPrefix) ?>assets/regix-logo.svg"
+            alt="REGIX — Next level shopping" width="220" height="53">
     </a>
     <?php
 }
@@ -33,7 +25,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
         : '../backend/auth/logout.php';
 
     $links = [
-        ['index.php', 'Overview', 'overview'],
+        ['dashboard.php', 'Overview', 'overview'],
         ['categories.php', 'Categories', 'categories'],
         ['products.php', 'Products', 'products'],
         ['orders.php', 'Orders', 'orders'],
@@ -41,6 +33,17 @@ function page_start(string $title, string $active, string $extraHead = ''): void
     ];
 
     $name = admin_name();
+    $isLoggedIn = !empty($_SESSION['email']) || !empty($_SESSION['user_id']);
+    $profilePath = $inAdminDirectory ? 'adminprofile.php' : 'admin/adminprofile.php';
+    $profileHref = $isLoggedIn ? $profilePath : $loginPath;
+    $roleLabels = [
+        'admin' => 'Administrator',
+        'customer' => 'Customer',
+        'seller' => 'Seller',
+    ];
+    $roleLabel = $isLoggedIn
+        ? ($roleLabels[$_SESSION['user_role'] ?? ''] ?? 'User')
+        : 'Not signed in';
 
     $icons = [
         'overview' =>
@@ -79,48 +82,30 @@ function page_start(string $title, string $active, string $extraHead = ''): void
     <head>
         <meta charset="utf-8">
 
-        <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1"
-        >
+        <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <meta name="theme-color" content="#090a0c">
         <meta name="color-scheme" content="dark">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oxanium:wght@500;600;700;800&display=swap" rel="stylesheet">
 
         <title><?= e($title) ?> · REGIX Admin</title>
 
-        <link
-            rel="icon"
-            type="image/svg+xml"
+        <link rel="icon" type="image/svg+xml" href="<?= e($assetPrefix) ?>assets/favicon.svg">
 
-            href="<?= e($assetPrefix) ?>assets/favicon.svg"
-        >
-
-       <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/admin.css">
-<link rel="stylesheet" href="<?= e($assetPrefix) ?>css/product_admin_view.css">
-
-
+        <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/admin.css">
         <script src="<?= e($assetPrefix) ?>js/admin.js" defer></script>
-            href="../assets/favicon.svg"
-        >
 
-        <link rel="stylesheet" href="../css/admin.css">
-
-        <script src="../js/admin.js" defer></script>
-<script src="<?= e($assetPrefix) ?>js/admin.js" defer></script>
-
-<?= $extraHead ?>
+        <?= $extraHead ?>
+        <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/admin-unified.css?v=<?= filemtime(__DIR__ . '/css/admin-unified.css') ?>">
+        <link rel="stylesheet" href="<?= e($assetPrefix) ?>css/typography.css?v=<?= filemtime(__DIR__ . '/css/typography.css') ?>">
 
     </head>
 
-    <body>
+    <body data-admin-page="<?= e(pathinfo($active, PATHINFO_FILENAME)) ?>" class="<?= in_array($active, ['products.php', 'categories.php', 'users.php'], true) ? 'admin-management' : 'admin-dashboard' ?>">
 
-        <input
-            class="nav-toggle"
-            type="checkbox"
-            id="nav-toggle"
-            aria-label="Open navigation"
-        >
+        <input class="nav-toggle" type="checkbox" id="nav-toggle" aria-label="Open navigation">
 
         <div class="app-shell">
 
@@ -135,15 +120,8 @@ function page_start(string $title, string $active, string $extraHead = ''): void
                     <div class="workspace-switcher">
 
                         <span class="workspace-icon">
-                            <img
-
-                                src="<?= e($assetPrefix) ?>assets/regix-mark.svg"
-=======
-                                src="../assets/regix-mark.svg"
-                                alt=""
-                                width="27"
-                                height="27"
-                            >
+                            <img src="<?= e($assetPrefix) ?>assets/regix-mark.svg" alt=""
+                                width="27" height="27">
                         </span>
 
                         <span class="workspace-copy">
@@ -158,6 +136,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
                     </div>
 
                     <!-- Workspace Navigation -->
+                    <div class="sidebar-nav-scroll" tabindex="0" role="region" aria-label="Sidebar navigation">
                     <div class="nav-label">
                         WORKSPACE
                     </div>
@@ -166,22 +145,14 @@ function page_start(string $title, string $active, string $extraHead = ''): void
 
                         <?php foreach ($links as [$file, $label, $icon]): ?>
 
-                            <a
-                                class="nav-link <?= $active === $file ? 'active' : '' ?>"
+                            <a class="nav-link <?= $active === $file ? 'active' : '' ?>"
                                 href="<?= e($file === 'orders.php' && !$inAdminDirectory ? 'admin/orders.php' : $file) ?>"
-                                <?= $active === $file ? 'aria-current="page"' : '' ?>
-                            >
+                                <?= $active === $file ? 'aria-current="page"' : '' ?>>
 
                                 <span class="nav-icon" aria-hidden="true">
 
-                                    <svg
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="1.8"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    >
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                        stroke-linecap="round" stroke-linejoin="round">
                                         <?= $icons[$icon] ?>
                                     </svg>
 
@@ -208,6 +179,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
 
                     <nav class="main-nav" aria-label="Account">
 
+                        <?php if (!$isLoggedIn): ?>
                         <a class="nav-link" href="<?= e($loginPath) ?>">
 
                             <span class="nav-icon" aria-hidden="true">
@@ -218,6 +190,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
 
                         </a>
 
+                        <?php else: ?>
                         <a class="nav-link" href="<?= e($logoutPath) ?>">
 
                             <span class="nav-icon" aria-hidden="true">
@@ -227,9 +200,11 @@ function page_start(string $title, string $active, string $extraHead = ''): void
                             <span>Sign out</span>
 
                         </a>
+                        <?php endif; ?>
 
                     </nav>
 
+                    </div>
                 </div>
 
                 <!-- Sidebar Bottom -->
@@ -251,7 +226,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
                             together in REGIX.
                         </p>
 
-                        <a href="index.php" class="text-button">
+                        <a href="dashboard.php" class="text-button">
                             Explore overview
                             <span aria-hidden="true">↗</span>
                         </a>
@@ -259,7 +234,7 @@ function page_start(string $title, string $active, string $extraHead = ''): void
                     </div>
 
                     <!-- Admin Profile -->
-                    <div class="profile-mini">
+                    <a class="profile-mini" href="<?= e($profileHref) ?>" title="View my profile">
 
                         <span class="avatar">
                             <?= e(initials($name)) ?>
@@ -272,35 +247,32 @@ function page_start(string $title, string $active, string $extraHead = ''): void
                             </strong>
 
                             <small>
-                                Store Administrator
+                                <?= e($roleLabel) ?>
                             </small>
 
                         </span>
 
                         <span
                             class="profile-status"
-                            title="Workspace"
+                            title="<?= $isLoggedIn ? 'Signed in' : 'Not signed in' ?>"
+                            <?= !$isLoggedIn ? 'style="background: #64748b; box-shadow: none;"' : '' ?>
                         ></span>
 
-                    </div>
+                    </a>
 
                 </div>
 
             </aside>
 
             <!-- Mobile Backdrop -->
-            <label
-                for="nav-toggle"
-                class="mobile-backdrop"
-                aria-label="Close navigation"
-            ></label>
+            <label for="nav-toggle" class="mobile-backdrop" aria-label="Close navigation"></label>
 
             <!-- Main Content -->
             <div class="main-content">
 
                 <main class="page-wrap" id="main-content">
 
-    <?php
+                    <?php
 }
 
 function page_end(): void
@@ -331,6 +303,7 @@ function page_end(): void
         </div>
 
     </body>
+
     </html>
 
     <?php
@@ -346,20 +319,10 @@ function heading(
     <section class="page-heading">
 
         <!-- Mobile Menu -->
-        <label
-            for="nav-toggle"
-            class="mobile-menu"
-            aria-label="Open navigation"
-        >
+        <label for="nav-toggle" class="mobile-menu" aria-label="Open navigation">
 
-            <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-            >
-                <path d="M4 7h16M4 12h16M4 17h16"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M4 7h16M4 12h16M4 17h16" />
             </svg>
 
         </label>
@@ -384,15 +347,6 @@ function heading(
             </p>
 
         </div>
-
-        <!-- Heading Badge -->
-        <span class="heading-chip">
-
-            <span class="heading-chip-dot"></span>
-
-            REGIX / ADMIN
-
-        </span>
 
     </section>
 
