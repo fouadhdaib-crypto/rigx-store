@@ -35,18 +35,6 @@ if (!$showBestSellers) {
         ORDER BY p.created_at DESC, p.id DESC LIMIT 6"
     )->fetchAll(PDO::FETCH_ASSOC);
 }
-// Preserve category browsing alongside the featured / best-selling selection.
-$categories = $db->query(
-    "SELECT id, name, description FROM categories WHERE deleted_at IS NULL ORDER BY name"
-)->fetchAll(PDO::FETCH_ASSOC);
-$categorySymbols = ['↗', '✳', '＋', '◈'];
-$productsByCategory = [];
-$catalogProducts = $db->query(
-    $productSelect . " WHERE " . $productAvailability . " ORDER BY p.created_at DESC, p.id DESC"
-)->fetchAll(PDO::FETCH_ASSOC);
-foreach ($catalogProducts as $catalogProduct) {
-    $productsByCategory[(int) $catalogProduct['category_id']][] = $catalogProduct;
-}
 if (empty($_SESSION['cart_csrf'])) {
     $_SESSION['cart_csrf'] = bin2hex(random_bytes(32));
 }
@@ -110,6 +98,7 @@ store_page_start('Next level. No limits.', '', true);
     <div class="campaign-story-copy campaign-reveal"><p class="campaign-lead">Every great session starts long before you press play.</p><p>It starts with the right parts. A considered choice. A setup that feels like an extension of you. REGIX brings the possibilities together, from your first upgrade to your next ambitious build.</p></div><div class="campaign-principles"><article><span>01</span><div><h3>Choose with intent.</h3><p>Build around what you actually do. Play, create, work, or a little of everything.</p></div></article><article><span>02</span><div><h3>Make room for more.</h3><p>Find components that fit your plans today and leave possibilities for tomorrow.</p></div></article><article><span>03</span><div><h3>Make it yours.</h3><p>New hardware or a pre-loved find. Your next setup doesn’t have to look like anyone else’s.</p></div></article></div>
 </section>
 <section class="campaign-categories campaign-section landing-featured" id="featured-products" aria-labelledby="category-title">
+    <p class="landing-category-feedback" id="landing-category-feedback" role="status" hidden></p>
     <div class="campaign-section-heading campaign-reveal">
         <div><span class="campaign-label">02 / <?= $showBestSellers ? 'THE BEST SELLERS' : 'JUST LANDED' ?></span>
         <h2 id="category-title"><?= $showBestSellers ? 'MOST WANTED.' : 'FRESH PARTS.' ?><br><span><?= $showBestSellers ? 'FOR GOOD REASON.' : 'NEW POSSIBILITIES.' ?></span></h2></div>
@@ -163,83 +152,6 @@ store_page_start('Next level. No limits.', '', true);
         <div class="featured-store-link"><span>More possibilities for your next build.</span><a href="store.php">Explore all products <?= store_icon('arrow') ?></a></div>
     <?php endif; ?>
 </section>
-<section class="campaign-categories campaign-section landing-featured landing-category-browser" id="categories" aria-labelledby="browse-category-title">
-    <p class="landing-category-feedback" id="landing-category-feedback" role="status" hidden></p>
-    <div class="campaign-section-heading campaign-reveal">
-        <div><span class="campaign-label">EXPLORE / THE BUILDING BLOCKS</span><h2 id="browse-category-title">SMALL PARTS.<br><span>BIG POSSIBILITIES.</span></h2></div>
-        <a class="campaign-link" href="#categories" data-clear-category-search>All categories <?= store_icon('arrow') ?></a>
-    </div>
-    <div class="campaign-category-list">
-        <?php foreach ($categories as $i => $category): ?>
-            <a class="hardware-category campaign-reveal" href="#products-<?= (int) $category['id'] ?>">
-                <span class="campaign-category-number"><?= sprintf('%02d', $i + 1) ?></span>
-                <span class="campaign-category-name"><?= e($category['name']) ?></span>
-                <span class="campaign-category-description"><?= e((string) ($category['description'] ?: 'Explore available products in this category.')) ?></span>
-                <span class="campaign-category-symbol"><?= e($categorySymbols[$i % count($categorySymbols)]) ?></span><?= store_icon('arrow') ?>
-            </a>
-        <?php endforeach; ?>
-    </div>
-    <?php if ($categories === []): ?><p class="landing-products-empty">New categories are on the way. Check back soon.</p><?php endif; ?>
-    <div class="landing-products">
-        <?php foreach ($categories as $category): ?>
-            <?php $categoryProducts = $productsByCategory[(int) $category['id']] ?? []; ?>
-            <section class="landing-product-category" id="products-<?= (int) $category['id'] ?>" aria-labelledby="products-title-<?= (int) $category['id'] ?>">
-                <div class="landing-product-heading">
-                    <div><span class="campaign-label"><?= e($category['name']) ?></span><h3 id="products-title-<?= (int) $category['id'] ?>">AVAILABLE NOW</h3></div>
-                    <span><?= count($categoryProducts) ?> <?= count($categoryProducts) === 1 ? 'product' : 'products' ?></span>
-                </div>
-                <?php if ($categoryProducts === []): ?>
-                    <p class="landing-products-empty">There are no available products in this category yet.</p>
-                <?php else: ?>
-                    <div class="landing-products-grid">
-                        <?php foreach ($categoryProducts as $product): ?>
-
-                            <?php
-                            $image = (string) ($product['product_img'] ?? '');
-                            $imageIsValid = preg_match('#\Aassets/products/[A-Za-z0-9._-]+\z#', $image) === 1;
-                            ?>
-                            <article class="landing-product-card">
-                                <div class="landing-product-image">
-                                    <?php if ($imageIsValid): ?>
-                                        <img src="../<?= e($image) ?>" alt="<?= e($product['name']) ?>" loading="lazy" width="480" height="320">
-                                    <?php else: ?>
-                                        <div class="featured-image-placeholder"><?= store_icon('box') ?><small><?= e($product['category_name']) ?></small></div>
-                                    <?php endif; ?>
-                                    <span><?= e(strtoupper((string) $product['condition_type'])) ?></span>
-                                </div>
-                                <div class="landing-product-copy">
-                                    <span><?= e((string) ($product['brand'] ?: $product['category_name'])) ?></span>
-                                    <h3><?= e($product['name']) ?></h3>
-                                    <?php if ((string) $product['description'] !== ''): ?><p><?= e($product['description']) ?></p><?php endif; ?>
-                                    <div class="landing-product-buy">
-                                        <strong><?= number_format((float) $product['price'], 2) ?> <small>JOD</small></strong>
-                                        <?php if (!empty($_SESSION['user_id']) && ($_SESSION['user_role'] ?? '') === 'customer'): ?>
-                                            <form method="post" action="cart_action.php">
-                                                <input type="hidden" name="csrf_token" value="<?= e((string) $_SESSION['cart_csrf']) ?>">
-                                                <input type="hidden" name="action" value="add">
-                                                <input type="hidden" name="product_id" value="<?= (int) $product['id'] ?>">
-                                                <button type="submit" <?= (int) $product['quantity'] < 1 ? 'disabled' : '' ?>>Add to cart</button>
-                                            </form>
-                                        <?php else: ?>
-                                            <?php if (!empty($_SESSION['user_id'])): ?>
-                                                <a href="store.php">View in store <?= store_icon('arrow') ?></a>
-                                            <?php else: ?>
-                                                <a href="../../backend/auth/login.php">Sign in to buy <?= store_icon('arrow') ?></a>
-                                            <?php endif; ?>
-                                        <?php endif; ?>
-                                    </div>
-                                    <small><?= (int) $product['quantity'] ?> in stock</small>
-                                </div>
-                            </article>
-            
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-            </section>
-        <?php endforeach; ?>
-    </div>
-    <div class="featured-store-link"><span>Find the right parts for your next build.</span><a href="store.php">Explore all products <?= store_icon('arrow') ?></a></div>
-</section>
 <section class="campaign-rigs campaign-section" id="rigs" aria-labelledby="rig-title">
     <div class="campaign-section-heading campaign-reveal"><div><span class="campaign-label">03 / SELECTED BUILD CONCEPTS</span><h2 id="rig-title">THE NEXT THING.<br><span>YOUR THING.</span></h2></div><p>03 concepts. Countless possibilities.<br>Illustrative configurations to spark your next build.</p></div>
     <div class="campaign-rig-grid"><?php foreach ($rigs as $i => [$name, $description, $badge, $cpu, $gpu, $ram, $photo, $preset, $accent]): ?><article class="campaign-rig campaign-reveal"><a class="campaign-rig-image campaign-liquid" href="store.php" aria-label="Browse components for <?= e($name) ?>"><img src="https://images.unsplash.com/<?= e($photo) ?>?auto=format&fit=crop&w=1100&q=85" alt="<?= e($name) ?> gaming setup inspiration" width="1100" height="760" loading="lazy"><span class="campaign-image-index">0<?= $i + 1 ?> / REGIX CONCEPT</span><span class="campaign-image-arrow"><?= store_icon('arrow') ?></span></a><div class="campaign-rig-caption"><div><h3><?= e($name) ?></h3><p><?= e($description) ?></p></div><span><?= e($badge) ?></span></div><p class="campaign-rig-spec"><?= e($cpu) ?> / <?= e($gpu) ?> / <?= e($ram) ?></p></article><?php endforeach; ?><article class="campaign-custom-rig campaign-reveal"><span class="campaign-label">THE MOST IMPORTANT BUILD IS YOURS.</span><h3>YOUR RULES.<br>YOUR RIG.</h3><p>Start with a concept. Make it personal.</p><a href="store.php" class="campaign-link">Browse components <?= store_icon('arrow') ?></a><span class="campaign-custom-cross" aria-hidden="true">✳</span></article></div>
@@ -253,6 +165,6 @@ store_page_start('Next level. No limits.', '', true);
     <a class="campaign-upgrade-button" href="store.php">Browse the store <?= store_icon('arrow') ?></a>
 </section>
 
-<section class="campaign-contact campaign-section" id="contact"><span class="campaign-label campaign-reveal">YOUR NEXT CHAPTER STARTS HERE.</span><h2 class="campaign-reveal">MAKE IT<br><span>YOURS.</span></h2><div class="campaign-contact-bottom campaign-reveal"><p>One component. A whole new setup.<br>There’s always a next level.</p><a href="store.php" class="campaign-contact-link">LET’S BUILD <?= store_icon('arrow') ?></a><a href="#categories" class="campaign-link">Explore the store ↗</a></div></section>
+<section class="campaign-contact campaign-section" id="contact"><span class="campaign-label campaign-reveal">YOUR NEXT CHAPTER STARTS HERE.</span><h2 class="campaign-reveal">MAKE IT<br><span>YOURS.</span></h2><div class="campaign-contact-bottom campaign-reveal"><p>One component. A whole new setup.<br>There’s always a next level.</p><a href="store.php" class="campaign-contact-link">LET’S BUILD <?= store_icon('arrow') ?></a><a href="store.php" class="campaign-link">Explore the store ↗</a></div></section>
 <?php store_page_end(); ?>
 

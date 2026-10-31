@@ -53,8 +53,11 @@ document.addEventListener('keydown', (event) => {
     document.querySelectorAll('.store-account[open]').forEach((account) => account.removeAttribute('open'));
 });
 
-const categoryCards = Array.from(document.querySelectorAll('.hardware-category, .landing-featured .landing-product-card'));
-const searchingProducts = document.querySelector('.landing-featured') !== null;
+const landingCategoryLinks = Array.from(document.querySelectorAll('.hardware-category'));
+const categoryCards = landingCategoryLinks.length
+    ? landingCategoryLinks
+    : Array.from(document.querySelectorAll('.landing-featured .landing-product-card'));
+const searchingProducts = landingCategoryLinks.length === 0;
 const categoryFeedback = document.getElementById('landing-category-feedback');
 
 function filterLandingCategories(query) {
@@ -84,9 +87,9 @@ document.getElementById('landing-category-search')?.addEventListener('submit', (
     event.currentTarget.closest('dialog').close();
     const url = new URL(window.location.href);
     url.searchParams.set('q', query);
-    url.hash = 'categories';
+    url.hash = searchingProducts ? 'featured-products' : 'categories';
     window.history.replaceState({}, '', url);
-    document.getElementById('categories').scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+    document.getElementById(searchingProducts ? 'featured-products' : 'categories')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
 });
 
 document.querySelectorAll('[data-clear-category-search]').forEach((link) => {

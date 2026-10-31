@@ -82,6 +82,7 @@ function store_page_start(
     $currentPage = basename((string) ($_SERVER['SCRIPT_NAME'] ?? ''));
     $isStorePage = $currentPage === 'store.php';
     $isProfilePage = $currentPage === 'userprofile.php';
+    $isBuilderPage = $currentPage === 'pc_builder.php';
     $pageSearch = is_string($_GET['q'] ?? null) ? trim($_GET['q']) : '';
     if (empty($_SESSION['cart_csrf'])) {
         $_SESSION['cart_csrf'] = bin2hex(random_bytes(32));
@@ -112,7 +113,7 @@ function store_page_start(
         <?php endif; ?>
         <link rel="stylesheet" href="../css/storefront.css?v=<?= filemtime(__DIR__ . '/../css/storefront.css') ?>">
         <link rel="stylesheet" href="../css/typography.css?v=<?= filemtime(__DIR__ . '/../css/typography.css') ?>">
-        <?php if ($landing || $isStorePage || $isProfilePage): ?>
+        <?php if ($landing || $isStorePage || $isProfilePage || $isBuilderPage): ?>
             <link href="https://fonts.googleapis.com/css2?family=Anton&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
             <link rel="stylesheet" href="../css/cinematic.css?v=<?= filemtime(__DIR__ . '/../css/cinematic.css') ?>">
         <?php endif; ?>
@@ -121,7 +122,7 @@ function store_page_start(
         <?php endif; ?>
         <script src="../js/store.js?v=<?= filemtime(__DIR__ . '/../js/store.js') ?>" defer></script>
     </head>
-    <body<?= $landing ? ' class="gaming-page"' : ($isStorePage ? ' class="gaming-page store-page"' : ($isProfilePage ? ' class="gaming-page profile-page"' : '')) ?>>
+    <body<?= $landing ? ' class="gaming-page"' : ($isStorePage ? ' class="gaming-page store-page"' : ($isProfilePage ? ' class="gaming-page profile-page"' : ($isBuilderPage ? ' class="gaming-page builder-page"' : ''))) ?>>
         <div class="store-ambient" aria-hidden="true"><span class="ambient-glow ambient-glow-one"></span><span class="ambient-glow ambient-glow-two"></span><span class="ambient-grid"></span><span class="ambient-stars"></span></div>
         <a class="skip-link" href="#main-content">
             Skip to content
@@ -131,7 +132,7 @@ function store_page_start(
                 NEXT LEVEL HARDWARE. EVERYDAY POSSIBILITIES.
             </span>
             <span>
-                <a href="index.php#categories">Find your next upgrade <?= store_icon('arrow') ?></a>
+                <a href="index.php#featured-products">Find your next upgrade <?= store_icon('arrow') ?></a>
             </span>
         </div>
         <header class="store-header">
@@ -142,13 +143,13 @@ function store_page_start(
                 <nav class="store-nav" id="store-nav" aria-label="Store navigation">
                 <a href="index.php"<?= $landing ? ' aria-current="page"' : '' ?>>Home</a>
                 <a href="store.php"<?= $isStorePage ? ' aria-current="page"' : '' ?>>Store</a>
-               <a href="index.php#categories">Categories</a>
+               
                 <a href="index.php#featured-products">Featured products</a>
                 <a href="index.php#rigs">Featured rigs</a>
-                <a href="pc_builder.php">Build planner</a>
+                <a href="pc_builder.php"<?= $isBuilderPage ? ' aria-current="page"' : '' ?>>Build planner</a>
                 </nav>
                 <div class="store-header-actions">
-                    <button class="store-icon-button" type="button" data-open-store-dialog="store-search-dialog" aria-label="<?= $isStorePage ? 'Search products' : 'Search categories' ?>" title="<?= $isStorePage ? 'Search products' : 'Search categories' ?>"><?= store_icon('search') ?></button>
+                    <button class="store-icon-button" type="button" data-open-store-dialog="store-search-dialog" aria-label="<?= $isStorePage ? 'Search products' : 'Search featured products' ?>" title="<?= $isStorePage ? 'Search products' : 'Search featured products' ?>"><?= store_icon('search') ?></button>
                     <?php if ($signedIn): ?>
                         <details class="store-account">
                             <summary aria-label="Your account"><?= store_icon('user') ?><span
@@ -190,14 +191,14 @@ function store_page_end(): void
         </main>
         <dialog class="store-search-dialog" id="store-search-dialog" aria-labelledby="store-search-title">
             <div class="store-dialog-heading">
-                <div><span class="gaming-kicker">FIND YOUR NEXT UPGRADE</span><h2 id="store-search-title"><?= $isStorePage ? 'Search products' : 'Search categories' ?></h2></div>
+                <div><span class="gaming-kicker">FIND YOUR NEXT UPGRADE</span><h2 id="store-search-title"><?= $isStorePage ? 'Search products' : 'Search featured products' ?></h2></div>
                 <button class="store-icon-button" type="button" data-close-store-dialog aria-label="Close search"><?= store_icon('close') ?></button>
             </div>
-            <p><?= $isStorePage ? 'Find a product by name, brand, or description.' : 'Search the categories currently available in the store.' ?></p>
-            <form class="store-search-form" id="landing-category-search" action="<?= $isStorePage ? 'store.php' : 'index.php#categories' ?>" method="get">
+            <p><?= $isStorePage ? 'Find a product by name, brand, or description.' : 'Search featured products for your next upgrade.' ?></p>
+            <form class="store-search-form" id="landing-category-search" action="<?= $isStorePage ? 'store.php' : 'index.php#featured-products' ?>" method="get">
                 <?= store_icon('search') ?>
-                <label class="sr-only" for="header-search"><?= $isStorePage ? 'Search products' : 'Search categories' ?></label>
-                <input id="header-search" name="q" type="search" value="<?= $isStorePage ? e($pageSearch) : '' ?>" placeholder="<?= $isStorePage ? 'Search products' : 'Search categories' ?>" autocomplete="off">
+                <label class="sr-only" for="header-search"><?= $isStorePage ? 'Search products' : 'Search featured products' ?></label>
+                <input id="header-search" name="q" type="search" value="<?= $isStorePage ? e($pageSearch) : '' ?>" placeholder="<?= $isStorePage ? 'Search products' : 'Search featured products' ?>" autocomplete="off">
                 <button type="submit" aria-label="Search"><?= store_icon('arrow') ?></button>
             </form>
         </dialog>
@@ -284,9 +285,7 @@ function store_page_end(): void
                     <a href="index.php#rigs">
                         Featured builds
                     </a>
-                    <a href="index.php#categories">
-                        Categories
-                    </a>
+                    <a href="store.php">Browse the store</a>
                     <a href="<?= (!empty($_SESSION['email']) || !empty($_SESSION['user_id']))
                         ? 'userprofile.php'
                         : '../../backend/auth/login.php' ?>">

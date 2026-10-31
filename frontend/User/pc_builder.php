@@ -1548,7 +1548,7 @@ echo $storePageStart;
         </section>
 
     </div><!-- /.pbx-page -->
-
+    </div><!-- /.pc-builder-page -->
 
     <?php
 

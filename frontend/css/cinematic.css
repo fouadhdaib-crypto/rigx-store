@@ -328,3 +328,9 @@ body.gaming-page { margin: 0; }
 .gaming-page .menu-button { display: none; border: 1px solid #ffffff22; border-radius: 5px; background: transparent; color: #c9d1c2; }
 .gaming-page .menu-button svg { width: 21px; height: 21px; }
 @media (max-width: 900px) { .gaming-page .store-header .menu-button { display: grid; place-items: center; } }
+
+/* Merged category browsing retains the same product-card system. */
+.landing-category-browser .landing-product-category { scroll-margin-top: 100px; margin-top: 28px; }
+.landing-category-browser .landing-product-heading { padding-bottom: 12px; }
+.landing-category-browser .landing-product-heading h3 { margin: 8px 0 0; }
+.landing-category-browser .landing-product-category[hidden] { display: none; }
