@@ -126,25 +126,9 @@ function store_page_start(
                 <a class="store-brand" href="index.php" aria-label="REGIX home">
                     <img src="../assets/regix-logo.svg" alt="REGIX — Next level shopping" width="180" height="44">
                 </a>
-                <a class="account-link" href="<?= (!empty($_SESSION['email']) || !empty($_SESSION['user_id']))
-                    ? 'userprofile.php'
-                    : '../../backend/auth/login.php' ?>">
-                    <?= store_icon('user') ?>
-                    <span>
-                        <?= e((string) ($_SESSION['user_name'] ?? 'Sign in')) ?>
-                    </span>
-                </a>
-                <button
-                    class="menu-button"
-                    type="button"
-                    aria-controls="store-nav"
-                    aria-expanded="false"
-                    aria-label="Toggle navigation"
-                >
-                    <?= store_icon('menu') ?>
-                </button>
-            </div>
-            <nav class="store-nav wrap" id="store-nav" aria-label="Store navigation">
+                <nav class="store-nav" id="store-nav" aria-label="Store navigation">
+                <a href="index.php"<?= $landing ? ' aria-current="page"' : '' ?>>Home</a>
+                <a href="store.php">Store</a>
                 <a href="index.php#categories">Categories</a>
                 <a href="index.php#rigs">Featured rigs</a>
                 <a href="index.php#builder">Build planner</a>
@@ -154,7 +138,7 @@ function store_page_start(
                     <?php if ($signedIn): ?>
                         <details class="store-account">
                             <summary aria-label="Your account"><?= store_icon('user') ?><span class="account-name"><?= e((string) ($_SESSION['user_name'] ?? 'Account')) ?></span><?= store_icon('chevron') ?></summary>
-                            <div class="store-account-panel"><small>WELCOME BACK</small><strong><?= e((string) ($_SESSION['user_name'] ?? 'Your account')) ?></strong><?php if (($_SESSION['user_role'] ?? '') === 'admin'): ?><a href="../admin/dashboard.php">Admin dashboard <?= store_icon('arrow') ?></a><?php endif; ?><a href="../../backend/auth/logout.php">Sign out</a></div>
+                            <div class="store-account-panel"><small>WELCOME BACK</small><strong><?= e((string) ($_SESSION['user_name'] ?? 'Your account')) ?></strong><a href="userprofile.php">Your profile <?= store_icon('arrow') ?></a><?php if (($_SESSION['user_role'] ?? '') === 'admin'): ?><a href="../admin/dashboard.php">Admin dashboard <?= store_icon('arrow') ?></a><?php endif; ?><a href="../../backend/auth/logout.php">Sign out</a></div>
                         </details>
                     <?php else: ?>
                         <a class="store-icon-button store-sign-in" href="../../backend/auth/login.php" aria-label="Sign in"><?= store_icon('user') ?><span>Sign in</span></a>
@@ -206,6 +190,46 @@ function store_page_end(): void
                 </small>
             </div>
         </footer>
+        <dialog class="store-search-dialog" id="store-search-dialog" aria-labelledby="store-search-title">
+            <div class="store-dialog-heading">
+                <div><span class="gaming-kicker">FIND YOUR UPGRADE</span><h2 id="store-search-title">Search categories</h2></div>
+                <button class="store-icon-button" type="button" data-close-store-dialog aria-label="Close search"><?= store_icon('close') ?></button>
+            </div>
+            <form class="store-search-form" id="landing-category-search" action="index.php#categories" method="get">
+                <?= store_icon('search') ?>
+                <label class="sr-only" for="header-search">Search categories</label>
+                <input id="header-search" name="q" type="search" placeholder="Graphics, memory, processors…">
+                <button type="submit" aria-label="Search"><?= store_icon('arrow') ?></button>
+            </form>
+            <p>Find the right components for your next build.</p>
+            <div class="store-search-suggestions"><a href="index.php?q=Graphics#categories">Graphics</a><a href="index.php?q=Memory#categories">Memory</a><a href="index.php#categories" data-clear-category-search>All categories</a></div>
+        </dialog>
+        <dialog class="store-cart-dialog" id="store-cart-dialog" aria-labelledby="store-cart-title">
+            <div class="store-dialog-heading">
+                <div><span class="gaming-kicker">YOUR NEXT UPGRADE</span><h2 id="store-cart-title">Your cart <span><?= (int) $cart['count'] ?></span></h2></div>
+                <button class="store-icon-button" type="button" data-close-store-dialog aria-label="Close cart"><?= store_icon('close') ?></button>
+            </div>
+            <?php if ($cart['items']): ?>
+                <div class="store-cart-items">
+                    <?php foreach ($cart['items'] as $item): ?>
+                        <article class="store-cart-item">
+                            <span class="cart-item-icon"><?= store_icon('box') ?></span>
+                            <div><h3><?= e((string) $item['name']) ?></h3><p>Quantity: <?= (int) $item['quantity'] ?></p></div>
+                            <strong>JD <?= number_format((float) $item['price'] * (int) $item['quantity'], 2) ?></strong>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+                <div class="store-cart-summary"><span>Subtotal</span><strong>JD <?= number_format($cart['total'], 2) ?></strong><p>Shipping and taxes are calculated at checkout.</p></div>
+            <?php else: ?>
+                <div class="store-cart-empty">
+                    <span class="cart-empty-orbit"><?= store_icon('cart') ?></span>
+                    <h3><?= $cart['error'] ? 'Your cart is unavailable' : 'Your next upgrade starts here' ?></h3>
+                    <p><?= $cart['error'] ? 'Please try again in a moment.' : (empty($_SESSION['email']) ? 'Sign in to see your saved cart.' : 'Your cart is empty. Explore components for your next build.') ?></p>
+                    <?php if (empty($_SESSION['email'])): ?><a class="button" href="../../backend/auth/login.php">Sign in <?= store_icon('arrow') ?></a><?php endif; ?>
+                </div>
+            <?php endif; ?>
+            <div class="store-cart-bottom"><button class="button" type="button" data-close-store-dialog>Continue exploring <?= store_icon('arrow') ?></button></div>
+        </dialog>
     </body>
 </html>
 <?php
