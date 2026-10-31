@@ -15,50 +15,172 @@ $categories = $db->query(
 
 $search = trim(is_string($_GET['q'] ?? null) ? $_GET['q'] : '');
 $search = mb_substr($search, 0, 100);
-$categoryId = filter_var(
-    $_GET['category_id'] ?? null,
-    FILTER_VALIDATE_INT,
-    ['options' => ['min_range' => 1]]
-);
-$categoryId = $categoryId === false ? null : $categoryId;
 
-$conditions = [
-    "p.deleted_at IS NULL",
-    "p.listing_status = 'available'",
-    'p.quantity > 0',
-    'c.deleted_at IS NULL',
-];
-$parameters = [];
-
-if ($search !== '') {
-    $conditions[] = '(p.name LIKE :name_search OR p.brand LIKE :brand_search OR p.description LIKE :description_search)';
-    $searchTerm = '%' . $search . '%';
-    $parameters[':name_search'] = $searchTerm;
-    $parameters[':brand_search'] = $searchTerm;
-    $parameters[':description_search'] = $searchTerm;
-}
-
-if ($categoryId !== null) {
-    $conditions[] = 'p.category_id = :category_id';
-    $parameters[':category_id'] = $categoryId;
-}
-
-$statement = $db->prepare(
-    'SELECT p.id, p.category_id, p.name, p.brand, p.description, p.price,
+$products = $db->query(
+    "SELECT p.id, p.category_id, p.name, p.brand, p.description, p.price,
             p.quantity, p.condition_type, p.product_img, c.name AS category_name
      FROM products p
      JOIN categories c ON c.id = p.category_id
-     WHERE ' . implode(' AND ', $conditions) . '
-     ORDER BY p.created_at DESC, p.id DESC'
-);
-$statement->execute($parameters);
-$products = $statement->fetchAll(PDO::FETCH_ASSOC);
+     WHERE p.deleted_at IS NULL
+       AND p.listing_status = 'available'
+       AND p.quantity > 0
+       AND c.deleted_at IS NULL
+     ORDER BY p.created_at DESC, p.id DESC"
+)->fetchAll(PDO::FETCH_ASSOC);
 
 $cartNotice = (string) ($_SESSION['cart_notice'] ?? '');
 unset($_SESSION['cart_notice']);
 
 store_page_start('Store', $search);
 ?>
+<style>
+    .store-catalog .store-catalog-filters {
+        display: grid;
+        grid-template-columns: minmax(240px, 2fr) repeat(2, minmax(150px, 1fr)) auto;
+        align-items: end;
+        gap: 14px;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: var(--surface);
+    }
+
+    .store-catalog .store-catalog-filters label {
+        display: grid;
+        gap: 8px;
+        min-width: 0;
+        margin: 0;
+    }
+
+    .store-catalog .store-catalog-filters label > span {
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .store-catalog .store-catalog-filters label input,
+    .store-catalog .store-catalog-filters label select {
+        display: block;
+        width: 100%;
+        height: 46px;
+        min-height: 46px;
+        margin: 0;
+        padding: 0 16px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background-color: var(--bg);
+        color: var(--text);
+        font-size: 13px;
+        line-height: 44px;
+        transition: border-color .15s, box-shadow .15s;
+    }
+
+    .store-catalog .store-catalog-filters label select {
+        appearance: none;
+        -webkit-appearance: none;
+        padding-right: 38px;
+        background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+        background-position: calc(100% - 20px) 20px, calc(100% - 15px) 20px;
+        background-size: 5px 5px, 5px 5px;
+        background-repeat: no-repeat;
+        cursor: pointer;
+    }
+
+    .store-catalog .store-catalog-filters label input:hover,
+    .store-catalog .store-catalog-filters label select:hover {
+        border-color: #3a4436;
+    }
+
+    .store-catalog .store-catalog-filters label input:focus,
+    .store-catalog .store-catalog-filters label select:focus {
+        outline: none;
+        border-color: var(--lime);
+        box-shadow: 0 0 0 3px rgba(163, 230, 53, .22);
+    }
+
+    .store-catalog .store-search-box {
+        position: relative;
+        display: block;
+        min-width: 0;
+    }
+
+    .store-catalog .store-search-box .store-search-icon {
+        position: absolute;
+        top: 50%;
+        left: 16px;
+        width: 17px;
+        height: 17px;
+        transform: translateY(-50%);
+        color: var(--muted);
+        pointer-events: none;
+        transition: color .15s;
+    }
+
+    .store-catalog .store-search-box:focus-within .store-search-icon {
+        color: var(--lime);
+    }
+
+    .store-catalog .store-catalog-filters label .store-search-box input {
+        padding: 0 42px 0 44px;
+        border-radius: 9999px;
+    }
+
+    .store-catalog .store-catalog-filters label .store-search-box input::placeholder {
+        color: #6b7467;
+    }
+
+    .store-catalog .store-catalog-filters label .store-search-box input::-webkit-search-cancel-button {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background:
+            linear-gradient(45deg, transparent 43%, var(--muted) 43% 57%, transparent 57%),
+            linear-gradient(-45deg, transparent 43%, var(--muted) 43% 57%, transparent 57%);
+        cursor: pointer;
+    }
+
+    .store-catalog .store-catalog-filters > a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 46px;
+        padding: 0 22px;
+        border: 1px solid var(--line);
+        border-radius: 9999px;
+        background: var(--bg);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+        transition: border-color .15s, color .15s;
+    }
+
+    .store-catalog .store-catalog-filters > a:hover {
+        border-color: var(--lime);
+        color: var(--lime);
+    }
+
+    @media (max-width: 1000px) {
+        .store-catalog .store-catalog-filters {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .store-catalog .store-catalog-filters > label:first-child {
+            grid-column: 1 / -1;
+        }
+    }
+
+    @media (max-width: 700px) {
+        .store-catalog .store-catalog-filters {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
 <section class="store-catalog" aria-labelledby="store-title">
     <div class="store-catalog-heading">
         <span class="campaign-label">REGIX STORE</span>
@@ -70,42 +192,58 @@ store_page_start('Store', $search);
         <p class="landing-category-feedback" role="status"><?= e($cartNotice) ?></p>
     <?php endif; ?>
 
-    <form class="store-catalog-filters" action="store.php" method="get">
+    <form class="store-catalog-filters" action="store.php" method="get" role="search">
         <label>
             <span>Search products</span>
-            <input type="search" name="q" value="<?= e($search) ?>" placeholder="Name, brand, or description">
+            <div class="store-search-box">
+                <svg class="store-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7"/>
+                    <path d="m20 20-3.5-3.5"/>
+                </svg>
+                <input type="search" name="q" id="store-search" value="<?= e($search) ?>" maxlength="100" autocomplete="off" placeholder="Search by name, brand, category or description">
+            </div>
         </label>
         <label>
             <span>Category</span>
-            <select name="category_id">
+            <select name="category_id" id="store-category">
                 <option value="">All categories</option>
                 <?php foreach ($categories as $category): ?>
-                    <option value="<?= (int) $category['id'] ?>" <?= $categoryId === (int) $category['id'] ? 'selected' : '' ?>>
+                    <option value="<?= (int) $category['id'] ?>">
                         <?= e($category['name']) ?>
                     </option>
                 <?php endforeach; ?>
             </select>
         </label>
-        <button type="submit">Search</button>
-        <?php if ($search !== '' || $categoryId !== null): ?>
-            <a href="store.php">Clear filters</a>
-        <?php endif; ?>
+        <label>
+            <span>Condition</span>
+            <select name="condition" id="store-condition">
+                <option value="">Any condition</option>
+                <option value="new">New</option>
+                <option value="used">Used</option>
+            </select>
+        </label>
+        <a href="store.php" id="store-clear" style="display: none;">Clear filters</a>
     </form>
 
     <div class="store-catalog-results">
-        <p><?= count($products) ?> <?= count($products) === 1 ? 'product' : 'products' ?> available</p>
+        <p id="store-result-count"><?= count($products) ?> <?= count($products) === 1 ? 'product' : 'products' ?> available</p>
     </div>
 
     <?php if ($products === []): ?>
         <p class="landing-products-empty">No products match your search yet.</p>
     <?php else: ?>
+        <p class="landing-products-empty" id="store-no-results" style="display: none;">No products match your search yet.</p>
+
         <div class="landing-products-grid">
             <?php foreach ($products as $product): ?>
                 <?php
                 $image = (string) ($product['product_img'] ?? '');
                 $imageIsValid = preg_match('#\Aassets/products/[A-Za-z0-9._-]+\z#', $image) === 1;
                 ?>
-                <article class="landing-product-card">
+                <article class="landing-product-card"
+                    data-search="<?= e(implode(' ', [(string) $product['name'], (string) $product['brand'], (string) $product['description'], (string) $product['category_name']])) ?>"
+                    data-category="<?= (int) $product['category_id'] ?>"
+                    data-condition="<?= e((string) $product['condition_type']) ?>">
                     <div class="landing-product-image">
                         <img src="<?= $imageIsValid ? '../' . e($image) : '../assets/regix-hero-tower.png' ?>"
                             alt="<?= e($product['name']) ?>" loading="lazy">

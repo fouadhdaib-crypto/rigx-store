@@ -100,3 +100,87 @@ document.querySelectorAll('[data-clear-category-search]').forEach((link) => {
 
 const initialCategoryQuery = new URLSearchParams(window.location.search).get('q');
 if (initialCategoryQuery) filterLandingCategories(initialCategoryQuery);
+
+const storeFilterForm = document.querySelector('.store-catalog-filters');
+
+if (storeFilterForm) {
+    const storeSearch = document.getElementById('store-search');
+    const storeCategory = document.getElementById('store-category');
+    const storeCondition = document.getElementById('store-condition');
+    const storeClear = document.getElementById('store-clear');
+    const storeResultCount = document.getElementById('store-result-count');
+    const storeNoResults = document.getElementById('store-no-results');
+    const storeCards = Array.from(document.querySelectorAll('.store-catalog .landing-product-card'));
+
+    const applyStoreFilters = () => {
+        const query = storeSearch.value.trim().toLocaleLowerCase();
+        let matches = 0;
+
+        storeCards.forEach((card) => {
+            const visible = (!query || card.dataset.search.toLocaleLowerCase().includes(query))
+                && (!storeCategory.value || card.dataset.category === storeCategory.value)
+                && (!storeCondition.value || card.dataset.condition === storeCondition.value);
+
+            card.hidden = !visible;
+            card.style.display = visible ? '' : 'none';
+
+            if (visible) {
+                matches++;
+            }
+        });
+
+        storeResultCount.textContent = matches + ' ' + (matches === 1 ? 'product' : 'products') + ' available';
+
+        if (storeNoResults) {
+            storeNoResults.style.display = storeCards.length > 0 && matches === 0 ? '' : 'none';
+        }
+
+        storeClear.style.display = query || storeCategory.value || storeCondition.value ? '' : 'none';
+
+        const url = new URL(window.location.href);
+
+        if (storeSearch.value.trim()) {
+            url.searchParams.set('q', storeSearch.value.trim());
+        } else {
+            url.searchParams.delete('q');
+        }
+
+        if (storeCategory.value) {
+            url.searchParams.set('category_id', storeCategory.value);
+        } else {
+            url.searchParams.delete('category_id');
+        }
+
+        if (storeCondition.value) {
+            url.searchParams.set('condition', storeCondition.value);
+        } else {
+            url.searchParams.delete('condition');
+        }
+
+        window.history.replaceState({}, '', url);
+    };
+
+    const params = new URLSearchParams(window.location.search);
+
+    storeSearch.value = params.get('q') ?? storeSearch.value;
+    storeCategory.value = params.get('category_id') ?? '';
+    storeCondition.value = params.get('condition') ?? '';
+
+    storeSearch.addEventListener('input', applyStoreFilters);
+    storeCategory.addEventListener('change', applyStoreFilters);
+    storeCondition.addEventListener('change', applyStoreFilters);
+
+    storeFilterForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+    });
+
+    storeClear.addEventListener('click', (event) => {
+        event.preventDefault();
+        storeSearch.value = '';
+        storeCategory.value = '';
+        storeCondition.value = '';
+        applyStoreFilters();
+    });
+
+    applyStoreFilters();
+}
