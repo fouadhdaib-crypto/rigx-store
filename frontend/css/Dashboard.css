@@ -1907,3 +1907,26 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Consistent dashboard action colors with readable labels and icons. */
+body[data-admin-page=dashboard] .primary-button {
+  background: #a3e635; border: 1px solid #a3e635; color: #101609;
+  box-shadow: none;
+}
+body[data-admin-page=dashboard] .primary-button:hover:not(:disabled) { background: #b5ed58; border-color: #b5ed58; color: #101609; }
+body[data-admin-page=dashboard] :is(.secondary-button, #refreshButton, #clearFilters, #retryButton) {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 39px; padding: 8px 14px; border: 1px solid #354038;
+  border-radius: 8px; background: #191f1b; color: #d0dacd;
+  font: 600 12px/1.4 'Inter', sans-serif; cursor: pointer;
+  transition: background .18s, color .18s, border-color .18s;
+}
+body[data-admin-page=dashboard] :is(.secondary-button, #refreshButton, #clearFilters, #retryButton):hover:not(:disabled) {
+  background: #25331c; border-color: #779a47; color: #bef175;
+}
+body[data-admin-page=dashboard] :is(.primary-button, .secondary-button, #retryButton) svg { color: inherit; stroke: currentColor; }
+body[data-admin-page=dashboard] :is(.primary-button, .secondary-button, #retryButton):focus-visible { outline: 2px solid #a3e635; outline-offset: 3px; }
+body[data-admin-page=dashboard] :is(.primary-button, .secondary-button, #retryButton):disabled { opacity: .5; cursor: not-allowed; }
+@media (prefers-reduced-motion: reduce) {
+  body[data-admin-page=dashboard] :is(.secondary-button, #refreshButton, #clearFilters, #retryButton) { transition: none; }
+}

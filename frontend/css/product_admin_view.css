@@ -734,3 +734,40 @@ body[data-admin-page=products] #filter-reset:hover { background: #b5ed58; }
     height: 160px;
   }
 }
+
+/* Fit every product column inside the dashboard instead of forcing a wide table. */
+body[data-admin-page=products] .table-scroll { box-sizing: border-box; min-width: 0; }
+body[data-admin-page=products] .products-table { width: 100%; min-width: 0; table-layout: fixed; }
+body[data-admin-page=products] .products-table :is(th, td) { padding: 14px 9px; white-space: normal; overflow-wrap: anywhere; }
+body[data-admin-page=products] .products-table th:nth-child(1) { width: 32%; }
+body[data-admin-page=products] .products-table th:nth-child(2) { width: 12%; }
+body[data-admin-page=products] .products-table th:nth-child(3) { width: 10%; }
+body[data-admin-page=products] .products-table th:nth-child(4) { width: 7%; }
+body[data-admin-page=products] .products-table th:nth-child(5) { width: 10%; }
+body[data-admin-page=products] .products-table th:nth-child(6) { width: 12%; }
+body[data-admin-page=products] .products-table th:nth-child(7) { width: 17%; }
+body[data-admin-page=products] .product-info { min-width: 0; gap: 10px; align-items: flex-start; }
+body[data-admin-page=products] .product-photo { width: 44px; height: 44px; border-radius: 8px; }
+body[data-admin-page=products] .product-text { min-width: 0; overflow-wrap: anywhere; }
+body[data-admin-page=products] .product-details-body { max-width: 100%; }
+body[data-admin-page=products] .row-actions { flex-wrap: wrap; gap: 6px; }
+body[data-admin-page=products] .row-actions form { margin: 0; min-width: 0; max-width: 100%; }
+body[data-admin-page=products] .row-actions .btn-small { min-height: 32px; padding: 6px 9px; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+body[data-admin-page=products] .products-table .badge { max-width: 100%; padding: 4px 7px; white-space: normal; overflow-wrap: anywhere; }
+@media (max-width: 700px) {
+ body[data-admin-page=products] .products-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+ body[data-admin-page=products] .products-table,
+ body[data-admin-page=products] .products-table tbody { display: block; width: 100%; }
+ body[data-admin-page=products] .products-table .product-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px 0; border-bottom: 1px solid var(--color-border); }
+ body[data-admin-page=products] .products-table .product-row[hidden] { display: none; }
+ body[data-admin-page=products] .products-table .product-row > td { display: block; min-width: 0; border: 0; padding: 9px; }
+ body[data-admin-page=products] .products-table .product-row > td:first-child,
+ body[data-admin-page=products] .products-table .product-row > td:last-child { grid-column: 1 / -1; }
+ body[data-admin-page=products] .product-row > td:not(:first-child)::before { display: block; margin-bottom: 6px; color: var(--color-text-muted); font-size: 10px; letter-spacing: .5px; text-transform: uppercase; }
+ body[data-admin-page=products] .product-row > td:nth-child(2)::before { content: 'Category'; }
+ body[data-admin-page=products] .product-row > td:nth-child(3)::before { content: 'Price'; }
+ body[data-admin-page=products] .product-row > td:nth-child(4)::before { content: 'Stock'; }
+ body[data-admin-page=products] .product-row > td:nth-child(5)::before { content: 'Condition'; }
+ body[data-admin-page=products] .product-row > td:nth-child(6)::before { content: 'Status'; }
+ body[data-admin-page=products] .row-actions { justify-content: flex-start; }
+}

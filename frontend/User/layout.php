@@ -107,7 +107,6 @@ function store_page_start(
         <link rel="stylesheet" href="../css/store.css">
         <?php if ($landing): ?>
             <link rel="stylesheet" href="../css/landing.css">
-            <script src="../js/landing.js" defer></script>
         <?php endif; ?>
         <link rel="stylesheet" href="../css/storefront.css?v=<?= filemtime(__DIR__ . '/../css/storefront.css') ?>">
         <link rel="stylesheet" href="../css/typography.css?v=<?= filemtime(__DIR__ . '/../css/typography.css') ?>">
@@ -143,7 +142,6 @@ function store_page_start(
                 <a href="store.php"<?= $isStorePage ? ' aria-current="page"' : '' ?>>Store</a>
                <a href="index.php#categories">Featured products</a>
                 <a href="index.php#rigs">Featured rigs</a>
-                <a href="index.php#builder">Build planner</a>
                 </nav>
                 <div class="store-header-actions">
                     <button class="store-icon-button" type="button" data-open-store-dialog="store-search-dialog" aria-label="Search featured products" title="Search featured products"><?= store_icon('search') ?></button>

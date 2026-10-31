@@ -136,13 +136,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $categories = $category->getAll($search);
+$productFilter = is_string($_GET['products'] ?? null) ? $_GET['products'] : '';
+$imageFilter = is_string($_GET['image'] ?? null) ? $_GET['image'] : '';
+$sort = is_string($_GET['sort'] ?? null) ? $_GET['sort'] : 'newest';
+$categories = array_values(array_filter($categories, static function (array $cat) use ($productFilter, $imageFilter): bool {
+    $hasProducts = (int) $cat['products_count'] > 0;
+    $hasImage = !empty($cat['category_img']);
+    return ($productFilter !== 'with' || $hasProducts)
+        && ($productFilter !== 'empty' || !$hasProducts)
+        && ($imageFilter !== 'with' || $hasImage)
+        && ($imageFilter !== 'missing' || !$hasImage);
+}));
+usort($categories, static function (array $a, array $b) use ($sort): int {
+    return match ($sort) {
+        'name-asc' => strnatcasecmp($a['name'], $b['name']),
+        'name-desc' => strnatcasecmp($b['name'], $a['name']),
+        'products-desc' => (int) $b['products_count'] <=> (int) $a['products_count'] ?: (int) $b['id'] <=> (int) $a['id'],
+        'products-asc' => (int) $a['products_count'] <=> (int) $b['products_count'] ?: (int) $b['id'] <=> (int) $a['id'],
+        default => (int) $b['id'] <=> (int) $a['id'],
+    };
+});
+$hasFilters = $search !== '' || $productFilter !== '' || $imageFilter !== '' || $sort !== 'newest';
 
 page_start('Categories', 'categories.php');
 heading('STORE MANAGEMENT', 'Categories', 'Organize your catalog and manage product collections.');
 ?>
 
 <!-- تم اضافة ملف الـ CSS هنا -->
-<link rel="stylesheet" href="../css/categories.css">
+<link rel="stylesheet" href="../css/categories.css?v=<?= filemtime(__DIR__ . '/../css/categories.css') ?>">
 
 <div class="categories-page">
 
@@ -183,13 +204,26 @@ heading('STORE MANAGEMENT', 'Categories', 'Organize your catalog and manage prod
         </div>
 
         <form method="get" class="category-search">
-            <span aria-hidden="true">⌕</span>
-
-            <input type="search" name="q" value="<?= e($search) ?>" placeholder="Search categories..."
-                aria-label="Search categories">
-
-            <?php if ($search !== ''): ?>
-                <a href="categories.php" class="clear-search">Clear</a>
+            <div class="category-search-input"><span aria-hidden="true">⌕</span>
+                <input type="search" name="q" value="<?= e($search) ?>" placeholder="Search categories..." aria-label="Search categories">
+            </div>
+            <select name="products" aria-label="Filter by product count">
+                <option value="">All categories</option>
+                <option value="with" <?= $productFilter === 'with' ? 'selected' : '' ?>>With products</option>
+                <option value="empty" <?= $productFilter === 'empty' ? 'selected' : '' ?>>Empty categories</option>
+            </select>
+            <select name="image" aria-label="Filter by category image">
+                <option value="">All images</option>
+                <option value="with" <?= $imageFilter === 'with' ? 'selected' : '' ?>>With image</option>
+                <option value="missing" <?= $imageFilter === 'missing' ? 'selected' : '' ?>>Missing image</option>
+            </select>
+            <select name="sort" aria-label="Sort categories">
+                <?php foreach (['newest' => 'Newest first', 'name-asc' => 'Name: A to Z', 'name-desc' => 'Name: Z to A', 'products-desc' => 'Most products', 'products-asc' => 'Fewest products'] as $value => $label): ?>
+                    <option value="<?= e($value) ?>" <?= $sort === $value ? 'selected' : '' ?>><?= e($label) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <?php if ($hasFilters): ?>
+                <a href="categories.php" class="clear-search">Reset</a>
             <?php endif; ?>
 
             <button type="submit">Search</button>
@@ -202,16 +236,16 @@ heading('STORE MANAGEMENT', 'Categories', 'Organize your catalog and manage prod
             <div class="empty-icon" aria-hidden="true">▦</div>
 
             <h3>
-                <?= $search !== ''
+                <?= $hasFilters
                     ? 'No matching categories'
                     : 'Your catalog starts here' ?>
             </h3>
 
             <p>
-                <?= $search !== '' ? 'Try another keyword or clear your search.' : 'Create your first category to organize your products.' ?>
+                <?= $hasFilters ? 'Try another keyword or reset your filters.' : 'Create your first category to organize your products.' ?>
             </p>
 
-            <?php if ($search === ''): ?>
+            <?php if (!$hasFilters): ?>
                 <button type="button" class="add-category-btn" id="openCategoryModalEmpty">
                     ＋ Create your first category
                 </button>

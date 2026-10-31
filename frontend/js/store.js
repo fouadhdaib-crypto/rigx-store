@@ -111,8 +111,13 @@ if (storeFilterForm) {
     const storeResultCount = document.getElementById('store-result-count');
     const storeNoResults = document.getElementById('store-no-results');
     const storeCards = Array.from(document.querySelectorAll('.store-catalog .landing-product-card'));
+    const filterButtons = Array.from(storeFilterForm.querySelectorAll('[data-filter-target]'));
 
     const applyStoreFilters = () => {
+        filterButtons.forEach((button) => {
+            const input = button.dataset.filterTarget === 'store-category' ? storeCategory : storeCondition;
+            button.setAttribute('aria-pressed', String(button.dataset.filterValue === input.value));
+        });
         const query = storeSearch.value.trim().toLocaleLowerCase();
         let matches = 0;
 
@@ -135,7 +140,7 @@ if (storeFilterForm) {
             storeNoResults.style.display = storeCards.length > 0 && matches === 0 ? '' : 'none';
         }
 
-        storeClear.style.display = query || storeCategory.value || storeCondition.value ? '' : 'none';
+        storeClear.disabled = !(query || storeCategory.value || storeCondition.value);
 
         const url = new URL(window.location.href);
 
@@ -165,6 +170,16 @@ if (storeFilterForm) {
     storeSearch.value = params.get('q') ?? storeSearch.value;
     storeCategory.value = params.get('category_id') ?? '';
     storeCondition.value = params.get('condition') ?? '';
+    [storeCategory, storeCondition].forEach((input) => {
+        if (!filterButtons.some((button) => button.dataset.filterTarget === input.id && button.dataset.filterValue === input.value)) input.value = '';
+    });
+    filterButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            const input = button.dataset.filterTarget === 'store-category' ? storeCategory : storeCondition;
+            input.value = button.dataset.filterValue;
+            applyStoreFilters();
+        });
+    });
 
     storeSearch.addEventListener('input', applyStoreFilters);
     storeCategory.addEventListener('change', applyStoreFilters);

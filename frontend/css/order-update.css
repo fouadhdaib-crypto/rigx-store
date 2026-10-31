@@ -6,6 +6,8 @@
 .orders-page .orders-toolbar-select:focus-visible { outline: 2px solid #a3e635; outline-offset: 2px; }
 .orders-page .orders-controls .orders-export { min-height: 40px; padding: 9px 16px; background: #a3e635; border: 1px solid #a3e635; border-radius: 9px; color: #101409; white-space: nowrap; }
 .orders-page .orders-controls .orders-export:hover { background: #b5ed58; }
+.orders-page .orders-controls .orders-export svg { display: block; width: 18px; height: 18px; flex-shrink: 0; color: inherit; stroke: currentColor; stroke-width: 2; }
+.orders-page .orders-controls .orders-export:focus-visible { outline: 2px solid #a3e635; outline-offset: 3px; }
 @media (max-width: 1200px) {
     .orders-page .orders-controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .orders-page .orders-search { grid-column: 1 / 3; }

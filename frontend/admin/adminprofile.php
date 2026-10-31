@@ -115,27 +115,7 @@ $val = static function (string $key, string $fallback) use ($errors): string {
 $fName  = $val('name', (string)$profile['name']);
 $fEmail = $val('email', (string)$profile['email']);
 
-$extraHead = '
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/admin-users.css">
-  <style>
-    .pf-top{display:flex;align-items:center;gap:1.25rem;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-card);padding:1.5rem;margin-bottom:1.25rem;flex-wrap:wrap}
-    .pf-avatar{width:68px;height:68px;border-radius:50%;background:var(--color-primary);color:var(--color-text-inverse);display:grid;place-items:center;font-size:1.75rem;font-weight:700;flex-shrink:0}
-    .pf-top h2{color:var(--color-text);font-size:1.35rem;margin:0}
-    .pf-top p{margin:.15rem 0 0;color:var(--color-text-secondary)}
-    .pf-tags{margin-left:auto;display:flex;gap:.5rem;flex-wrap:wrap}
-    .pf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1.25rem}
-    .pf-panel{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-card);padding:1.5rem}
-    .pf-panel h3{color:var(--color-text);margin:0 0 .75rem;font-size:1.1rem}
-    .pf-panel .btn-primary{margin-top:1.25rem}
-    .pf-alert{padding:.75rem 1rem;border-radius:var(--radius-md);margin-bottom:1.25rem;font-weight:600;font-size:.9rem;border:1px solid var(--color-border)}
-    .pf-alert.success{background:rgba(163,230,53,.1);border-color:var(--color-border-glow);color:var(--color-success)}
-    .pf-alert.error{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:var(--color-error)}
-    .pf-err{display:block;color:var(--color-error);font-size:.8rem;margin-top:.35rem}
-  </style>
-';
+$extraHead = '<link rel="stylesheet" href="../css/admin-profile.css?v=' . filemtime(__DIR__ . '/../css/admin-profile.css') . '">';
 
 page_start('My profile', 'profile.php', $extraHead);
 
@@ -146,6 +126,7 @@ heading('Account', 'My Profile', 'Manage your admin account details and password
   <div class="pf-alert <?= e($flash['type']) ?>" role="status"><?= e($flash['msg']) ?></div>
 <?php endif; ?>
 
+<div class="admin-profile-page">
 <section class="pf-top">
   <div class="pf-avatar" aria-hidden="true"><?= e(mb_strtoupper(mb_substr($profile['name'], 0, 1))) ?></div>
   <div>
@@ -161,7 +142,7 @@ heading('Account', 'My Profile', 'Manage your admin account details and password
 
  
   <form class="pf-panel" method="post" novalidate>
-    <h3>Personal information</h3>
+    <h3>Personal information</h3><p class="pf-description">Keep your account name and contact details up to date.</p>
     <input type="hidden" name="csrf" value="<?= e($_SESSION['csrf_admin_profile']) ?>">
 
     <div class="form-group">
@@ -180,7 +161,7 @@ heading('Account', 'My Profile', 'Manage your admin account details and password
   </form>
 
   <form class="pf-panel" method="post" autocomplete="off" novalidate>
-    <h3>Change password</h3>
+    <h3>Account security</h3><p class="pf-description">Choose a unique password with at least 8 characters.</p>
     <input type="hidden" name="csrf" value="<?= e($_SESSION['csrf_admin_profile']) ?>">
 
     <div class="form-group">
@@ -206,4 +187,5 @@ heading('Account', 'My Profile', 'Manage your admin account details and password
 
 </div>
 
+</div>
 <?php page_end(); ?>

@@ -116,15 +116,19 @@ store_page_start('Next level. No limits.', '', true);
                             ?>
                             <article class="landing-product-card">
                                 <div class="landing-product-image">
-                                    <img src="<?= $imageIsValid ? '../' . e($image) : '../assets/regix-hero-tower.png' ?>" alt="<?= e($product['name']) ?>" loading="lazy">
+                                    <?php if ($imageIsValid): ?>
+                                        <img src="../<?= e($image) ?>" alt="<?= e($product['name']) ?>" loading="lazy" width="480" height="320">
+                                    <?php else: ?>
+                                        <div class="featured-image-placeholder"><?= store_icon('box') ?><small><?= e($product['category_name']) ?></small></div>
+                                    <?php endif; ?>
                                     <span><?= e(strtoupper((string) $product['condition_type'])) ?></span>
                                 </div>
                                 <div class="landing-product-copy">
                                     <span><?= e((string) ($product['brand'] ?: $product['category_name'])) ?></span>
-                                    <h4><?= e($product['name']) ?></h4>
+                                    <h3><?= e($product['name']) ?></h3>
                                     <?php if ((string) $product['description'] !== ''): ?><p><?= e($product['description']) ?></p><?php endif; ?>
                                     <div class="landing-product-buy">
-                                        <strong><?= number_format((float) $product['price'], 2) ?> JOD</strong>
+                                        <strong><?= number_format((float) $product['price'], 2) ?> <small>JOD</small></strong>
                                         <?php if (!empty($_SESSION['user_id']) && ($_SESSION['user_role'] ?? '') === 'customer'): ?>
                                             <form method="post" action="cart_action.php">
                                                 <input type="hidden" name="csrf_token" value="<?= e((string) $_SESSION['cart_csrf']) ?>">
@@ -133,7 +137,11 @@ store_page_start('Next level. No limits.', '', true);
                                                 <button type="submit" <?= (int) $product['quantity'] < 1 ? 'disabled' : '' ?>>Add to cart</button>
                                             </form>
                                         <?php else: ?>
-                                            <a href="../../backend/auth/login.php">Sign in to buy</a>
+                                            <?php if (!empty($_SESSION['user_id'])): ?>
+                                                <a href="store.php">View in store <?= store_icon('arrow') ?></a>
+                                            <?php else: ?>
+                                                <a href="../../backend/auth/login.php">Sign in to buy <?= store_icon('arrow') ?></a>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
                                     <small><?= (int) $product['quantity'] ?> in stock</small>
@@ -141,124 +149,22 @@ store_page_start('Next level. No limits.', '', true);
                             </article>
             <?php endforeach; ?>
         </div>
+        <div class="featured-store-link"><span>More possibilities for your next build.</span><a href="store.php">Explore all products <?= store_icon('arrow') ?></a></div>
     <?php endif; ?>
 </section>
 <section class="campaign-rigs campaign-section" id="rigs" aria-labelledby="rig-title">
     <div class="campaign-section-heading campaign-reveal"><div><span class="campaign-label">03 / SELECTED BUILD CONCEPTS</span><h2 id="rig-title">THE NEXT THING.<br><span>YOUR THING.</span></h2></div><p>03 concepts. Countless possibilities.<br>Illustrative configurations to spark your next build.</p></div>
-    <div class="campaign-rig-grid"><?php foreach ($rigs as $i => [$name, $description, $badge, $cpu, $gpu, $ram, $photo, $preset, $accent]): ?><article class="campaign-rig campaign-reveal"><a class="campaign-rig-image campaign-liquid" href="#builder" data-preset="<?= e($preset) ?>" aria-label="Plan the <?= e($name) ?> build"><img src="https://images.unsplash.com/<?= e($photo) ?>?auto=format&fit=crop&w=1100&q=85" alt="<?= e($name) ?> gaming setup inspiration" width="1100" height="760" loading="lazy"><span class="campaign-image-index">0<?= $i + 1 ?> / REGIX CONCEPT</span><span class="campaign-image-arrow"><?= store_icon('arrow') ?></span></a><div class="campaign-rig-caption"><div><h3><?= e($name) ?></h3><p><?= e($description) ?></p></div><span><?= e($badge) ?></span></div><p class="campaign-rig-spec"><?= e($cpu) ?> / <?= e($gpu) ?> / <?= e($ram) ?></p></article><?php endforeach; ?><article class="campaign-custom-rig campaign-reveal"><span class="campaign-label">THE MOST IMPORTANT BUILD IS YOURS.</span><h3>YOUR RULES.<br>YOUR RIG.</h3><p>Start with a concept. Make it personal.</p><a href="#builder" class="campaign-link">Open the build planner <?= store_icon('arrow') ?></a><span class="campaign-custom-cross" aria-hidden="true">✳</span></article></div>
+    <div class="campaign-rig-grid"><?php foreach ($rigs as $i => [$name, $description, $badge, $cpu, $gpu, $ram, $photo, $preset, $accent]): ?><article class="campaign-rig campaign-reveal"><a class="campaign-rig-image campaign-liquid" href="store.php" aria-label="Browse components for <?= e($name) ?>"><img src="https://images.unsplash.com/<?= e($photo) ?>?auto=format&fit=crop&w=1100&q=85" alt="<?= e($name) ?> gaming setup inspiration" width="1100" height="760" loading="lazy"><span class="campaign-image-index">0<?= $i + 1 ?> / REGIX CONCEPT</span><span class="campaign-image-arrow"><?= store_icon('arrow') ?></span></a><div class="campaign-rig-caption"><div><h3><?= e($name) ?></h3><p><?= e($description) ?></p></div><span><?= e($badge) ?></span></div><p class="campaign-rig-spec"><?= e($cpu) ?> / <?= e($gpu) ?> / <?= e($ram) ?></p></article><?php endforeach; ?><article class="campaign-custom-rig campaign-reveal"><span class="campaign-label">THE MOST IMPORTANT BUILD IS YOURS.</span><h3>YOUR RULES.<br>YOUR RIG.</h3><p>Start with a concept. Make it personal.</p><a href="store.php" class="campaign-link">Browse components <?= store_icon('arrow') ?></a><span class="campaign-custom-cross" aria-hidden="true">✳</span></article></div>
 </section>
 <section class="campaign-playstyles campaign-section" id="playstyles">
     <div class="campaign-section-heading campaign-reveal"><div><span class="campaign-label">04 / FIND YOUR FOCUS</span><h2>WHAT DRIVES<br><span>YOUR SETUP?</span></h2></div></div>
-    <div class="campaign-playstyle-grid campaign-reveal"><div class="campaign-playstyle-tabs" role="tablist" aria-label="Choose your setup focus"><button type="button" role="tab" id="focus-play" aria-selected="true" aria-controls="focus-panel" data-focus="play"><span>01</span><span>THE PLAYER<small>FRAMES. FOCUS. FLOW.</small></span><i>↗</i></button><button type="button" role="tab" id="focus-create" aria-selected="false" aria-controls="focus-panel" tabindex="-1" data-focus="create"><span>02</span><span>THE CREATOR<small>IDEAS INTO REALITY.</small></span><i>↗</i></button><button type="button" role="tab" id="focus-everyday" aria-selected="false" aria-controls="focus-panel" tabindex="-1" data-focus="everyday"><span>03</span><span>THE EVERYDAY<small>LESS WAITING. MORE DOING.</small></span><i>↗</i></button></div><div class="campaign-focus-panel" role="tabpanel" id="focus-panel" aria-labelledby="focus-play" tabindex="0"><span class="campaign-focus-glyph" aria-hidden="true">↗</span><p id="focus-copy">Stay in the moment. Start with graphics performance, a balanced processor, and the responsiveness that makes every session feel right.</p><a href="#builder" class="campaign-link">Plan your setup <?= store_icon('arrow') ?></a></div></div>
+    <div class="campaign-playstyle-grid campaign-reveal"><div class="campaign-playstyle-tabs" role="tablist" aria-label="Choose your setup focus"><button type="button" role="tab" id="focus-play" aria-selected="true" aria-controls="focus-panel" data-focus="play"><span>01</span><span>THE PLAYER<small>FRAMES. FOCUS. FLOW.</small></span><i>↗</i></button><button type="button" role="tab" id="focus-create" aria-selected="false" aria-controls="focus-panel" tabindex="-1" data-focus="create"><span>02</span><span>THE CREATOR<small>IDEAS INTO REALITY.</small></span><i>↗</i></button><button type="button" role="tab" id="focus-everyday" aria-selected="false" aria-controls="focus-panel" tabindex="-1" data-focus="everyday"><span>03</span><span>THE EVERYDAY<small>LESS WAITING. MORE DOING.</small></span><i>↗</i></button></div><div class="campaign-focus-panel" role="tabpanel" id="focus-panel" aria-labelledby="focus-play" tabindex="0"><span class="campaign-focus-glyph" aria-hidden="true">↗</span><p id="focus-copy">Stay in the moment. Start with graphics performance, a balanced processor, and the responsiveness that makes every session feel right.</p><a href="store.php" class="campaign-link">Find your upgrade <?= store_icon('arrow') ?></a></div></div>
 </section>
-<section class="build-planner gaming-section campaign-reveal" id="builder" aria-labelledby="builder-title">
-    <div class="planner-copy">
-        <span class="gaming-kicker">
-            YOUR SETUP. YOUR RULES.
-        </span>
-        <h2 id="builder-title">
-            Dream it.
-            <br>
-            <span>
-                Piece it together.
-            </span>
-        </h2>
-        <p>
-            Start with the essentials. Explore component combinations and get a feel for your build budget.
-        </p>
-        <a class="gaming-text-link" href="#rigs">
-            Explore build concepts <?= store_icon('arrow') ?>
-        </a>
-        <div class="planner-note">
-            <?= store_icon('box') ?>
-            <p>
-                This is a planning preview. Prices are illustrative estimates in JOD; availability and compatibility must be checked before buying.
-            </p>
-        </div>
-    </div>
-    <div class="planner-panel">
-        <div class="planner-panel-top">
-            <h3>
-                Build planner
-            </h3>
-            <span>
-                01 / CORE COMPONENTS
-            </span>
-        </div>
-        <label for="build-cpu">
-            <span>
-                01
-            </span>
-            PROCESSOR
-        </label>
-        <select id="build-cpu">
-            <option value="250">
-                Intel Core i5-14600K — 250 JOD
-            </option>
-            <option value="320">
-                AMD Ryzen 7 7800X3D — 320 JOD
-            </option>
-            <option value="420">
-                Intel Core i9-14900K — 420 JOD
-            </option>
-        </select>
-        <label for="build-gpu">
-            <span>
-                02
-            </span>
-            GRAPHICS CARD
-        </label>
-        <select id="build-gpu">
-            <option value="450">
-                RTX 4070 Super · 12GB — 450 JOD
-            </option>
-            <option value="750">
-                RTX 4080 Super · 16GB — 750 JOD
-            </option>
-            <option value="1300">
-                RTX 4090 · 24GB — 1,300 JOD
-            </option>
-        </select>
-        <label for="build-ram">
-            <span>
-                03
-            </span>
-            MEMORY
-        </label>
-        <select id="build-ram">
-            <option value="85">
-                32GB DDR5 — 85 JOD
-            </option>
-            <option value="165">
-                64GB DDR5 — 165 JOD
-            </option>
-        </select>
-        <div class="planner-total">
-            <div>
-                <span>
-                    ESTIMATED COMPONENT SUBTOTAL
-                </span>
-                <strong>
-                    <output id="build-total" aria-live="polite">
-                        785
-                    </output>
-                    <small>
-                        JOD
-                    </small>
-                </strong>
-            </div>
-            <?= store_icon('arrow') ?>
-        </div>
-        <p class="total-note">
-            CPU + GPU + RAM only. Other parts and delivery excluded.
-        </p>
-        <noscript>
-            <p>
-                Enable JavaScript to update your build estimate.
-            </p>
-        </noscript>
-    </div>
+<section class="campaign-upgrade campaign-reveal" id="upgrade" aria-labelledby="upgrade-title">
+    <div><span class="campaign-label">YOUR NEXT LEVEL STARTS HERE.</span><h2 id="upgrade-title">READY FOR AN UPGRADE?</h2><p>Find your next component. Make your setup yours.</p></div>
+    <a class="campaign-upgrade-button" href="store.php">Browse the store <?= store_icon('arrow') ?></a>
 </section>
 
-<section class="campaign-contact campaign-section" id="contact"><span class="campaign-label campaign-reveal">YOUR NEXT CHAPTER STARTS HERE.</span><h2 class="campaign-reveal">MAKE IT<br><span>YOURS.</span></h2><div class="campaign-contact-bottom campaign-reveal"><p>One component. A whole new setup.<br>There’s always a next level.</p><a href="#builder" class="campaign-contact-link">LET’S BUILD <?= store_icon('arrow') ?></a><a href="#categories" class="campaign-link">Explore the store ↗</a></div></section>
+<section class="campaign-contact campaign-section" id="contact"><span class="campaign-label campaign-reveal">YOUR NEXT CHAPTER STARTS HERE.</span><h2 class="campaign-reveal">MAKE IT<br><span>YOURS.</span></h2><div class="campaign-contact-bottom campaign-reveal"><p>One component. A whole new setup.<br>There’s always a next level.</p><a href="store.php" class="campaign-contact-link">LET’S BUILD <?= store_icon('arrow') ?></a><a href="#categories" class="campaign-link">Explore the store ↗</a></div></section>
 <?php store_page_end(); ?>
+
