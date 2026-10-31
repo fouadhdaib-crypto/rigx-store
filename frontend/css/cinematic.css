@@ -14,6 +14,10 @@ html.lenis-smooth { scroll-behavior: auto; }
     font-family: var(--campaign-body);
 }
 .gaming-page .store-main { width: 100%; max-width: none; padding: 0; }
+.gaming-page.store-page .store-main { width: calc(100% - var(--campaign-gutter) * 2); max-width: 1800px; margin-inline: auto; }
+.gaming-page.store-page .store-catalog { padding-block: clamp(28px, 3vw, 44px); }
+.gaming-page.store-page .store-catalog-heading h1 { font-family: var(--campaign-display); font-weight: 400; font-size: clamp(42px, 5.2vw, 88px); text-transform: uppercase; color: var(--campaign-ink); }
+.gaming-page.store-page .store-catalog-heading > p { color: var(--campaign-muted); }
 .gaming-page .store-ambient { opacity: .15; }
 .gaming-page .announcement { display: none; }
 .gaming-page .store-header { background: #08080aeb; border-bottom: 1px solid var(--campaign-line); }

@@ -81,6 +81,7 @@ function store_page_start(
     $signedIn = !empty($_SESSION['email']);
     $currentPage = basename((string) ($_SERVER['SCRIPT_NAME'] ?? ''));
     $isStorePage = $currentPage === 'store.php';
+    $isProfilePage = $currentPage === 'userprofile.php';
     $pageSearch = is_string($_GET['q'] ?? null) ? trim($_GET['q']) : '';
     if (empty($_SESSION['cart_csrf'])) {
         $_SESSION['cart_csrf'] = bin2hex(random_bytes(32));
@@ -110,14 +111,16 @@ function store_page_start(
         <?php endif; ?>
         <link rel="stylesheet" href="../css/storefront.css?v=<?= filemtime(__DIR__ . '/../css/storefront.css') ?>">
         <link rel="stylesheet" href="../css/typography.css?v=<?= filemtime(__DIR__ . '/../css/typography.css') ?>">
-        <?php if ($landing): ?>
+        <?php if ($landing || $isStorePage || $isProfilePage): ?>
             <link href="https://fonts.googleapis.com/css2?family=Anton&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
             <link rel="stylesheet" href="../css/cinematic.css?v=<?= filemtime(__DIR__ . '/../css/cinematic.css') ?>">
+        <?php endif; ?>
+        <?php if ($landing): ?>
             <script src="../js/cinematic.js?v=<?= filemtime(__DIR__ . '/../js/cinematic.js') ?>" defer></script>
         <?php endif; ?>
         <script src="../js/store.js?v=<?= filemtime(__DIR__ . '/../js/store.js') ?>" defer></script>
     </head>
-    <body<?= $landing ? ' class="gaming-page"' : '' ?>>
+    <body<?= $landing ? ' class="gaming-page"' : ($isStorePage ? ' class="gaming-page store-page"' : ($isProfilePage ? ' class="gaming-page profile-page"' : '')) ?>>
         <div class="store-ambient" aria-hidden="true"><span class="ambient-glow ambient-glow-one"></span><span class="ambient-glow ambient-glow-two"></span><span class="ambient-grid"></span><span class="ambient-stars"></span></div>
         <a class="skip-link" href="#main-content">
             Skip to content
@@ -167,6 +170,8 @@ function store_page_end(): void
 {
     $cart = store_cart();
     $signedIn = !empty($_SESSION['user_id']) && ($_SESSION['user_role'] ?? '') === 'customer';
+    $isStorePage = basename((string) ($_SERVER['SCRIPT_NAME'] ?? '')) === 'store.php';
+    $pageSearch = is_string($_GET['q'] ?? null) ? trim($_GET['q']) : '';
     ?>
         </main>
         <dialog class="store-search-dialog" id="store-search-dialog" aria-labelledby="store-search-title">

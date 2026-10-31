@@ -1,4 +1,14 @@
 /* المسار: frontend/css/user_profile.css  (يعتمد على متغيرات store.css) */
+.gaming-page.profile-page { --bg: #08080a; --surface: #101214; --line: #f3f1ea1b; --text: #f3f1ea; --muted: #92958c; --lime: #a3e635; }
+.gaming-page.profile-page .store-main { width: calc(100% - var(--campaign-gutter) * 2); max-width: 1200px; margin-inline: auto; padding-block: 24px 32px; }
+.profile-page .profile-head h1 { font-family: var(--campaign-display); font-weight: 400; font-size: clamp(32px, 4vw, 52px); }
+.profile-page .panel h2 { font-family: var(--campaign-body); font-weight: 500; }
+.profile-page .stat, .profile-page .panel { border-radius: 8px; }
+@media (max-width: 600px) {
+    .profile-page .profile-grid { grid-template-columns: minmax(0, 1fr); }
+    .profile-page .panel { padding: 16px; }
+    .profile-page .profile-head .muted { overflow-wrap: anywhere; }
+}
 .profile-head{display:flex;align-items:center;gap:20px;margin:28px 0 20px;flex-wrap:wrap}
 .profile-head .button.ghost{margin-left:auto;background:transparent;border:1px solid var(--line);color:var(--text)}
 .avatar{width:68px;height:68px;border-radius:50%;background:var(--lime);color:#0b0d0b;
