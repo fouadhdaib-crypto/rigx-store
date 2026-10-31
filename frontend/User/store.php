@@ -35,6 +35,7 @@ unset($_SESSION['cart_notice']);
 store_page_start('Store', $search);
 ?>
 <link rel="stylesheet" href="../css/store-catalog.css?v=<?= filemtime(__DIR__ . '/../css/store-catalog.css') ?>">
+<script src="../js/store-reveal.js?v=<?= filemtime(__DIR__ . '/../js/store-reveal.js') ?>" defer></script>
 
 <section class="store-catalog" aria-labelledby="store-title">
     <div class="store-catalog-heading">
