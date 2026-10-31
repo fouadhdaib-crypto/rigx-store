@@ -122,13 +122,19 @@ class Order
         return $summary;
     }
 
+<<<<<<< HEAD
    public function findAllForAdmin(): array
+=======
+
+    public function findAllForAdmin(): array
+>>>>>>> c10ae8d1fe5dc210357e69dec911eb771c9dd3d6
     {
         $sql = "
         SELECT
             o.*,
             u.name AS customer_name,
             u.email,
+<<<<<<< HEAD
 
             COALESCE(i.item_count, 0) AS item_count,
 
@@ -177,6 +183,58 @@ class Order
 
         return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
+=======
+
+            COALESCE(i.item_count, 0) AS item_count,
+
+            COALESCE(
+                (
+                    SELECT pay.payment_status
+                    FROM payments pay
+                    WHERE pay.cart_id = o.cart_id
+                      AND pay.deleted_at IS NULL
+                    ORDER BY pay.created_at DESC, pay.id DESC
+                    LIMIT 1
+                ),
+                'pending'
+            ) AS payment_status,
+
+            COALESCE(
+                (
+                    SELECT pay.payment_method
+                    FROM payments pay
+                    WHERE pay.cart_id = o.cart_id
+                      AND pay.deleted_at IS NULL
+                    ORDER BY pay.created_at DESC, pay.id DESC
+                    LIMIT 1
+                ),
+                'not_recorded'
+            ) AS payment_method
+
+        FROM orders o
+
+        LEFT JOIN users u
+            ON u.id = o.user_id
+
+        LEFT JOIN (
+            SELECT
+                order_id,
+                SUM(quantity) AS item_count
+            FROM order_items
+            GROUP BY order_id
+        ) i
+            ON i.order_id = o.id
+
+        WHERE o.deleted_at IS NULL
+
+        ORDER BY o.id DESC
+    ";
+
+        return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+>>>>>>> c10ae8d1fe5dc210357e69dec911eb771c9dd3d6
     public function findByUserId(int $userId): array
     {
         $statement = $this->db->prepare(
@@ -218,8 +276,10 @@ class Order
 
     public function updateStatuses(int $id, string $status, string $paymentStatus): bool
     {
-        if (!in_array($status, ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'], true)
-            || !in_array($paymentStatus, ['pending', 'authorized', 'paid', 'failed', 'refunded'], true)) {
+        if (
+            !in_array($status, ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'], true)
+            || !in_array($paymentStatus, ['pending', 'authorized', 'paid', 'failed', 'refunded'], true)
+        ) {
             throw new InvalidArgumentException('Invalid order or payment status.');
         }
 
