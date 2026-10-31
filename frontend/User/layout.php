@@ -78,7 +78,7 @@ function store_page_start(
     bool $landing = false
 ): void {
     $cart = store_cart();
-    $signedIn = !empty($_SESSION['email']);
+    $signedIn = !empty($_SESSION['user_id']) || !empty($_SESSION['email']);
     $currentPage = basename((string) ($_SERVER['SCRIPT_NAME'] ?? ''));
     $isStorePage = $currentPage === 'store.php';
     $isProfilePage = $currentPage === 'userprofile.php';
@@ -96,7 +96,9 @@ function store_page_start(
         <meta name="theme-color" content="#090a0c">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oxanium:wght@500;600;700;800&display=swap" rel="stylesheet">
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oxanium:wght@500;600;700;800&display=swap"
+            rel="stylesheet">
         <meta name="description"
             content="Discover new and pre-loved products at REGIX. Browse featured products and find your next everyday essential.">
         <title>
@@ -140,23 +142,37 @@ function store_page_start(
                 <nav class="store-nav" id="store-nav" aria-label="Store navigation">
                 <a href="index.php"<?= $landing ? ' aria-current="page"' : '' ?>>Home</a>
                 <a href="store.php"<?= $isStorePage ? ' aria-current="page"' : '' ?>>Store</a>
-               <a href="index.php#categories">Featured products</a>
+               <a href="index.php#categories">Categories</a>
+                <a href="index.php#featured-products">Featured products</a>
                 <a href="index.php#rigs">Featured rigs</a>
+                <a href="pc_builder.php">Build planner</a>
                 </nav>
                 <div class="store-header-actions">
-                    <button class="store-icon-button" type="button" data-open-store-dialog="store-search-dialog" aria-label="Search featured products" title="Search featured products"><?= store_icon('search') ?></button>
+                    <button class="store-icon-button" type="button" data-open-store-dialog="store-search-dialog" aria-label="<?= $isStorePage ? 'Search products' : 'Search categories' ?>" title="<?= $isStorePage ? 'Search products' : 'Search categories' ?>"><?= store_icon('search') ?></button>
                     <?php if ($signedIn): ?>
                         <details class="store-account">
-                            <summary aria-label="Your account"><?= store_icon('user') ?><span class="account-name"><?= e((string) ($_SESSION['user_name'] ?? 'Account')) ?></span><?= store_icon('chevron') ?></summary>
-                            <div class="store-account-panel"><small>WELCOME BACK</small><strong><?= e((string) ($_SESSION['user_name'] ?? 'Your account')) ?></strong><a href="userprofile.php">Your profile <?= store_icon('arrow') ?></a><?php if (($_SESSION['user_role'] ?? '') === 'admin'): ?><a href="../admin/dashboard.php">Admin dashboard <?= store_icon('arrow') ?></a><?php endif; ?><a href="../../backend/auth/logout.php">Sign out</a></div>
+                            <summary aria-label="Your account"><?= store_icon('user') ?><span
+                                    class="account-name"><?= e((string) ($_SESSION['user_name'] ?? 'Account')) ?></span><?= store_icon('chevron') ?>
+                            </summary>
+                            <div class="store-account-panel"><small>WELCOME
+                                    BACK</small><strong><?= e((string) ($_SESSION['user_name'] ?? 'Your account')) ?></strong><a
+                                    href="userprofile.php">Your profile
+                                    <?= store_icon('arrow') ?></a><?php if (($_SESSION['user_role'] ?? '') === 'admin'): ?><a
+                                        href="../admin/dashboard.php">Admin dashboard
+                                        <?= store_icon('arrow') ?></a><?php endif; ?><a href="../../backend/auth/logout.php">Sign
+                                    out</a></div>
                         </details>
                     <?php else: ?>
-                        <a class="store-icon-button store-sign-in" href="../../backend/auth/login.php" aria-label="Sign in"><?= store_icon('user') ?><span>Sign in</span></a>
+                        <a class="store-icon-button store-sign-in" href="../../backend/auth/login.php"
+                            aria-label="Sign in"><?= store_icon('user') ?><span>Sign in</span></a>
                     <?php endif; ?>
-                    <button class="store-cart-button" type="button" data-open-store-dialog="store-cart-dialog" aria-label="Open cart, <?= (int) $cart['count'] ?> items">
-                        <?= store_icon('cart') ?><span class="cart-button-label">Cart</span><span class="store-cart-count"><?= (int) $cart['count'] ?></span>
+                    <button class="store-cart-button" type="button" data-open-store-dialog="store-cart-dialog"
+                        aria-label="Open cart, <?= (int) $cart['count'] ?> items">
+                        <?= store_icon('cart') ?><span class="cart-button-label">Cart</span><span
+                            class="store-cart-count"><?= (int) $cart['count'] ?></span>
                     </button>
-                    <button class="menu-button" type="button" aria-controls="store-nav" aria-expanded="false" aria-label="Toggle navigation"><?= store_icon('menu') ?></button>
+                    <button class="menu-button" type="button" aria-controls="store-nav" aria-expanded="false"
+                        aria-label="Toggle navigation"><?= store_icon('menu') ?></button>
                 </div>
             </div>
         </header>
@@ -187,8 +203,11 @@ function store_page_end(): void
         </dialog>
         <dialog class="store-cart-dialog" id="store-cart-dialog" aria-labelledby="store-cart-title">
             <div class="store-dialog-heading">
-                <div><span class="gaming-kicker">YOUR SELECTION</span><h2 id="store-cart-title">Your cart <span><?= (int) $cart['count'] ?></span></h2></div>
-                <button class="store-icon-button" type="button" data-close-store-dialog aria-label="Close cart"><?= store_icon('close') ?></button>
+                <div><span class="gaming-kicker">YOUR SELECTION</span>
+                    <h2 id="store-cart-title">Your cart <span><?= (int) $cart['count'] ?></span></h2>
+                </div>
+                <button class="store-icon-button" type="button" data-close-store-dialog
+                    aria-label="Close cart"><?= store_icon('close') ?></button>
             </div>
             <?php if ($cart['error']): ?>
                 <p class="store-cart-empty" role="alert">Your cart could not be loaded. Please try again.</p>
@@ -213,8 +232,11 @@ function store_page_end(): void
                                         <input type="hidden" name="csrf_token" value="<?= e((string) $_SESSION['cart_csrf']) ?>">
                                         <input type="hidden" name="action" value="update">
                                         <input type="hidden" name="cart_item_id" value="<?= (int) $item['cart_item_id'] ?>">
-                                        <label class="sr-only" for="cart-quantity-<?= (int) $item['cart_item_id'] ?>">Quantity for <?= e((string) $item['name']) ?></label>
-                                        <input id="cart-quantity-<?= (int) $item['cart_item_id'] ?>" name="quantity" type="number" min="1" max="<?= (int) $item['stock'] ?>" value="<?= (int) $item['quantity'] ?>" <?= empty($item['stock']) || $item['product_deleted_at'] !== null || $item['listing_status'] !== 'available' ? 'disabled' : '' ?>>
+                                        <label class="sr-only" for="cart-quantity-<?= (int) $item['cart_item_id'] ?>">Quantity for
+                                            <?= e((string) $item['name']) ?></label>
+                                        <input id="cart-quantity-<?= (int) $item['cart_item_id'] ?>" name="quantity" type="number"
+                                            min="1" max="<?= (int) $item['stock'] ?>" value="<?= (int) $item['quantity'] ?>"
+                                            <?= empty($item['stock']) || $item['product_deleted_at'] !== null || $item['listing_status'] !== 'available' ? 'disabled' : '' ?>>
                                         <button type="submit" <?= empty($item['stock']) || $item['product_deleted_at'] !== null || $item['listing_status'] !== 'available' ? 'disabled' : '' ?>>Update</button>
                                     </form>
                                     <form method="post" action="cart_action.php">
@@ -224,13 +246,17 @@ function store_page_end(): void
                                         <button class="store-cart-remove" type="submit">Remove</button>
                                     </form>
                                 <?php endif; ?>
-                                <?php if ($item['product_deleted_at'] !== null || $item['listing_status'] !== 'available' || (int) $item['stock'] < 1): ?><small>This product is no longer available.</small><?php endif; ?>
+                                <?php if ($item['product_deleted_at'] !== null || $item['listing_status'] !== 'available' || (int) $item['stock'] < 1): ?><small>This
+                                        product is no longer available.</small><?php endif; ?>
                             </div>
                             <strong><?= number_format((float) $item['price'] * (int) $item['quantity'], 2) ?><small>JOD</small></strong>
                         </article>
                     <?php endforeach; ?>
                 </div>
-                <div class="store-cart-summary"><span>Subtotal</span><strong><?= number_format((float) $cart['total'], 2) ?> JOD</strong><p>Delivery charges, if any, are confirmed at checkout.</p></div>
+                <div class="store-cart-summary"><span>Subtotal</span><strong><?= number_format((float) $cart['total'], 2) ?>
+                        JOD</strong>
+                    <p>Delivery charges, if any, are confirmed at checkout.</p>
+                </div>
                 <div class="store-cart-bottom">
                     <?php if ($signedIn): ?>
                         <a class="button" href="checkout.php">Proceed to checkout <?= store_icon('arrow') ?></a>
@@ -272,47 +298,8 @@ function store_page_end(): void
                 </small>
             </div>
         </footer>
-        <dialog class="store-search-dialog" id="store-search-dialog" aria-labelledby="store-search-title">
-            <div class="store-dialog-heading">
-                <div><span class="gaming-kicker">FIND YOUR UPGRADE</span><h2 id="store-search-title">Search featured products</h2></div>
-                <button class="store-icon-button" type="button" data-close-store-dialog aria-label="Close search"><?= store_icon('close') ?></button>
-            </div>
-            <form class="store-search-form" id="landing-category-search" action="index.php#categories" method="get">
-                <?= store_icon('search') ?>
-                <label class="sr-only" for="header-search">Search featured products</label>
-                <input id="header-search" name="q" type="search" placeholder="Graphics, memory, processors…">
-                <button type="submit" aria-label="Search"><?= store_icon('arrow') ?></button>
-            </form>
-            <p>Search featured products for your next build.</p>
-            <div class="store-search-suggestions"><a href="index.php?q=Graphics#categories">Graphics</a><a href="index.php?q=Memory#categories">Memory</a><a href="index.php#categories" data-clear-category-search>All featured products</a></div>
-        </dialog>
-        <dialog class="store-cart-dialog" id="store-cart-dialog" aria-labelledby="store-cart-title">
-            <div class="store-dialog-heading">
-                <div><span class="gaming-kicker">YOUR NEXT UPGRADE</span><h2 id="store-cart-title">Your cart <span><?= (int) $cart['count'] ?></span></h2></div>
-                <button class="store-icon-button" type="button" data-close-store-dialog aria-label="Close cart"><?= store_icon('close') ?></button>
-            </div>
-            <?php if ($cart['items']): ?>
-                <div class="store-cart-items">
-                    <?php foreach ($cart['items'] as $item): ?>
-                        <article class="store-cart-item">
-                            <span class="cart-item-icon"><?= store_icon('box') ?></span>
-                            <div><h3><?= e((string) $item['name']) ?></h3><p>Quantity: <?= (int) $item['quantity'] ?></p></div>
-                            <strong>JD <?= number_format((float) $item['price'] * (int) $item['quantity'], 2) ?></strong>
-                        </article>
-                    <?php endforeach; ?>
-                </div>
-                <div class="store-cart-summary"><span>Subtotal</span><strong>JD <?= number_format($cart['total'], 2) ?></strong><p>Shipping and taxes are calculated at checkout.</p></div>
-            <?php else: ?>
-                <div class="store-cart-empty">
-                    <span class="cart-empty-orbit"><?= store_icon('cart') ?></span>
-                    <h3><?= $cart['error'] ? 'Your cart is unavailable' : 'Your next upgrade starts here' ?></h3>
-                    <p><?= $cart['error'] ? 'Please try again in a moment.' : (empty($_SESSION['email']) ? 'Sign in to see your saved cart.' : 'Your cart is empty. Explore components for your next build.') ?></p>
-                    <?php if (empty($_SESSION['email'])): ?><a class="button" href="../../backend/auth/login.php">Sign in <?= store_icon('arrow') ?></a><?php endif; ?>
-                </div>
-            <?php endif; ?>
-            <div class="store-cart-bottom"><button class="button" type="button" data-close-store-dialog>Continue exploring <?= store_icon('arrow') ?></button></div>
-        </dialog>
-    </body>
-</html>
-<?php
+        </body>
+
+    </html>
+    <?php
 }

@@ -35,6 +35,18 @@ if (!$showBestSellers) {
         ORDER BY p.created_at DESC, p.id DESC LIMIT 6"
     )->fetchAll(PDO::FETCH_ASSOC);
 }
+// Preserve category browsing alongside the featured / best-selling selection.
+$categories = $db->query(
+    "SELECT id, name, description FROM categories WHERE deleted_at IS NULL ORDER BY name"
+)->fetchAll(PDO::FETCH_ASSOC);
+$categorySymbols = ['↗', '✳', '＋', '◈'];
+$productsByCategory = [];
+$catalogProducts = $db->query(
+    $productSelect . " WHERE " . $productAvailability . " ORDER BY p.created_at DESC, p.id DESC"
+)->fetchAll(PDO::FETCH_ASSOC);
+foreach ($catalogProducts as $catalogProduct) {
+    $productsByCategory[(int) $catalogProduct['category_id']][] = $catalogProduct;
+}
 if (empty($_SESSION['cart_csrf'])) {
     $_SESSION['cart_csrf'] = bin2hex(random_bytes(32));
 }
@@ -97,13 +109,12 @@ store_page_start('Next level. No limits.', '', true);
     <div class="campaign-section-heading campaign-reveal"><span class="campaign-label">01 / THE REGIX MINDSET</span><h2>GREAT SETUPS<br>DON’T HAPPEN<br><span>BY ACCIDENT.</span></h2></div>
     <div class="campaign-story-copy campaign-reveal"><p class="campaign-lead">Every great session starts long before you press play.</p><p>It starts with the right parts. A considered choice. A setup that feels like an extension of you. REGIX brings the possibilities together, from your first upgrade to your next ambitious build.</p></div><div class="campaign-principles"><article><span>01</span><div><h3>Choose with intent.</h3><p>Build around what you actually do. Play, create, work, or a little of everything.</p></div></article><article><span>02</span><div><h3>Make room for more.</h3><p>Find components that fit your plans today and leave possibilities for tomorrow.</p></div></article><article><span>03</span><div><h3>Make it yours.</h3><p>New hardware or a pre-loved find. Your next setup doesn’t have to look like anyone else’s.</p></div></article></div>
 </section>
-<section class="campaign-categories campaign-section landing-featured" id="categories" aria-labelledby="category-title">
+<section class="campaign-categories campaign-section landing-featured" id="featured-products" aria-labelledby="category-title">
     <div class="campaign-section-heading campaign-reveal">
         <div><span class="campaign-label">02 / <?= $showBestSellers ? 'THE BEST SELLERS' : 'JUST LANDED' ?></span>
         <h2 id="category-title"><?= $showBestSellers ? 'MOST WANTED.' : 'FRESH PARTS.' ?><br><span><?= $showBestSellers ? 'FOR GOOD REASON.' : 'NEW POSSIBILITIES.' ?></span></h2></div>
         <p><?= $showBestSellers ? 'The parts our customers keep choosing for their next upgrade.' : 'Explore the latest additions for your next upgrade.' ?></p>
     </div>
-    <p class="landing-category-feedback" id="landing-category-feedback" role="status" hidden></p>
     <?php if ($cartNotice !== ''): ?><p class="landing-category-feedback" role="status"><?= e($cartNotice) ?></p><?php endif; ?>
     <?php if ($products === []): ?>
         <p class="landing-products-empty">New parts are on the way. Check back soon for your next upgrade.</p>
@@ -151,6 +162,83 @@ store_page_start('Next level. No limits.', '', true);
         </div>
         <div class="featured-store-link"><span>More possibilities for your next build.</span><a href="store.php">Explore all products <?= store_icon('arrow') ?></a></div>
     <?php endif; ?>
+</section>
+<section class="campaign-categories campaign-section landing-featured landing-category-browser" id="categories" aria-labelledby="browse-category-title">
+    <p class="landing-category-feedback" id="landing-category-feedback" role="status" hidden></p>
+    <div class="campaign-section-heading campaign-reveal">
+        <div><span class="campaign-label">EXPLORE / THE BUILDING BLOCKS</span><h2 id="browse-category-title">SMALL PARTS.<br><span>BIG POSSIBILITIES.</span></h2></div>
+        <a class="campaign-link" href="#categories" data-clear-category-search>All categories <?= store_icon('arrow') ?></a>
+    </div>
+    <div class="campaign-category-list">
+        <?php foreach ($categories as $i => $category): ?>
+            <a class="hardware-category campaign-reveal" href="#products-<?= (int) $category['id'] ?>">
+                <span class="campaign-category-number"><?= sprintf('%02d', $i + 1) ?></span>
+                <span class="campaign-category-name"><?= e($category['name']) ?></span>
+                <span class="campaign-category-description"><?= e((string) ($category['description'] ?: 'Explore available products in this category.')) ?></span>
+                <span class="campaign-category-symbol"><?= e($categorySymbols[$i % count($categorySymbols)]) ?></span><?= store_icon('arrow') ?>
+            </a>
+        <?php endforeach; ?>
+    </div>
+    <?php if ($categories === []): ?><p class="landing-products-empty">New categories are on the way. Check back soon.</p><?php endif; ?>
+    <div class="landing-products">
+        <?php foreach ($categories as $category): ?>
+            <?php $categoryProducts = $productsByCategory[(int) $category['id']] ?? []; ?>
+            <section class="landing-product-category" id="products-<?= (int) $category['id'] ?>" aria-labelledby="products-title-<?= (int) $category['id'] ?>">
+                <div class="landing-product-heading">
+                    <div><span class="campaign-label"><?= e($category['name']) ?></span><h3 id="products-title-<?= (int) $category['id'] ?>">AVAILABLE NOW</h3></div>
+                    <span><?= count($categoryProducts) ?> <?= count($categoryProducts) === 1 ? 'product' : 'products' ?></span>
+                </div>
+                <?php if ($categoryProducts === []): ?>
+                    <p class="landing-products-empty">There are no available products in this category yet.</p>
+                <?php else: ?>
+                    <div class="landing-products-grid">
+                        <?php foreach ($categoryProducts as $product): ?>
+
+                            <?php
+                            $image = (string) ($product['product_img'] ?? '');
+                            $imageIsValid = preg_match('#\Aassets/products/[A-Za-z0-9._-]+\z#', $image) === 1;
+                            ?>
+                            <article class="landing-product-card">
+                                <div class="landing-product-image">
+                                    <?php if ($imageIsValid): ?>
+                                        <img src="../<?= e($image) ?>" alt="<?= e($product['name']) ?>" loading="lazy" width="480" height="320">
+                                    <?php else: ?>
+                                        <div class="featured-image-placeholder"><?= store_icon('box') ?><small><?= e($product['category_name']) ?></small></div>
+                                    <?php endif; ?>
+                                    <span><?= e(strtoupper((string) $product['condition_type'])) ?></span>
+                                </div>
+                                <div class="landing-product-copy">
+                                    <span><?= e((string) ($product['brand'] ?: $product['category_name'])) ?></span>
+                                    <h3><?= e($product['name']) ?></h3>
+                                    <?php if ((string) $product['description'] !== ''): ?><p><?= e($product['description']) ?></p><?php endif; ?>
+                                    <div class="landing-product-buy">
+                                        <strong><?= number_format((float) $product['price'], 2) ?> <small>JOD</small></strong>
+                                        <?php if (!empty($_SESSION['user_id']) && ($_SESSION['user_role'] ?? '') === 'customer'): ?>
+                                            <form method="post" action="cart_action.php">
+                                                <input type="hidden" name="csrf_token" value="<?= e((string) $_SESSION['cart_csrf']) ?>">
+                                                <input type="hidden" name="action" value="add">
+                                                <input type="hidden" name="product_id" value="<?= (int) $product['id'] ?>">
+                                                <button type="submit" <?= (int) $product['quantity'] < 1 ? 'disabled' : '' ?>>Add to cart</button>
+                                            </form>
+                                        <?php else: ?>
+                                            <?php if (!empty($_SESSION['user_id'])): ?>
+                                                <a href="store.php">View in store <?= store_icon('arrow') ?></a>
+                                            <?php else: ?>
+                                                <a href="../../backend/auth/login.php">Sign in to buy <?= store_icon('arrow') ?></a>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+                                    </div>
+                                    <small><?= (int) $product['quantity'] ?> in stock</small>
+                                </div>
+                            </article>
+            
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </section>
+        <?php endforeach; ?>
+    </div>
+    <div class="featured-store-link"><span>Find the right parts for your next build.</span><a href="store.php">Explore all products <?= store_icon('arrow') ?></a></div>
 </section>
 <section class="campaign-rigs campaign-section" id="rigs" aria-labelledby="rig-title">
     <div class="campaign-section-heading campaign-reveal"><div><span class="campaign-label">03 / SELECTED BUILD CONCEPTS</span><h2 id="rig-title">THE NEXT THING.<br><span>YOUR THING.</span></h2></div><p>03 concepts. Countless possibilities.<br>Illustrative configurations to spark your next build.</p></div>
