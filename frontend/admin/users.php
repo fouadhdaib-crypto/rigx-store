@@ -107,52 +107,32 @@ $extraHead = '
 
 
 page_start('Users', 'users.php', $extraHead);
+?>
+<link rel="stylesheet" href="../css/users-orders.css?v=<?= filemtime(__DIR__ . '/../css/users-orders.css') ?>">
+<div class="users-page orders-page">
+<?php
 
 heading('STORE MANAGEMENT', 'Customers & users', 'Manage customers and admins, permissions and spending.');
 ?>
 
-    <section class="metrics-grid">
-      <div class="metric-card">
-        <div>
-          <div class="metric-title">TOTAL CUSTOMERS</div>
-          <div class="metric-value"><?= number_format($stats['total_customers']) ?></div>
-          <div class="metric-subtext green">
-            <i class="fa-solid fa-arrow-up"></i> +<?= number_format($stats['new_this_month']) ?> <span class="muted">this month</span>
-          </div>
-        </div>
-        <div class="metric-icon-box green">
-          <i class="fa-solid fa-users"></i>
-        </div>
-      </div>
-
-      <div class="metric-card">
-        <div>
-          <div class="metric-title">CUSTOMER ACCOUNTS</div>
-          <div class="metric-value"><?= number_format($stats['active_customers']) ?></div>
-          <div class="metric-subtext green">
-            <i class="fa-solid fa-circle" style="font-size: 0.5rem; vertical-align: middle;"></i> Available to sign in
-          </div>
-        </div>
-        <div class="metric-icon-box blue">
-          <i class="fa-solid fa-user-check"></i>
-        </div>
-      </div>
-
-      <div class="metric-card">
-        <div>
-          <div class="metric-title">TOTAL REVENUE SPENT</div>
-          <div class="metric-value">JD <?= number_format($stats['revenue_total']) ?></div>
-          <div class="metric-subtext green">
-            <i class="fa-solid fa-arrow-<?= $growth < 0 ? 'down' : 'up' ?>"></i> <?= $growth >= 0 ? '+' : '' ?><?= $growth ?>% <span class="muted">vs last month</span>
-          </div>
-        </div>
-        <div class="metric-icon-box orange">
-          <i class="fa-solid fa-wallet"></i>
-        </div>
-      </div>
+    <section class="orders-overview users-overview" aria-label="User overview">
+      <article class="orders-stat">
+        <div class="orders-stat-top"><span>Total customers</span><span class="orders-stat-icon orders-icon-green"><i class="fa-solid fa-users" aria-hidden="true"></i></span></div>
+        <strong><?= number_format($stats['total_customers']) ?></strong>
+        <small><span class="orders-positive">+<?= number_format($stats['new_this_month']) ?></span> this month</small>
+      </article>
+      <article class="orders-stat">
+        <div class="orders-stat-top"><span>Customer accounts</span><span class="orders-stat-icon orders-icon-blue"><i class="fa-solid fa-user-check" aria-hidden="true"></i></span></div>
+        <strong><?= number_format($stats['active_customers']) ?></strong>
+        <small>Available to sign in</small>
+      </article>
+      <article class="orders-stat">
+        <div class="orders-stat-top"><span>Total revenue spent</span><span class="orders-stat-icon orders-icon-purple"><i class="fa-solid fa-wallet" aria-hidden="true"></i></span></div>
+        <strong><?= number_format($stats['revenue_total'], 2) ?> JOD</strong>
+        <small><span><?= $growth >= 0 ? '+' : '' ?><?= e((string) $growth) ?>% vs last month</span></small>
+      </article>
     </section>
-
-    <section class="table-container">
+    <section class="table-container panel orders-panel">
 
       <div id="pageMessage" class="form-message"></div>
 
@@ -588,4 +568,5 @@ heading('STORE MANAGEMENT', 'Customers & users', 'Manage customers and admins, p
     filterAndSortUsers();
   </script>
 
+</div>
 <?php page_end();  ?>
