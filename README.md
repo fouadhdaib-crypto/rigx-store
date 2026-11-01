@@ -157,18 +157,17 @@ Sign out and back in after a role change so the session reflects the account's r
 
 Checkout requires a customer account and a nonempty active cart. It collects delivery details and offers cash on delivery or Stripe checkout. Order creation and payment handling use database records and inventory checks.
 
-**Local setup gap:** `checkout.php` and the payment return pages require `backend/config/stripe.php`, but that file is not currently present in this checkout. Because the include is unconditional, checkout needs that configuration file even if testing cash on delivery.
-
-For local setup, create the configuration file with a Stripe test key obtained from your own account, or an empty value while only testing cash on delivery:
+`backend/config/stripe.php` is included in the repository and reads configuration from environment variables. For local XAMPP development, create the ignored file `backend/config/stripe.local.php` with your own Stripe test key:
 
 ```php
 <?php
 declare(strict_types=1);
 
-define('STRIPE_SECRET_KEY', getenv('STRIPE_SECRET_KEY') ?: '');
+define('STRIPE_SECRET_KEY', 'sk_test_your_key');
+define('SITE_URL', 'http://localhost/category%20and%20payments/frontend/User');
 ```
 
-Configure the environment variable in the PHP/Apache environment for card testing. Restart Apache after changing its environment. The application does not automatically load a `.env` file. Do not commit real secret keys.
+This local override is ignored by Git and must not be committed. Each teammate should create their own copy with their own key and local project URL. Alternatively, set `STRIPE_SECRET_KEY` and `SITE_URL` in the PHP/Apache environment. When `STRIPE_SECRET_KEY` is empty, cash on delivery remains available but card checkout cannot be started. Do not commit real secret keys.
 
 `StripeClass.php` calls the Stripe API through PHP cURL. Payment return handlers are `payment_success.php` and `payment_cancel.php`.
 
@@ -262,7 +261,7 @@ Avoid force-pushing shared `main`. A rejected push usually means remote work mus
 | --- | --- |
 | Database connection failure | MySQL running, database imported, and `$DB_connValues` matching your installation |
 | Missing table/column | Full SQL export version, PC specifications table, and whether the payment-order migration is required |
-| Checkout reports missing `stripe.php` | Create the local configuration described above |
+| Card checkout is unavailable | Set `STRIPE_SECRET_KEY` or create the ignored `backend/config/stripe.local.php` described above |
 | `Unexpected token '<'` during an order action | Inspect the network response for a login redirect or PHP error instead of JSON; verify the admin session |
 | Styles look unchanged | Ctrl + F5, stylesheet URLs, and page-specific body classes |
 | Admin page redirects | Existing account, current database role, and login session |

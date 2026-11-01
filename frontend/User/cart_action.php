@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     exit('Method not allowed.');
 }
-
+//CSRF
 $returnToStore = ($_POST['return_to'] ?? '') === 'store';
 $returnPage = $returnToStore ? 'store.php' : 'index.php';
 $token = is_string($_POST['csrf_token'] ?? null) ? $_POST['csrf_token'] : '';

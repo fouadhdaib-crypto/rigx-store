@@ -162,7 +162,6 @@ page_start('Categories', 'categories.php');
 heading('STORE MANAGEMENT', 'Categories', 'Organize your catalog and manage product collections.');
 ?>
 
-<!-- تم اضافة ملف الـ CSS هنا -->
 <link rel="stylesheet" href="../css/categories.css?v=<?= filemtime(__DIR__ . '/../css/categories.css') ?>">
 
 <div class="categories-page">
