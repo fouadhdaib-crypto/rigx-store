@@ -317,3 +317,69 @@
     });
   }
 })();
+
+// ==========================================================================
+// PURPOSE CARD EFFECTS (tilt, spotlight, tap ripple)
+// Purely visual. Selection state is handled by the code above.
+// ==========================================================================
+
+(function () {
+  const cards = document.querySelectorAll(".pbx-purpose-card.pbx-rich");
+
+  if (!cards.length) {
+    return;
+  }
+
+  const reduceMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+
+  const finePointer = window.matchMedia(
+    "(hover: hover) and (pointer: fine)",
+  ).matches;
+
+  cards.forEach(function (card) {
+    // Spotlight + gentle 3D tilt following the pointer.
+    if (finePointer) {
+      card.addEventListener("pointermove", function (event) {
+        const rect = card.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width;
+        const y = (event.clientY - rect.top) / rect.height;
+
+        card.style.setProperty("--mx", (x * 100).toFixed(1) + "%");
+        card.style.setProperty("--my", (y * 100).toFixed(1) + "%");
+
+        if (!reduceMotion) {
+          card.style.setProperty("--ry", ((x - 0.5) * 5).toFixed(2) + "deg");
+          card.style.setProperty("--rx", ((0.5 - y) * 5).toFixed(2) + "deg");
+        }
+      });
+
+      card.addEventListener("pointerleave", function () {
+        card.style.setProperty("--rx", "0deg");
+        card.style.setProperty("--ry", "0deg");
+      });
+    }
+
+    // Tap ripple. A label click also fires a synthetic click on its input,
+    // so ignore that second one to avoid a double ripple.
+    card.addEventListener("click", function (event) {
+      if (reduceMotion || event.target.tagName === "INPUT") {
+        return;
+      }
+
+      const rect = card.getBoundingClientRect();
+      const dot = document.createElement("span");
+
+      dot.className = "pbx-ripple";
+      dot.style.setProperty("--x0", event.clientX - rect.left + "px");
+      dot.style.setProperty("--y0", event.clientY - rect.top + "px");
+
+      card.appendChild(dot);
+
+      window.setTimeout(function () {
+        dot.remove();
+      }, 650);
+    });
+  });
+})();

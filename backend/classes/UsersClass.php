@@ -247,3 +247,4 @@ class UsersClass
         return $rows;
     }
 }
+

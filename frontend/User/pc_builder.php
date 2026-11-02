@@ -531,13 +531,28 @@ echo $storePageStart;
 
                             <div class="pbx-purpose-list">
 
+                                <!-- GAMING -->
                                 <label
-                                    class="pbx-purpose-card <?= $formValues['purpose'] === 'gaming' ? 'is-selected' : '' ?>">
+                                    class="pbx-purpose-card pbx-rich <?= $formValues['purpose'] === 'gaming' ? 'is-selected' : '' ?>"
+                                    data-purpose="gaming">
 
                                     <input type="radio" name="purpose" value="gaming"
                                         <?= $formValues['purpose'] === 'gaming' ? 'checked' : '' ?> required>
 
-                                    <span class="pbx-purpose-symbol">G</span>
+                                    <span class="pbx-card-glow" aria-hidden="true"></span>
+
+                                    <span class="pbx-purpose-symbol pbx-icon-wrap" aria-hidden="true">
+                                        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path class="pbx-ico-body"
+                                                d="M14 16h20a8 8 0 0 1 7.8 6.3l1.6 8.2a4.6 4.6 0 0 1-8 3.9L32 31H16l-3.4 3.4a4.6 4.6 0 0 1-8-3.9l1.6-8.2A8 8 0 0 1 14 16Z" />
+                                            <path d="M16 21v6M13 24h6" />
+                                            <circle class="pbx-ico-pulse" cx="30" cy="22.5" r="1.4"
+                                                fill="currentColor" />
+                                            <circle class="pbx-ico-pulse pbx-delay" cx="34" cy="26" r="1.4"
+                                                fill="currentColor" />
+                                        </svg>
+                                    </span>
 
                                     <span class="pbx-purpose-content">
                                         <strong>Gaming</strong>
@@ -545,24 +560,47 @@ echo $storePageStart;
                                             For immersive games, higher frame rates
                                             and graphics-focused performance.
                                         </small>
+
+                                        <span class="pbx-meters" aria-hidden="true">
+                                            <span class="pbx-meter" style="--v:.95"><em>GPU</em><i></i></span>
+                                            <span class="pbx-meter" style="--v:.72"><em>CPU</em><i></i></span>
+                                            <span class="pbx-meter" style="--v:.60"><em>RAM</em><i></i></span>
+                                        </span>
+
                                         <span class="pbx-purpose-tags">
                                             <i>Gaming performance</i>
                                             <i>GPU priority</i>
                                         </span>
                                     </span>
 
-                                    <span class="pbx-choice-indicator"></span>
+                                    <span class="pbx-choice-indicator">
+                                        <svg viewBox="0 0 20 20" aria-hidden="true">
+                                            <path d="M5 10.5l3.2 3.2L15 6.8" />
+                                        </svg>
+                                    </span>
 
                                 </label>
 
 
+                                <!-- WORKSTATION -->
                                 <label
-                                    class="pbx-purpose-card <?= $formValues['purpose'] === 'workstation' ? 'is-selected' : '' ?>">
+                                    class="pbx-purpose-card pbx-rich <?= $formValues['purpose'] === 'workstation' ? 'is-selected' : '' ?>"
+                                    data-purpose="workstation">
 
                                     <input type="radio" name="purpose" value="workstation"
                                         <?= $formValues['purpose'] === 'workstation' ? 'checked' : '' ?>>
 
-                                    <span class="pbx-purpose-symbol">W</span>
+                                    <span class="pbx-card-glow" aria-hidden="true"></span>
+
+                                    <span class="pbx-purpose-symbol pbx-icon-wrap" aria-hidden="true">
+                                        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <rect class="pbx-ico-body" x="6" y="9" width="36" height="25" rx="3" />
+                                            <path d="M18 41h12M24 34v7" />
+                                            <path class="pbx-ico-code" d="M19 18l-5 5 5 5M29 18l5 5-5 5" />
+                                            <path class="pbx-ico-pulse" d="M26 17l-4 12" />
+                                        </svg>
+                                    </span>
 
                                     <span class="pbx-purpose-content">
                                         <strong>Workstation</strong>
@@ -570,24 +608,48 @@ echo $storePageStart;
                                             For development, creative applications,
                                             demanding workloads and multitasking.
                                         </small>
+
+                                        <span class="pbx-meters" aria-hidden="true">
+                                            <span class="pbx-meter" style="--v:.95"><em>CPU</em><i></i></span>
+                                            <span class="pbx-meter" style="--v:.90"><em>RAM</em><i></i></span>
+                                            <span class="pbx-meter" style="--v:.50"><em>GPU</em><i></i></span>
+                                        </span>
+
                                         <span class="pbx-purpose-tags">
                                             <i>Processing</i>
                                             <i>Memory capacity</i>
                                         </span>
                                     </span>
 
-                                    <span class="pbx-choice-indicator"></span>
+                                    <span class="pbx-choice-indicator">
+                                        <svg viewBox="0 0 20 20" aria-hidden="true">
+                                            <path d="M5 10.5l3.2 3.2L15 6.8" />
+                                        </svg>
+                                    </span>
 
                                 </label>
 
 
+                                <!-- EVERYDAY USE -->
                                 <label
-                                    class="pbx-purpose-card <?= $formValues['purpose'] === 'general_use' ? 'is-selected' : '' ?>">
+                                    class="pbx-purpose-card pbx-rich <?= $formValues['purpose'] === 'general_use' ? 'is-selected' : '' ?>"
+                                    data-purpose="general_use">
 
                                     <input type="radio" name="purpose" value="general_use"
                                         <?= $formValues['purpose'] === 'general_use' ? 'checked' : '' ?>>
 
-                                    <span class="pbx-purpose-symbol">D</span>
+                                    <span class="pbx-card-glow" aria-hidden="true"></span>
+
+                                    <span class="pbx-purpose-symbol pbx-icon-wrap" aria-hidden="true">
+                                        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path class="pbx-ico-body"
+                                                d="M10 12h28a2 2 0 0 1 2 2v17H8V14a2 2 0 0 1 2-2Z" />
+                                            <path d="M4 36h40l-2.5 3.5a3 3 0 0 1-2.4 1.2H8.9a3 3 0 0 1-2.4-1.2L4 36Z" />
+                                            <circle class="pbx-ico-pulse" cx="24" cy="21.5" r="4" />
+                                            <path d="M16 28c1.6-3 4.5-4.5 8-4.5s6.4 1.5 8 4.5" />
+                                        </svg>
+                                    </span>
 
                                     <span class="pbx-purpose-content">
                                         <strong>Everyday use</strong>
@@ -595,13 +657,24 @@ echo $storePageStart;
                                             For studying, browsing, office work
                                             and everyday applications.
                                         </small>
+
+                                        <span class="pbx-meters" aria-hidden="true">
+                                            <span class="pbx-meter" style="--v:.80"><em>Balance</em><i></i></span>
+                                            <span class="pbx-meter" style="--v:.92"><em>Value</em><i></i></span>
+                                            <span class="pbx-meter" style="--v:.70"><em>Efficiency</em><i></i></span>
+                                        </span>
+
                                         <span class="pbx-purpose-tags">
                                             <i>Balanced setup</i>
                                             <i>Budget fit</i>
                                         </span>
                                     </span>
 
-                                    <span class="pbx-choice-indicator"></span>
+                                    <span class="pbx-choice-indicator">
+                                        <svg viewBox="0 0 20 20" aria-hidden="true">
+                                            <path d="M5 10.5l3.2 3.2L15 6.8" />
+                                        </svg>
+                                    </span>
 
                                 </label>
 
